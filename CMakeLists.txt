@@ -16,10 +16,13 @@ option(IS_TESTING_ENABLED "The option turns on/off tests" ON)
 
 set(EXECUTABLE_NAME "tde2_introspector")
 
-set(HEADERS )
-	#"${CMAKE_CURRENT_SOURCE_DIR}/include/CCustomEngineListener.h")
+set(HEADERS 
+	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/common.h")
 
 set(SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/common.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp")
 
 source_group("includes" FILES ${HEADERS})
