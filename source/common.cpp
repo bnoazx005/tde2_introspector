@@ -2,6 +2,7 @@
 #include "../deps/argparse/argparse.h"
 #include <iostream>
 #include <filesystem>
+#include <array>
 
 
 namespace TDEngine2
@@ -14,7 +15,7 @@ namespace TDEngine2
 		0
 	};
 
-	TIntrospectorOptions ParseOptions(int argc, const char** argv)
+	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT
 	{
 		int showVersion = 0;
 
@@ -72,5 +73,30 @@ namespace TDEngine2
 		compilerOptions.mOptimizationLevel = std::min<U8>(3, std::max<U8>(0, compilerOptions.mOptimizationLevel)); // in range of [0; 3]
 #endif
 		return std::move(utilityOptions);
+	}
+
+
+	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT
+	{
+		if (directory.empty())
+		{
+			return {};
+		}
+
+		static std::array<std::string, 2> extensions { ".h", ".hpp"	};
+
+		std::vector<std::string> headersPaths;
+
+		for (auto&& directory : std::filesystem::recursive_directory_iterator{ directory })
+		{
+			auto&& path = directory.path();
+
+			if (path.extension() == extensions[0] || path.extension() == extensions[1])
+			{
+				headersPaths.emplace_back(path.string());
+			}
+		}
+
+		return headersPaths;
 	}
 }

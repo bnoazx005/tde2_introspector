@@ -16,7 +16,14 @@ int main(int argc, const char** argv)
 	std::cout << "Input: " << options.mInputDirname << std::endl
 		<< "Output: " << options.mOutputDirname << std::endl;
 
-	// \todo Scan given directory for cpp header files
+	// \note Scan given directory for cpp header files
+	std::vector<std::string> filesToProcess = GetHeaderFiles(options.mInputDirname);
+	if (filesToProcess.empty())
+	{
+		std::cout << "Nothing to process... Exit\n";
+		return -1;
+	}
+
 	// \todo Run for each header parser utility
 	// \todo Generate meta-information as cpp files
 

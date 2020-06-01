@@ -2,10 +2,18 @@
 
 
 #include <string>
+#include <vector>
 
 
 namespace TDEngine2
 {
+#if TDE2_USE_NOEXCEPT
+	#define TDE2_NOEXCEPT noexcept
+#else 
+	#define TDE2_NOEXCEPT 
+#endif
+
+
 	static struct TVersion
 	{
 		const uint32_t mMajor = 0;
@@ -22,5 +30,7 @@ namespace TDEngine2
 		static TIntrospectorOptions mInvalid;
 	};
 
-	TIntrospectorOptions ParseOptions(int argc, const char** argv);
+	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT;
+
+	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT;
 }
