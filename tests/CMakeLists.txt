@@ -28,6 +28,7 @@ add_subdirectory(lib/Catch2)
 set(HEADERS )
 
 set(SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/lexerTests.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 
 source_group("includes" FILES ${HEADERS})

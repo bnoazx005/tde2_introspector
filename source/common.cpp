@@ -83,7 +83,7 @@ namespace TDEngine2
 			return {};
 		}
 
-		static std::array<std::string, 2> extensions { ".h", ".hpp"	};
+		static const std::array<std::string, 2> extensions { ".h", ".hpp" };
 
 		std::vector<std::string> headersPaths;
 
