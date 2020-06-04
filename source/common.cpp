@@ -1,7 +1,7 @@
 #include "../include/common.h"
 #include "../deps/argparse/argparse.h"
 #include <iostream>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <array>
 
 
@@ -55,7 +55,7 @@ namespace TDEngine2
 
 		if (pOutputDirectory)
 		{
-			utilityOptions.mOutputDirname = std::filesystem::path(pOutputDirectory).string();
+			utilityOptions.mOutputDirname = std::experimental::filesystem::path(pOutputDirectory).string();
 		}		
 		
 #if 0
@@ -87,7 +87,7 @@ namespace TDEngine2
 
 		std::vector<std::string> headersPaths;
 
-		for (auto&& directory : std::filesystem::recursive_directory_iterator{ directory })
+		for (auto&& directory : std::experimental::filesystem::recursive_directory_iterator{ directory })
 		{
 			auto&& path = directory.path();
 

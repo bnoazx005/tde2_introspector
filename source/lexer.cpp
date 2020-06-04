@@ -52,4 +52,76 @@ namespace TDEngine2
 
 		return lineStr;
 	}
+
+
+	const Lexer::TKeywordsMap Lexer::mReservedTokens
+	{
+		{ "namespace", E_TOKEN_TYPE::TT_NAMESPACE },
+		{ "{", E_TOKEN_TYPE::TT_OPEN_BRACE },
+		{ "}", E_TOKEN_TYPE::TT_CLOSE_BRACE },
+		{ ":", E_TOKEN_TYPE::TT_COLON },
+	};
+
+	Lexer::Lexer(IInputStream& streamSource):
+		mpStream(&streamSource), mCurrProcessedText()
+	{
+	}
+
+	const TToken& Lexer::GetCurrToken() const
+	{
+		return mTokensQueue.front();
+	}
+
+	const TToken& Lexer::GetNextToken()
+	{
+		mTokensQueue.erase(mTokensQueue.cbegin());
+		mTokensQueue.emplace_back(_scanToken());
+
+		return mTokensQueue.front();
+	}
+
+	const TToken& Lexer::PeekToken(uint32_t offset)
+	{
+		return mTokensQueue.front();
+	}
+
+	TToken Lexer::_scanToken()
+	{
+		/*while (!eof)
+		{
+			skip whitespaces
+			skip comments
+			read literals
+			read identifiers and keywords
+		}*/
+
+		return {};
+	}
+
+	char Lexer::_getCurrChar() const
+	{
+		return mCurrProcessedText.front();
+	}
+
+	char Lexer::_getNextChar()
+	{
+		mCurrProcessedText.erase(0, 1);
+
+		if (mCurrProcessedText.empty())
+		{
+			mCurrProcessedText.append(mpStream->ReadLine());
+		}
+
+		return mCurrProcessedText.front();
+	}
+
+	char Lexer::_peekNextChar(uint32_t offset)
+	{
+		if (offset >= mCurrProcessedText.size())
+		{
+			mCurrProcessedText.append(mpStream->ReadLine());
+		}
+
+		return mCurrProcessedText[offset];
+	}
 }

@@ -3,14 +3,13 @@
 
 #include <string>
 #include <fstream>
+#include <unordered_map>
+#include "tokens.h"
 #include "common.h"
 
 
 namespace TDEngine2
 {
-	struct TToken;
-
-
 	class IInputStream
 	{
 		public:
@@ -47,6 +46,8 @@ namespace TDEngine2
 	class Lexer
 	{
 		public:
+			using TKeywordsMap = std::unordered_map<std::string, E_TOKEN_TYPE>;
+		public:
 			Lexer(IInputStream& streamSource);
 			~Lexer() = default;
 
@@ -54,6 +55,18 @@ namespace TDEngine2
 			const TToken& GetNextToken();
 			const TToken& PeekToken(uint32_t offset = 1);
 		private:
-			IInputStream* mpStream;
+			TToken _scanToken();
+
+			char _getCurrChar() const;
+			char _getNextChar();
+			char _peekNextChar(uint32_t offset);
+		private:
+			IInputStream*             mpStream;
+
+			std::string               mCurrProcessedText;
+
+			std::vector<TToken>       mTokensQueue;
+
+			static const TKeywordsMap mReservedTokens;
 	};
 }
