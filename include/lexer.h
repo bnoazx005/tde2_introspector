@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <unordered_map>
+#include <memory>
 #include "tokens.h"
 #include "common.h"
 
@@ -55,18 +56,20 @@ namespace TDEngine2
 			const TToken& GetNextToken();
 			const TToken& PeekToken(uint32_t offset = 1);
 		private:
-			TToken _scanToken();
+			std::unique_ptr<TToken> _scanToken();
 
 			char _getCurrChar() const;
 			char _getNextChar();
 			char _peekNextChar(uint32_t offset);
+
+			std::unique_ptr<TToken> _parseReservedKeywordsAndIdentifiers();
 		private:
-			IInputStream*             mpStream;
+			IInputStream*                        mpStream;
 
-			std::string               mCurrProcessedText;
+			std::string                          mCurrProcessedText;
 
-			std::vector<TToken>       mTokensQueue;
+			std::vector<std::unique_ptr<TToken>> mTokensQueue;
 
-			static const TKeywordsMap mReservedTokens;
+			static const TKeywordsMap            mReservedTokens;
 	};
 }

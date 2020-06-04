@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <string>
 
 
 namespace TDEngine2
@@ -14,11 +15,14 @@ namespace TDEngine2
 		// keywords
 		TT_NAMESPACE,
 		TT_IDENTIFIER,
+		TT_ENUM,
+		TT_CLASS,
 
 		// symbols
 		TT_COLON,
 		TT_OPEN_BRACE,
 		TT_CLOSE_BRACE,
+		TT_SEMICOLON,
 		TT_UNKNOWN,
 	};
 
@@ -27,8 +31,18 @@ namespace TDEngine2
 	{
 		using TCursorPos = std::tuple<uint32_t, uint32_t>;
 
+		TToken(E_TOKEN_TYPE type, const TCursorPos& pos = { 0, 0 });
+
 		E_TOKEN_TYPE mType = E_TOKEN_TYPE::TT_EOF;
 
 		TCursorPos   mPos = { 0, 0 };
+	};
+
+	
+	struct TIdentifierToken : TToken
+	{
+		explicit TIdentifierToken(const std::string& id);
+
+		std::string mId;
 	};
 }
