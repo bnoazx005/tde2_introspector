@@ -49,13 +49,15 @@ namespace TDEngine2
 		public:
 			using TKeywordsMap = std::unordered_map<std::string, E_TOKEN_TYPE>;
 		public:
-			Lexer(IInputStream& streamSource);
+			explicit Lexer(IInputStream& streamSource);
 			~Lexer() = default;
 
 			const TToken& GetCurrToken() const;
 			const TToken& GetNextToken();
 			const TToken& PeekToken(uint32_t offset = 1);
 		private:
+			Lexer() = default;
+
 			std::unique_ptr<TToken> _scanToken();
 
 			char _getCurrChar() const;

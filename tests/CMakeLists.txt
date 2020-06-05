@@ -28,6 +28,7 @@ set(HEADERS )
 
 set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/lexer.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../source/parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/tokens.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/lexerTests.cpp")

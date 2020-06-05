@@ -19,6 +19,7 @@ set(EXECUTABLE_NAME "tde2_introspector")
 set(HEADERS 
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/lexer.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/parser.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/tokens.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/common.h")
 
@@ -26,6 +27,7 @@ set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.c"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/common.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/lexer.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/tokens.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp")
 
