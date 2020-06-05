@@ -52,7 +52,7 @@ namespace TDEngine2
 			explicit Lexer(IInputStream& streamSource);
 			~Lexer() = default;
 
-			const TToken& GetCurrToken() const;
+			const TToken& GetCurrToken();
 			const TToken& GetNextToken();
 			const TToken& PeekToken(uint32_t offset = 1);
 		private:

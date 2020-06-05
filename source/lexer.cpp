@@ -71,8 +71,13 @@ namespace TDEngine2
 	{
 	}
 
-	const TToken& Lexer::GetCurrToken() const
+	const TToken& Lexer::GetCurrToken()
 	{
+		if (mTokensQueue.empty())
+		{
+			return GetNextToken();
+		}
+
 		return *mTokensQueue.front();
 	}
 

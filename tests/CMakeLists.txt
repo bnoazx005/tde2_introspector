@@ -24,14 +24,16 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/lib/Catch2/contrib/")
 add_subdirectory(lib/Catch2)
 
-set(HEADERS )
+set(HEADERS 
+	"${CMAKE_CURRENT_SOURCE_DIR}/mockInputStream.h")
 
 set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/lexer.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/tokens.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/lexerTests.cpp")
+	"${CMAKE_CURRENT_SOURCE_DIR}/lexerTests.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/parserTests.cpp")
 
 source_group("includes" FILES ${HEADERS})
 source_group("sources" FILES ${SOURCES})

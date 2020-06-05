@@ -9,6 +9,8 @@
 namespace TDEngine2
 {
 	class Lexer;
+	struct TToken;
+	enum class E_TOKEN_TYPE : uint16_t;
 
 
 	struct TParserError
@@ -17,6 +19,7 @@ namespace TDEngine2
 
 		enum class E_PARSER_ERROR_CODE: uint32_t
 		{
+			UNEXPECTED_SYMBOL,
 			UNKNOWN
 		};
 
@@ -37,6 +40,15 @@ namespace TDEngine2
 			void Parse();
 		private:
 			Parser() = default;
+
+			bool _expect(E_TOKEN_TYPE expectedType, const TToken& token);
+
+			bool _parseDeclarationSequence();
+			bool _parseDeclaration();
+
+			bool _parseNamespaceDefinition();
+			bool _parseNamedNamespaceDefinition();
+			bool _parseAnonymusNamespaceDefinition();
 		private:
 			Lexer*           mpLexer;
 
