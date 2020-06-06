@@ -17,14 +17,27 @@ namespace TDEngine2
 
 	bool Parser::_parseDeclarationSequence()
 	{
-		while (_parseDeclaration()) {}
+		const TToken* pCurrToken = nullptr;
+
+		while ((pCurrToken = &mpLexer->GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			switch (pCurrToken->mType)
+			{
+				case E_TOKEN_TYPE::TT_NAMESPACE:
+					_parseNamespaceDefinition();
+					break;
+				case E_TOKEN_TYPE::TT_ENUM:
+					_parseEnumDeclaration();
+					break;
+				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
+					return true;
+				default:
+					mpLexer->GetNextToken(); // just skip unknown tokens
+					break;
+			}
+		}
 
 		return true;
-	}
-
-	bool Parser::_parseDeclaration()
-	{
-		return _parseNamespaceDefinition() || _parseEnumDeclaration();
 	}
 
 	bool Parser::_parseNamespaceDefinition()
@@ -197,6 +210,16 @@ namespace TDEngine2
 		}
 
 		return true;
+	}
+
+	bool Parser::_eatUnknownTokens()
+	{
+		while (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_UNKNOWN)
+		{
+			mpLexer->GetNextToken();
+		}
+
+		return mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF;
 	}
 
 	bool Parser::_expect(E_TOKEN_TYPE expectedType, const TToken& token)

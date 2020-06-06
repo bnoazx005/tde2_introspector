@@ -44,7 +44,6 @@ namespace TDEngine2
 			bool _expect(E_TOKEN_TYPE expectedType, const TToken& token);
 
 			bool _parseDeclarationSequence();
-			bool _parseDeclaration();
 
 			bool _parseNamespaceDefinition();
 			bool _parseNamedNamespaceDefinition();
@@ -55,6 +54,8 @@ namespace TDEngine2
 			bool _parseEnumDeclaration();
 			bool _parseEnumBody();
 			bool _parseEnumeratorDefinition();
+
+			bool _eatUnknownTokens();
 		private:
 			Lexer*           mpLexer;
 
