@@ -135,4 +135,34 @@ TEST_CASE("Lexer tests")
 
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
 	}
+
+	/*SECTION("TestGetNextToken_PassNumberLiterals_ReturnsSequenceOfTokens")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"42"
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_NUMBER,
+		};
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+	}*/
 }

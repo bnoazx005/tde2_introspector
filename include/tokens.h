@@ -26,6 +26,7 @@ namespace TDEngine2
 		TT_ASSIGN_OP,
 		TT_COMMA,
 
+		TT_NUMBER,
 		TT_UNKNOWN,
 	};
 
@@ -47,5 +48,12 @@ namespace TDEngine2
 		explicit TIdentifierToken(const std::string& id);
 
 		std::string mId;
+	};
+
+	struct TNumberToken : TToken
+	{
+		explicit TNumberToken(const std::string& value);
+
+		std::string mValue;
 	};
 }

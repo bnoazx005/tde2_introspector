@@ -54,6 +54,7 @@ namespace TDEngine2
 
 			bool _parseEnumDeclaration();
 			bool _parseEnumBody();
+			bool _parseEnumeratorDefinition();
 		private:
 			Lexer*           mpLexer;
 

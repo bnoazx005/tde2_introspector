@@ -118,10 +118,17 @@ namespace TDEngine2
 				continue;
 			}
 
+			if (pRecognizedToken = std::move(_parseNumbers()))
+			{
+				return std::move(pRecognizedToken);
+			}
+
 			if (pRecognizedToken = std::move(_parseReservedKeywordsAndIdentifiers()))
 			{
 				return std::move(pRecognizedToken);
 			}
+
+			return std::make_unique<TToken>(E_TOKEN_TYPE::TT_UNKNOWN);
 		}
 
 		/*while (!eof)
@@ -170,6 +177,11 @@ namespace TDEngine2
 		return mCurrProcessedText[offset];
 	}
 
+	std::unique_ptr<TToken> Lexer::_parseNumbers()
+	{
+		return {};
+	}
+
 	std::unique_ptr<TToken> Lexer::_parseReservedKeywordsAndIdentifiers()
 	{
 		char ch = _getCurrChar();
@@ -196,7 +208,17 @@ namespace TDEngine2
 
 		// \note try to detect symbol
 		auto&& iter = mReservedTokens.find(possibleIdentifier);
-		return std::make_unique<TToken>((iter != mReservedTokens.cend()) ? iter->second : (_getCurrChar() == EOF ? E_TOKEN_TYPE::TT_EOF : E_TOKEN_TYPE::TT_UNKNOWN));
+		if (iter == mReservedTokens.cend())
+		{
+			if (_getCurrChar() == EOF)
+			{
+				return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF);
+			}
+
+			return nullptr;
+		}
+
+		return std::make_unique<TToken>(iter->second);
 	}
 
 	bool Lexer::_skipComments()

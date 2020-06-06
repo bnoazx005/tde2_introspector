@@ -138,7 +138,16 @@ namespace TDEngine2
 
 		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 		{
+			mpLexer->GetNextToken(); // eat {
+
 			_parseEnumBody();
+
+			if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			mpLexer->GetNextToken(); // eat }
 		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
@@ -153,7 +162,41 @@ namespace TDEngine2
 
 	bool Parser::_parseEnumBody()
 	{
-		return false;
+		while (_parseEnumeratorDefinition() && mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COMMA) 
+		{
+			mpLexer->GetNextToken(); // eat ',' token
+		}
+
+		return true;
+	}
+
+	bool Parser::_parseEnumeratorDefinition()
+	{
+		if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_ASSIGN_OP) /// \note try to parse value of the enumerator
+		{
+			mpLexer->GetNextToken();
+
+			// \todo for now we just skip this part
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_COMMA && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+			{
+				mpLexer->GetNextToken();
+			}
+
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF)
+			{
+				mOnErrorCallback({}); // \todo add correct error handling here
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	bool Parser::_expect(E_TOKEN_TYPE expectedType, const TToken& token)
