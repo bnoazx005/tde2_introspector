@@ -54,4 +54,20 @@ TEST_CASE("Parser tests")
 			REQUIRE(false);
 		}).Parse();
 	}
+
+	SECTION("TestParse_PassEnumDeclaration_ProcessWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"enum TEST;",
+				"enum class TEST2;",
+				"enum class TEST3 : unsigned int;",
+			} } };
+
+		Lexer lexer(*stream);
+		Parser(lexer, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+	}
 }

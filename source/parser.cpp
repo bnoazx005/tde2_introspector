@@ -24,7 +24,7 @@ namespace TDEngine2
 
 	bool Parser::_parseDeclaration()
 	{
-		return _parseNamespaceDefinition();
+		return _parseNamespaceDefinition() || _parseEnumDeclaration();
 	}
 
 	bool Parser::_parseNamespaceDefinition()
@@ -94,6 +94,66 @@ namespace TDEngine2
 		mpLexer->GetNextToken();
 
 		return true;
+	}
+
+	bool Parser::_parseBlockDeclaration()
+	{
+		return _parseEnumDeclaration();
+	}
+
+	bool Parser::_parseEnumDeclaration()
+	{
+		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mType)
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		// \note enum class case
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_CLASS)
+		{
+
+			mpLexer->GetNextToken();
+		}
+
+		if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		// \todo parse enumeration's underlying type
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COLON)
+		{
+			mpLexer->GetNextToken();
+
+			// \todo Replace it with parseEnumUnderlyingType
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+			{
+				mpLexer->GetNextToken();
+			}
+		}
+
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
+		{
+			_parseEnumBody();
+		}
+
+		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		return true;
+	}
+
+	bool Parser::_parseEnumBody()
+	{
+		return false;
 	}
 
 	bool Parser::_expect(E_TOKEN_TYPE expectedType, const TToken& token)

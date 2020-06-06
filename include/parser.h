@@ -49,6 +49,11 @@ namespace TDEngine2
 			bool _parseNamespaceDefinition();
 			bool _parseNamedNamespaceDefinition();
 			bool _parseAnonymusNamespaceDefinition();
+
+			bool _parseBlockDeclaration();
+
+			bool _parseEnumDeclaration();
+			bool _parseEnumBody();
 		private:
 			Lexer*           mpLexer;
 
