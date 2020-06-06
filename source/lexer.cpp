@@ -64,6 +64,8 @@ namespace TDEngine2
 		{ "}", E_TOKEN_TYPE::TT_CLOSE_BRACE },
 		{ ":", E_TOKEN_TYPE::TT_COLON },
 		{ ";", E_TOKEN_TYPE::TT_SEMICOLON },
+		{ "=", E_TOKEN_TYPE::TT_ASSIGN_OP },
+		{ ",", E_TOKEN_TYPE::TT_COMMA },
 	};
 
 	Lexer::Lexer(IInputStream& streamSource):
@@ -111,6 +113,11 @@ namespace TDEngine2
 				_getNextChar();
 			}
 
+			if (_skipComments())
+			{
+				continue;
+			}
+
 			if (pRecognizedToken = std::move(_parseReservedKeywordsAndIdentifiers()))
 			{
 				return std::move(pRecognizedToken);
@@ -130,7 +137,7 @@ namespace TDEngine2
 
 	char Lexer::_getCurrChar() const
 	{
-		return mCurrProcessedText.front();
+		return mCurrProcessedText.empty() ? EOF : mCurrProcessedText.front();
 	}
 
 	char Lexer::_getNextChar()
@@ -189,6 +196,84 @@ namespace TDEngine2
 
 		// \note try to detect symbol
 		auto&& iter = mReservedTokens.find(possibleIdentifier);
-		return std::make_unique<TToken>((iter != mReservedTokens.cend()) ? iter->second : E_TOKEN_TYPE::TT_UNKNOWN);
+		return std::make_unique<TToken>((iter != mReservedTokens.cend()) ? iter->second : (_getCurrChar() == EOF ? E_TOKEN_TYPE::TT_EOF : E_TOKEN_TYPE::TT_UNKNOWN));
+	}
+
+	bool Lexer::_skipComments()
+	{
+		if (_getCurrChar() != '/')
+		{
+			return false;
+		}
+
+		char ch = _peekNextChar(1);
+
+		if (std::isspace(ch))
+		{
+			// increment counter of lines
+			return false;
+		}
+
+		switch (ch)
+		{
+			case '/':
+				_getNextChar(); // take '/'
+				_getNextChar();
+				_skipSingleLineComment();
+				break;
+			case '*':
+				_getNextChar(); // take '/'
+				_getNextChar();
+				_skipMultiLineComment();
+				break;
+			default:
+				return false;
+		}
+
+		return true;
+	}
+
+	void Lexer::_skipSingleLineComment()
+	{
+		char ch = ' ';
+
+		while ((ch = _getNextChar()) != EOF && ch != '\n') {}
+
+		// \todo increment counter of lines
+	}
+
+	void Lexer::_skipMultiLineComment()
+	{
+		char currCh = ' ';
+		char nextCh = ' ';
+
+		/*uint32_t x = mCurrPos;
+		uint32_t y = mCurrLine;*/
+
+		while ((currCh = _getNextChar()) != EOF && currCh != '*' ||
+			(currCh == '*' && (nextCh = _peekNextChar(1)) != '/'))
+		{
+			_skipComments();
+		}
+
+		switch (currCh)
+		{
+			case EOF:
+				// the end of the file was reached, but there is no end of the comment
+				//OnErrorOutput.Invoke({ LE_INVALID_END_OF_MULTILINE_COMMENT, x, y });
+				break;
+
+			case '*':
+				// try to read '/'
+				currCh = _getNextChar();
+
+				if (currCh != '/')
+				{
+					// invalid end of the multi-line comment
+					//OnErrorOutput.Invoke({ LE_INVALID_END_OF_MULTILINE_COMMENT, x, y });
+				}
+
+				break;
+		}
 	}
 }

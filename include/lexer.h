@@ -65,6 +65,10 @@ namespace TDEngine2
 			char _peekNextChar(uint32_t offset);
 
 			std::unique_ptr<TToken> _parseReservedKeywordsAndIdentifiers();
+
+			bool _skipComments();
+			void _skipSingleLineComment();
+			void _skipMultiLineComment();
 		private:
 			IInputStream*                        mpStream;
 

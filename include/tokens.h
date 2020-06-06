@@ -23,6 +23,9 @@ namespace TDEngine2
 		TT_OPEN_BRACE,
 		TT_CLOSE_BRACE,
 		TT_SEMICOLON,
+		TT_ASSIGN_OP,
+		TT_COMMA,
+
 		TT_UNKNOWN,
 	};
 
