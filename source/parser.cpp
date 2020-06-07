@@ -141,7 +141,9 @@ namespace TDEngine2
 			return false;
 		}
 
-		assert(mpSymTable->CreateScope(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId));
+		const std::string& enumName = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+
+		assert(mpSymTable->CreateScope(enumName));
 
 		mpLexer->GetNextToken();
 
@@ -157,18 +159,26 @@ namespace TDEngine2
 			}
 		}
 
-		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
+		if (auto pEnumScopeEntity = mpSymTable->LookUpNamedScope(enumName))
 		{
-			mpLexer->GetNextToken(); // eat {
+			auto pEnumTypeDesc = std::make_unique<TEnumType>();
+			pEnumTypeDesc->mId = enumName;
 
-			_parseEnumBody();
+			pEnumScopeEntity->mpType = std::move(pEnumTypeDesc);
 
-			if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
-				return false;
-			}
+				mpLexer->GetNextToken(); // eat {
 
-			mpLexer->GetNextToken(); // eat }
+				_parseEnumBody(pEnumTypeDesc.get());
+
+				if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))
+				{
+					return false;
+				}
+
+				mpLexer->GetNextToken(); // eat }
+			}
 		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
@@ -183,9 +193,9 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseEnumBody()
+	bool Parser::_parseEnumBody(TEnumType* pEnumType)
 	{
-		while (_parseEnumeratorDefinition() && mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COMMA) 
+		while (_parseEnumeratorDefinition(pEnumType) && mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COMMA) 
 		{
 			mpLexer->GetNextToken(); // eat ',' token
 		}
@@ -193,11 +203,16 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseEnumeratorDefinition()
+	bool Parser::_parseEnumeratorDefinition(TEnumType* pEnumType)
 	{
 		if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
 		{
 			return false;
+		}
+
+		if (pEnumType)
+		{
+			pEnumType->mEnumerators.emplace_back(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId);
 		}
 
 		mpLexer->GetNextToken();

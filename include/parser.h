@@ -12,6 +12,8 @@ namespace TDEngine2
 	class SymTable;
 
 	struct TToken;
+	struct TEnumType;
+
 	enum class E_TOKEN_TYPE : uint16_t;
 
 
@@ -54,8 +56,8 @@ namespace TDEngine2
 			bool _parseBlockDeclaration();
 
 			bool _parseEnumDeclaration();
-			bool _parseEnumBody();
-			bool _parseEnumeratorDefinition();
+			bool _parseEnumBody(TEnumType* pEnumType);
+			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
 			bool _eatUnknownTokens();
 		private:
