@@ -21,6 +21,7 @@ set(HEADERS
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/lexer.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/parser.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/tokens.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/symtable.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/common.h")
 
 set(SOURCES
@@ -29,6 +30,7 @@ set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/lexer.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/tokens.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/symtable.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp")
 
 source_group("includes" FILES ${HEADERS})

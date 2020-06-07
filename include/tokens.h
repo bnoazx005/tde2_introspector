@@ -35,6 +35,8 @@ namespace TDEngine2
 	{
 		using TCursorPos = std::tuple<uint32_t, uint32_t>;
 
+		virtual ~TToken() = default;
+
 		TToken(E_TOKEN_TYPE type, const TCursorPos& pos = { 0, 0 });
 
 		E_TOKEN_TYPE mType = E_TOKEN_TYPE::TT_EOF;

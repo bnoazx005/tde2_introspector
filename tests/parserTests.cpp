@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <parser.h>
+#include <symtable.h>
 #include "mockInputStream.h"
 #include <catch2/catch.hpp>
 
@@ -19,7 +20,9 @@ TEST_CASE("Parser tests")
 			} } };
 
 		Lexer lexer(*stream);
-		Parser(lexer, [](auto&&)
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -34,7 +37,9 @@ TEST_CASE("Parser tests")
 			} } };
 
 		Lexer lexer(*stream);
-		Parser(lexer, [](auto&&)
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -49,7 +54,9 @@ TEST_CASE("Parser tests")
 			} } };
 
 		Lexer lexer(*stream);
-		Parser(lexer, [](auto&&)
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -65,7 +72,9 @@ TEST_CASE("Parser tests")
 			} } };
 
 		Lexer lexer(*stream);
-		Parser(lexer, [](auto&&)
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -80,7 +89,9 @@ TEST_CASE("Parser tests")
 			} } };
 
 		Lexer lexer(*stream);
-		Parser(lexer, [](auto&&)
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();

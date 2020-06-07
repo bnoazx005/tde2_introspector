@@ -1,12 +1,14 @@
 #include "../include/parser.h"
 #include "../include/lexer.h"
 #include "../include/tokens.h"
+#include "../include/symtable.h"
+#include <cassert>
 
 
 namespace TDEngine2
 {
-	Parser::Parser(Lexer& lexer, const TOnErrorCallback& onErrorCallback):
-		mpLexer(&lexer), mOnErrorCallback(onErrorCallback)
+	Parser::Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback):
+		mpLexer(&lexer), mpSymTable(&symTable), mOnErrorCallback(onErrorCallback)
 	{
 	}
 
@@ -59,6 +61,8 @@ namespace TDEngine2
 			return false;
 		}
 
+		assert(mpSymTable->CreateScope(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId));
+
 		mpLexer->GetNextToken();
 
 		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken()))
@@ -78,6 +82,8 @@ namespace TDEngine2
 		{
 			return false;
 		}
+
+		mpSymTable->ExitScope();
 
 		mpLexer->GetNextToken();
 
@@ -135,6 +141,8 @@ namespace TDEngine2
 			return false;
 		}
 
+		assert(mpSymTable->CreateScope(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId));
+
 		mpLexer->GetNextToken();
 
 		// \todo parse enumeration's underlying type
@@ -167,6 +175,8 @@ namespace TDEngine2
 		{
 			return false;
 		}
+
+		mpSymTable->ExitScope();
 
 		mpLexer->GetNextToken();
 

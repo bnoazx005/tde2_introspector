@@ -9,6 +9,8 @@
 namespace TDEngine2
 {
 	class Lexer;
+	class SymTable;
+
 	struct TToken;
 	enum class E_TOKEN_TYPE : uint16_t;
 
@@ -34,7 +36,7 @@ namespace TDEngine2
 		public:
 			using TOnErrorCallback = std::function<void(const TParserError&)>;
 		public:
-			explicit Parser(Lexer& lexer, const TOnErrorCallback& onErrorCallback);
+			Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback);
 			~Parser() = default;
 
 			void Parse();
@@ -58,6 +60,8 @@ namespace TDEngine2
 			bool _eatUnknownTokens();
 		private:
 			Lexer*           mpLexer;
+
+			SymTable*        mpSymTable;
 
 			TOnErrorCallback mOnErrorCallback;
 	};

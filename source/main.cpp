@@ -1,5 +1,8 @@
 #include <iostream>
 #include "../include/common.h"
+#include "../include/lexer.h"
+#include "../include/parser.h"
+#include "../include/symtable.h"
 
 
 using namespace TDEngine2;
@@ -25,6 +28,22 @@ int main(int argc, const char** argv)
 	}
 
 	// \todo Run for each header parser utility
+	for (const std::string& currFilename : filesToProcess)
+	{
+		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
+		{
+			pFileStream->Open();
+
+			Lexer lexer{ *pFileStream };
+			SymTable symTable;
+
+			Parser{ lexer, symTable, [](auto&&)
+			{
+				std::cerr << "Error: " << std::endl;
+			} }.Parse();
+		}
+		
+	}
 
 	// \todo Generate meta-information as cpp files
 
