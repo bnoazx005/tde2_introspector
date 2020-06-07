@@ -60,6 +60,7 @@ namespace TDEngine2
 		{ "namespace", E_TOKEN_TYPE::TT_NAMESPACE },
 		{ "enum", E_TOKEN_TYPE::TT_ENUM },
 		{ "class", E_TOKEN_TYPE::TT_CLASS },
+		{ "struct", E_TOKEN_TYPE::TT_STRUCT },
 		{ "{", E_TOKEN_TYPE::TT_OPEN_BRACE },
 		{ "}", E_TOKEN_TYPE::TT_CLOSE_BRACE },
 		{ ":", E_TOKEN_TYPE::TT_COLON },

@@ -34,6 +34,7 @@ TEST_CASE("SymTable tests")
 		REQUIRE(symTable.LookUpSymbol("x") == TSymbolDesc::mInvalid);
 
 		symTable.EnterScope();
+		REQUIRE(symTable.LookUpSymbol("a") != TSymbolDesc::mInvalid);
 		REQUIRE(symTable.LookUpSymbol("x") != TSymbolDesc::mInvalid);
 		symTable.ExitScope();
 	}

@@ -87,24 +87,41 @@ namespace TDEngine2
 
 	const TSymbolDesc& SymTable::LookUpSymbol(const std::string& id) const
 	{
-		auto&& symbols = mpCurrScope->mVariables;
-
-		auto&& iter = std::find_if(symbols.begin(), symbols.end(), [id](const TSymbolDesc& entity) { return id == entity.mName; });
-
-		return (iter != symbols.cend()) ? *iter : TSymbolDesc::mInvalid;
+		return _lookUpInternal(id);
 	}
 
 	SymTable::TScopeEntity* SymTable::LookUpNamedScope(const std::string& name)
 	{
-		auto&& namedScopes = mpCurrScope->mpNamedScopes;
-
-		auto&& iter = namedScopes.find(name);
-		if (iter == namedScopes.cend())
+		auto findScope = [name](TScopeEntity* pScope) -> TScopeEntity*
 		{
-			return nullptr;
+			auto&& namedScopes = pScope->mpNamedScopes;
+
+			auto&& iter = namedScopes.find(name);
+			if (iter == namedScopes.cend())
+			{
+				return nullptr;
+			}
+
+			return iter->second;
+		};
+		
+		if (TScopeEntity* pResult = findScope(mpCurrScope))
+		{
+			return pResult;
+		}
+		
+		TScopeEntity* pCurrScope = mpCurrScope;
+		while (pCurrScope->mpParentScope)
+		{
+			pCurrScope = pCurrScope->mpParentScope;
+
+			if (TScopeEntity* pResult = findScope(pCurrScope))
+			{
+				return pResult;
+			}
 		}
 
-		return iter->second;
+		return nullptr;
 	}
 
 	bool SymTable::_createAnonymousScope()
@@ -173,5 +190,41 @@ namespace TDEngine2
 		mLastVisitedScopeIndex = -1;
 
 		return true;
+	}
+
+	const TSymbolDesc& SymTable::_lookUpInternal(const std::string& id) const
+	{
+		auto lookUp = [id](TScopeEntity* pScope) -> const TSymbolDesc*
+		{
+			auto&& symbols = pScope->mVariables;
+
+			auto&& iter = std::find_if(symbols.begin(), symbols.end(), [id](const TSymbolDesc& entity) { return id == entity.mName; });
+
+			if (iter != symbols.cend())
+			{
+				return &(*iter);
+			}
+
+			return nullptr;
+		};
+		
+		if (auto pResult = lookUp(mpCurrScope))
+		{
+			return *pResult;
+		}
+
+		TScopeEntity* pCurrScope = mpCurrScope;
+
+		while (pCurrScope->mpParentScope)
+		{
+			pCurrScope = pCurrScope->mpParentScope;
+
+			if (auto pResult = lookUp(pCurrScope))
+			{
+				return *pResult;
+			}
+		}
+
+		return TSymbolDesc::mInvalid;
 	}
 }

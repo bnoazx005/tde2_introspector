@@ -18,6 +18,8 @@ namespace TDEngine2
 
 	struct TEnumType: TType
 	{
+		bool                     mIsStronglyTyped = false;
+
 		std::vector<std::string> mEnumerators;
 	};
 
@@ -72,6 +74,8 @@ namespace TDEngine2
 
 			bool _visitAnonymousScope();
 			bool _visitNamedScope(const std::string& name);
+
+			const TSymbolDesc& _lookUpInternal(const std::string& id) const;
 		private:
 			TScopeEntity* mpGlobalScope;
 			TScopeEntity* mpCurrScope;

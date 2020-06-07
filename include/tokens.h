@@ -17,6 +17,7 @@ namespace TDEngine2
 		TT_IDENTIFIER,
 		TT_ENUM,
 		TT_CLASS,
+		TT_STRUCT,
 
 		// symbols
 		TT_COLON,

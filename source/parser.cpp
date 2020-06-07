@@ -129,10 +129,12 @@ namespace TDEngine2
 
 		mpLexer->GetNextToken();
 
-		// \note enum class case
-		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_CLASS)
-		{
+		bool isStronglyTypedEnum = false;
 
+		// \note enum class case
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_CLASS || mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_STRUCT)
+		{
+			isStronglyTypedEnum = true;
 			mpLexer->GetNextToken();
 		}
 
@@ -141,7 +143,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		const std::string& enumName = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+		std::string enumName = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
 
 		assert(mpSymTable->CreateScope(enumName));
 
@@ -162,7 +164,9 @@ namespace TDEngine2
 		if (auto pEnumScopeEntity = mpSymTable->LookUpNamedScope(enumName))
 		{
 			auto pEnumTypeDesc = std::make_unique<TEnumType>();
-			pEnumTypeDesc->mId = enumName;
+
+			pEnumTypeDesc->mId              = enumName;
+			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
 
 			pEnumScopeEntity->mpType = std::move(pEnumTypeDesc);
 
