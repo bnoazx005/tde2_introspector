@@ -50,8 +50,8 @@ namespace TDEngine2
 		}
 
 		std::getline(mFileStream, lineStr, '\n');
-
-		return lineStr;
+		
+		return mFileStream.eof() ? lineStr : lineStr.append("\n");
 	}
 
 

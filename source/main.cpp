@@ -16,9 +16,6 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
-	std::cout << "Input: " << options.mInputDirname << std::endl
-		<< "Output: " << options.mOutputDirname << std::endl;
-
 	// \note Scan given directory for cpp header files
 	std::vector<std::string> filesToProcess = GetHeaderFiles(options.mInputDirname);
 	if (filesToProcess.empty())
@@ -30,11 +27,23 @@ int main(int argc, const char** argv)
 	// \todo Run for each header parser utility
 	for (const std::string& currFilename : filesToProcess)
 	{
+		std::cout << "Process " << currFilename << " file...\n";
+
 		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
 		{
 			pFileStream->Open();
 
 			Lexer lexer{ *pFileStream };
+
+#if 0
+			const TToken* currToken = &lexer.GetCurrToken();
+			while ((currToken = &lexer.GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
+			{
+				std::cout << TokenTypeToString(currToken->mType) << std::endl;
+				lexer.GetNextToken();
+			}
+#endif
+
 			SymTable symTable;
 
 			Parser{ lexer, symTable, [](auto&&)

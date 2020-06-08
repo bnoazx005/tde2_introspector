@@ -59,4 +59,7 @@ namespace TDEngine2
 
 		std::string mValue;
 	};
+
+
+	std::string TokenTypeToString(const E_TOKEN_TYPE& type);
 }
