@@ -22,10 +22,14 @@ namespace TDEngine2
 
 	struct TIntrospectorOptions
 	{
-		bool        mIsValid;
+		static constexpr uint16_t mMaxNumOfThreads = 32;
 
-		std::string mInputDirname = ".";
-		std::string mOutputDirname = ".";
+		bool                      mIsValid;
+
+		std::string               mInputDirname = ".";
+		std::string               mOutputDirname = ".";
+
+		uint16_t                  mCurrNumOfThreads = 1;
 
 		static TIntrospectorOptions mInvalid;
 	};

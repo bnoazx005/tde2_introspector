@@ -1,4 +1,5 @@
 #include <iostream>
+#include <array>
 #include "../include/common.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
@@ -24,37 +25,36 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
-	// \todo Run for each header parser utility
-	for (const std::string& currFilename : filesToProcess)
+	std::vector<std::unique_ptr<SymTable>> symbolsPerFile { filesToProcess.size() };
+
+	// \note Run for each header parser utility
+	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
 	{
+		const std::string& currFilename = filesToProcess[i];
+
 		std::cout << "Process " << currFilename << " file...\n";
 
 		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
 		{
-			pFileStream->Open();
+			if (!pFileStream->Open())
+			{
+				std::cerr << "Error (" << currFilename << "): File's not found\n";
+				continue;
+			}
 
 			Lexer lexer{ *pFileStream };
 
-#if 0
-			const TToken* currToken = &lexer.GetCurrToken();
-			while ((currToken = &lexer.GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
-			{
-				std::cout << TokenTypeToString(currToken->mType) << std::endl;
-				lexer.GetNextToken();
-			}
-#endif
+			symbolsPerFile[i] = std::make_unique<SymTable>();
 
-			SymTable symTable;
-
-			Parser{ lexer, symTable, [](auto&&)
+			Parser{ lexer, *symbolsPerFile[i], [&currFilename](auto&&)
 			{
-				std::cerr << "Error: " << std::endl;
+				std::cerr << "Error (" << currFilename << "): " << std::endl;
 			} }.Parse();
-		}
-		
+
+			// \todo Generate meta-information as cpp files
+		}		
 	}
 
-	// \todo Generate meta-information as cpp files
 
 	return 0;
 }
