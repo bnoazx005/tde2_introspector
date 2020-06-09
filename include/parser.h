@@ -30,7 +30,23 @@ namespace TDEngine2
 		E_PARSER_ERROR_CODE mCode;
 
 		TCursorPos          mPos;
+
+		union
+		{
+			struct TUnexpectedTokenErrorData
+			{
+				E_TOKEN_TYPE mActualToken;
+				E_TOKEN_TYPE mExpectedToken;
+			};
+
+			TUnexpectedTokenErrorData mUnexpectedTokenErrData;
+		} mData;
+
+		std::string ToString() const;
 	};
+
+
+	std::string ParserErrorToString(TParserError::E_PARSER_ERROR_CODE errorCode);
 
 
 	class Parser

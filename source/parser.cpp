@@ -7,6 +7,48 @@
 
 namespace TDEngine2
 {
+	std::string TParserError::ToString() const
+	{
+		std::string result = "";
+		
+		result
+			.append("(")
+			.append(std::to_string(std::get<1>(mPos)))
+			.append(":")
+			.append(std::to_string(std::get<0>(mPos)))
+			.append(") ")
+			.append(ParserErrorToString(mCode))
+			.append(". ");
+
+		switch (mCode)
+		{
+			case TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL:
+			{
+				result
+					.append("Expected \"")
+					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mExpectedToken))
+					.append("\", but found \"")
+					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mActualToken))
+					.append("\"");
+			}
+				break;
+		}
+
+		return result;
+	}
+
+	std::string ParserErrorToString(TParserError::E_PARSER_ERROR_CODE errorCode)
+	{
+		switch (errorCode)
+		{
+			case TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL:
+				return "Unexpected symbol found";
+		}
+
+		return "";
+	}
+
+
 	Parser::Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback):
 		mpLexer(&lexer), mpSymTable(&symTable), mOnErrorCallback(onErrorCallback)
 	{
@@ -260,7 +302,12 @@ namespace TDEngine2
 		
 		if (mOnErrorCallback)
 		{
-			mOnErrorCallback({ TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL });
+			TParserError error;
+			error.mCode = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
+			error.mPos  = token.mPos;
+			error.mData.mUnexpectedTokenErrData = { token.mType, expectedType };
+
+			mOnErrorCallback(error);
 		}
 
 		return false;

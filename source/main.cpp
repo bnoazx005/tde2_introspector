@@ -46,9 +46,9 @@ int main(int argc, const char** argv)
 
 			symbolsPerFile[i] = std::make_unique<SymTable>();
 
-			Parser{ lexer, *symbolsPerFile[i], [&currFilename](auto&&)
+			Parser{ lexer, *symbolsPerFile[i], [&currFilename](auto&& error)
 			{
-				std::cerr << "Error (" << currFilename << "): " << std::endl;
+				std::cerr << "Error (" << currFilename << ")" << error.ToString() << std::endl;
 			} }.Parse();
 
 			// \todo Generate meta-information as cpp files
