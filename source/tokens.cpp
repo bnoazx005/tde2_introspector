@@ -8,13 +8,13 @@ namespace TDEngine2
 	{
 	}
 
-	TIdentifierToken::TIdentifierToken(const std::string& id):
-		TToken(E_TOKEN_TYPE::TT_IDENTIFIER, { 0, 0 }), mId(id)
+	TIdentifierToken::TIdentifierToken(const std::string& id, const TCursorPos& pos):
+		TToken(E_TOKEN_TYPE::TT_IDENTIFIER, pos), mId(id)
 	{
 	}
 
-	TNumberToken::TNumberToken(const std::string& value):
-		TToken(E_TOKEN_TYPE::TT_NUMBER, { 0, 0 }), mValue(value)
+	TNumberToken::TNumberToken(const std::string& value, const TCursorPos& pos):
+		TToken(E_TOKEN_TYPE::TT_NUMBER, pos), mValue(value)
 	{
 	}
 
@@ -36,17 +36,17 @@ namespace TDEngine2
 			case E_TOKEN_TYPE::TT_STRUCT:
 				return "STRUCT";
 			case E_TOKEN_TYPE::TT_COLON:
-				return "COLON";
+				return ":";
 			case E_TOKEN_TYPE::TT_OPEN_BRACE:
-				return "OPEN_BRACE";
+				return "{";
 			case E_TOKEN_TYPE::TT_CLOSE_BRACE:
-				return "CLOSE_BRACE";
+				return "}";
 			case E_TOKEN_TYPE::TT_SEMICOLON:
-				return "SEMICOLON";
+				return ";";
 			case E_TOKEN_TYPE::TT_ASSIGN_OP:
-				return "ASSIGN";
+				return "=";
 			case E_TOKEN_TYPE::TT_COMMA:
-				return "COMMA";
+				return ",";
 			case E_TOKEN_TYPE::TT_NUMBER:
 				return "NUMBER";
 			case E_TOKEN_TYPE::TT_UNKNOWN:

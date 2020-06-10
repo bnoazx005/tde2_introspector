@@ -48,14 +48,14 @@ namespace TDEngine2
 	
 	struct TIdentifierToken : TToken
 	{
-		explicit TIdentifierToken(const std::string& id);
+		explicit TIdentifierToken(const std::string& id, const TCursorPos& pos);
 
 		std::string mId;
 	};
 
 	struct TNumberToken : TToken
 	{
-		explicit TNumberToken(const std::string& value);
+		explicit TNumberToken(const std::string& value, const TCursorPos& pos);
 
 		std::string mValue;
 	};

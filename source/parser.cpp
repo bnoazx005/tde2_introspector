@@ -25,11 +25,11 @@ namespace TDEngine2
 			case TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL:
 			{
 				result
-					.append("Expected \"")
+					.append("Expected \'")
 					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mExpectedToken))
-					.append("\", but found \"")
+					.append("\', but found \'")
 					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mActualToken))
-					.append("\"");
+					.append("\'");
 			}
 				break;
 		}

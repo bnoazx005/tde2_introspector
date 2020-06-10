@@ -111,6 +111,12 @@ namespace TDEngine2
 		{
 			while (std::isspace(ch = _getCurrChar()))
 			{
+				if (ch == '\n' || ch == '\r')
+				{
+					mCurrHorPosIndex = 0;
+					++mCurrLineIndex;
+				}
+				
 				_getNextChar();
 			}
 
@@ -129,7 +135,7 @@ namespace TDEngine2
 				return std::move(pRecognizedToken);
 			}
 
-			return std::make_unique<TToken>(E_TOKEN_TYPE::TT_UNKNOWN);
+			return std::make_unique<TToken>(E_TOKEN_TYPE::TT_UNKNOWN, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
 		}
 
 		/*while (!eof)
@@ -164,6 +170,8 @@ namespace TDEngine2
 		{
 			return EOF;
 		}
+
+		++mCurrHorPosIndex;
 
 		return mCurrProcessedText.front();
 	}
@@ -201,10 +209,10 @@ namespace TDEngine2
 			auto&& iter = mReservedTokens.find(possibleIdentifier);
 			if (iter != mReservedTokens.cend())
 			{
-				return std::unique_ptr<TToken>(new TToken{ iter->second });
+				return std::unique_ptr<TToken>(new TToken{ iter->second, { mCurrHorPosIndex, mCurrLineIndex } });
 			}
 			
-			return std::unique_ptr<TToken>(new TIdentifierToken{ possibleIdentifier });
+			return std::unique_ptr<TToken>(new TIdentifierToken{ possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } });
 		}
 
 		// \note try to detect symbol
@@ -213,13 +221,13 @@ namespace TDEngine2
 		{
 			if (_getCurrChar() == EOF)
 			{
-				return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF);
+				return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
 			}
 
 			return nullptr;
 		}
 
-		return std::make_unique<TToken>(iter->second);
+		return std::make_unique<TToken>(iter->second, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
 	}
 
 	bool Lexer::_skipComments()

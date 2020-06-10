@@ -77,6 +77,9 @@ namespace TDEngine2
 
 			std::vector<std::unique_ptr<TToken>> mTokensQueue;
 
+			uint32_t                             mCurrLineIndex = 1;
+			uint32_t                             mCurrHorPosIndex = 0;
+
 			static const TKeywordsMap            mReservedTokens;
 	};
 }

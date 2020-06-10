@@ -211,4 +211,39 @@ TEST_CASE("Lexer tests")
 			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
 		}
 	}
+
+	SECTION("TestGetNextToken_PassMultilineStream_ReturnsCorrectLineIndexesNumbersInTokens")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"a\n",
+				"b\n",
+				"c\n",
+				"d\n",
+			} } };
+
+		Lexer lexer(*stream);
+
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 1));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 2));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 3));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 4));
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
+
+	SECTION("TestGetNextToken_PassMultilineStream_ReturnsCorrectHorizontalLineIndexesNumbersInTokens")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"a b c d",
+			} } };
+
+		Lexer lexer(*stream);
+
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 1));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(3, 1));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(5, 1));
+		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(7, 1));
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
 }

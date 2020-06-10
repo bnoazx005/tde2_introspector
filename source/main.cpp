@@ -32,13 +32,13 @@ int main(int argc, const char** argv)
 	{
 		const std::string& currFilename = filesToProcess[i];
 
-		std::cout << "Process " << currFilename << " file...\n";
+		std::cout << ((i == 0) ? "" : "\n") << "Process " << currFilename << " file... ";
 
 		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
 		{
 			if (!pFileStream->Open())
 			{
-				std::cerr << "Error (" << currFilename << "): File's not found\n";
+				std::cerr << "\nError (" << currFilename << "): File's not found\n";
 				continue;
 			}
 
@@ -46,12 +46,20 @@ int main(int argc, const char** argv)
 
 			symbolsPerFile[i] = std::make_unique<SymTable>();
 
-			Parser{ lexer, *symbolsPerFile[i], [&currFilename](auto&& error)
+			bool hasErrors = false;
+
+			Parser{ lexer, *symbolsPerFile[i], [&currFilename, &hasErrors](auto&& error)
 			{
-				std::cerr << "Error (" << currFilename << ")" << error.ToString() << std::endl;
+				hasErrors = true;
+				std::cerr << "\nError (" << currFilename << ")" << error.ToString();
 			} }.Parse();
 
 			// \todo Generate meta-information as cpp files
+
+			if (!hasErrors)
+			{
+				std::cout << "OK\n";
+			}
 		}		
 	}
 
