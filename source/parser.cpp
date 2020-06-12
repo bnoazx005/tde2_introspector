@@ -103,13 +103,28 @@ namespace TDEngine2
 			return false;
 		}
 
-		assert(mpSymTable->CreateScope(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId));
+		std::string namespaceId = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+		if (!mpSymTable->CreateScope(namespaceId))
+		{
+			assert(false);
+			return false;
+		}
 
 		mpLexer->GetNextToken();
 
 		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken()))
 		{
 			return false;
+		}
+
+		if (auto pNamespaceScope = mpSymTable->LookUpNamedScope(namespaceId))
+		{
+			if (auto pNamespaceType = std::make_unique<TNamespaceType>())
+			{
+				pNamespaceType->mId = namespaceId;
+
+				pNamespaceScope->mpType = std::move(pNamespaceType);
+			}			
 		}
 
 		mpLexer->GetNextToken();
@@ -208,6 +223,7 @@ namespace TDEngine2
 			auto pEnumTypeDesc = std::make_unique<TEnumType>();
 
 			pEnumTypeDesc->mId              = enumName;
+			pEnumTypeDesc->mMangledId       = mpSymTable->GetMangledNameForNamedScope(enumName);
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)

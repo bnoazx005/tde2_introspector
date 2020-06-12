@@ -11,6 +11,11 @@ namespace TDEngine2
 		visitor.VisitBaseType(*this);
 	}
 
+	void TNamespaceType::Visit(ITypeVisitor& visitor)
+	{
+		visitor.VisitNamespaceType(*this);
+	}
+
 	void TEnumType::Visit(ITypeVisitor& visitor)
 	{
 		visitor.VisitEnumType(*this);
@@ -139,6 +144,35 @@ namespace TDEngine2
 		}
 
 		return nullptr;
+	}
+
+	std::string SymTable::GetMangledNameForNamedScope(const std::string& id)
+	{
+		TScopeEntity* pNamedScope = LookUpNamedScope(id);
+		if (!pNamedScope)
+		{
+			return "";
+		}
+
+		std::string mangledId = id;
+
+		TScopeEntity* pCurrScope = pNamedScope;
+		while (pCurrScope->mpParentScope)
+		{
+			pCurrScope = pCurrScope->mpParentScope;
+
+			if (pCurrScope->mIndex != -1 || !pCurrScope->mpType) // \note only named scopes influences onto the result id
+			{
+				continue;
+			}
+
+			if (auto pType = pCurrScope->mpType.get())
+			{
+				mangledId = pType->mId + "@" + mangledId;
+			}
+		}
+
+		return mangledId;
 	}
 
 	bool SymTable::_createAnonymousScope()
@@ -289,6 +323,10 @@ namespace TDEngine2
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
 		mpEnums.push_back(&type);
+	}
+
+	void EnumsMetaExtractor::VisitNamespaceType(const TNamespaceType& type)
+	{
 	}
 
 	const EnumsMetaExtractor::TEnumsArray& EnumsMetaExtractor::GetEnums() const

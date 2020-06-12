@@ -23,6 +23,15 @@ namespace TDEngine2
 		std::string mId;
 	};
 
+	
+	struct TNamespaceType : TType
+	{
+		virtual ~TNamespaceType() = default;
+
+		void Visit(ITypeVisitor& visitor) override;
+	};
+
+
 	struct TEnumType: TType
 	{
 		virtual ~TEnumType() = default;
@@ -31,6 +40,8 @@ namespace TDEngine2
 
 		bool                     mIsStronglyTyped = false;
 		bool                     mIsIntrospectable = false;
+
+		std::string              mMangledId; // \note contains full path to enum Namespace..ClassName@Enum
 
 		std::vector<std::string> mEnumerators;
 	};
@@ -85,6 +96,8 @@ namespace TDEngine2
 			const TSymbolDesc& LookUpSymbol(const std::string& id) const;
 
 			TScopeEntity* LookUpNamedScope(const std::string& name);
+
+			std::string GetMangledNameForNamedScope(const std::string& id);
 		private:
 			bool _createAnonymousScope();
 			bool _createNamedScope(const std::string& name);
@@ -118,6 +131,7 @@ namespace TDEngine2
 
 		virtual void VisitBaseType(const TType& type) = 0;
 		virtual void VisitEnumType(const TEnumType& type) = 0;
+		virtual void VisitNamespaceType(const TNamespaceType& type) = 0;
 	};
 
 
@@ -157,6 +171,7 @@ namespace TDEngine2
 
 			void VisitBaseType(const TType& type) override;
 			void VisitEnumType(const TEnumType& type) override;
+			void VisitNamespaceType(const TNamespaceType& type) override;
 
 			const TEnumsArray& GetEnums() const;
 		private:
