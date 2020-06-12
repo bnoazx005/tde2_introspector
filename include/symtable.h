@@ -9,19 +9,34 @@
 
 namespace TDEngine2
 {
+	class ITypeVisitor;
+
+
 	struct TType
 	{
 		using UniquePtr = std::unique_ptr<TType>;
+
+		virtual ~TType() = default;
+
+		virtual void Visit(ITypeVisitor& visitor);
 
 		std::string mId;
 	};
 
 	struct TEnumType: TType
 	{
+		virtual ~TEnumType() = default;
+
+		void Visit(ITypeVisitor& visitor) override;
+
 		bool                     mIsStronglyTyped = false;
+		bool                     mIsIntrospectable = false;
 
 		std::vector<std::string> mEnumerators;
 	};
+
+
+	class ISymTableVisitor;
 
 
 	struct TSymbolDesc
@@ -58,6 +73,8 @@ namespace TDEngine2
 			SymTable();
 			~SymTable();
 
+			void Visit(ISymTableVisitor& visitor);
+
 			bool CreateScope(const std::string& name = "");
 			bool EnterScope(const std::string& name = "");
 			void ExitScope();
@@ -85,5 +102,65 @@ namespace TDEngine2
 
 			int32_t       mLastVisitedScopeIndex = -1;
 			int32_t       mPrevVisitedScopeIndex; ///< \note The field is only updated when visiting VisitNamedScope
+	};
+
+
+	/*!
+		interface ITypeVisitor
+
+		\brief Use this interface to implement own visitors of types that are stored within symbol tables
+	*/
+
+	class ITypeVisitor
+	{
+	public:
+		virtual ~ITypeVisitor() = default;
+
+		virtual void VisitBaseType(const TType& type) = 0;
+		virtual void VisitEnumType(const TEnumType& type) = 0;
+	};
+
+
+	/*!
+		interface ISymTableVisitor
+
+		\brief Use this interface to implement own visitors of symbol tables to extract information from them
+	*/
+
+	class ISymTableVisitor
+	{
+		public:
+			virtual ~ISymTableVisitor() = default;
+
+			virtual void VisitScope(const SymTable::TScopeEntity& scope) = 0;
+			virtual void VisitNamedScope(const SymTable::TScopeEntity& namedScope) = 0;
+	};
+
+
+	/*!
+		class EnumsMetaExtractor
+
+		\brief The class extracts all enumerations declarations from symbol table and puts them in single contiguous array
+	*/
+
+	class EnumsMetaExtractor : public ISymTableVisitor, public ITypeVisitor
+	{
+		public:
+			using TEnumsArray = std::vector<const TEnumType*>;
+			using TEnumsHashMap = std::unordered_map<std::string, uint32_t>; // key is a full name of an enum which is consists of mangled name like the following Name@..@EnumName
+		public:
+			EnumsMetaExtractor() = default;
+			virtual ~EnumsMetaExtractor() = default;
+
+			void VisitScope(const SymTable::TScopeEntity& scope) override;
+			void VisitNamedScope(const SymTable::TScopeEntity& namedScope) override;
+
+			void VisitBaseType(const TType& type) override;
+			void VisitEnumType(const TEnumType& type) override;
+
+			const TEnumsArray& GetEnums() const;
+		private:
+			TEnumsHashMap mEnumsHashTable;
+			TEnumsArray   mpEnums;
 	};
 }

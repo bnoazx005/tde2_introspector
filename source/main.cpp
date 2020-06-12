@@ -27,6 +27,8 @@ int main(int argc, const char** argv)
 
 	std::vector<std::unique_ptr<SymTable>> symbolsPerFile { filesToProcess.size() };
 
+	EnumsMetaExtractor enumsExtractor;
+
 	// \note Run for each header parser utility
 	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
 	{
@@ -54,15 +56,16 @@ int main(int argc, const char** argv)
 				std::cerr << "\nError (" << currFilename << ")" << error.ToString();
 			} }.Parse();
 
-			// \todo Generate meta-information as cpp files
-
 			if (!hasErrors)
 			{
 				std::cout << "OK\n";
 			}
-		}		
+
+			symbolsPerFile[i]->Visit(enumsExtractor);
+		}
 	}
 
+	// \todo Generate meta-information as cpp files
 
 	return 0;
 }

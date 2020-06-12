@@ -5,6 +5,18 @@
 
 namespace TDEngine2
 {
+
+	void TType::Visit(ITypeVisitor& visitor)
+	{
+		visitor.VisitBaseType(*this);
+	}
+
+	void TEnumType::Visit(ITypeVisitor& visitor)
+	{
+		visitor.VisitEnumType(*this);
+	}
+
+
 	const TSymbolDesc TSymbolDesc::mInvalid { "", nullptr };
 
 	bool operator!= (const TSymbolDesc& leftSymbol, const TSymbolDesc& rightSymbol)
@@ -27,6 +39,11 @@ namespace TDEngine2
 	SymTable::~SymTable()
 	{
 		// \todo add deletion
+	}
+
+	void SymTable::Visit(ISymTableVisitor& visitor)
+	{
+		visitor.VisitScope(*mpGlobalScope);
 	}
 
 	void SymTable::AddSymbol(TSymbolDesc&& desc)
@@ -226,5 +243,56 @@ namespace TDEngine2
 		}
 
 		return TSymbolDesc::mInvalid;
+	}
+
+
+	/*!
+		\brief EnumsExtractor's definition
+	*/
+
+	void EnumsMetaExtractor::VisitScope(const SymTable::TScopeEntity& scope)
+	{
+		for (auto&& pCurrScope : scope.mpNestedScopes)
+		{
+			VisitScope(*pCurrScope);
+		}
+
+		for (auto&& currNamedScope : scope.mpNamedScopes)
+		{
+			VisitNamedScope(*currNamedScope.second);
+		}
+	}
+
+	void EnumsMetaExtractor::VisitNamedScope(const SymTable::TScopeEntity& namedScope)
+	{
+		if (TType* pScopeType = namedScope.mpType.get()) // \note this scope isn't namespace probably class, struct or enum
+		{
+			pScopeType->Visit(*this);
+		}
+
+		for (auto&& pCurrScope : namedScope.mpNestedScopes)
+		{
+			VisitScope(*pCurrScope);
+		}
+
+		for (auto&& currNamedScope : namedScope.mpNamedScopes)
+		{
+			VisitNamedScope(*currNamedScope.second);
+		}
+	}
+
+	void EnumsMetaExtractor::VisitBaseType(const TType& type)
+	{
+		// do nothing here
+	}
+
+	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
+	{
+		mpEnums.push_back(&type);
+	}
+
+	const EnumsMetaExtractor::TEnumsArray& EnumsMetaExtractor::GetEnums() const
+	{
+		return mpEnums;
 	}
 }

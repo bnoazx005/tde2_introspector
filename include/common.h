@@ -37,4 +37,20 @@ namespace TDEngine2
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT;
 
 	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT;
+
+
+	const std::string GeneratedHeaderPrelude = R"(
+		/*
+			\brief The section is auto generated code that contains all needed types, functcions and other
+			infrastructure to provide correct work of meta-data
+		*/
+
+		template <typename TEnum>
+		struct EnumFieldInfo
+		{
+			const TEnum       value;
+			const std::string name;
+		};
+
+	)";
 }

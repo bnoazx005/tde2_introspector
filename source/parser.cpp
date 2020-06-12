@@ -210,8 +210,6 @@ namespace TDEngine2
 			pEnumTypeDesc->mId              = enumName;
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
 
-			pEnumScopeEntity->mpType = std::move(pEnumTypeDesc);
-
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
 				mpLexer->GetNextToken(); // eat {
@@ -225,6 +223,8 @@ namespace TDEngine2
 
 				mpLexer->GetNextToken(); // eat }
 			}
+
+			pEnumScopeEntity->mpType = std::move(pEnumTypeDesc);
 		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
