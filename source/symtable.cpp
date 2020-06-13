@@ -322,6 +322,22 @@ namespace TDEngine2
 
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
+		auto iter = mEnumsHashTable.find(type.mMangledId);
+		if (iter != mEnumsHashTable.cend())
+		{
+			if (const TEnumType* pOtherEnum = mpEnums[iter->second])
+			{
+				if (!pOtherEnum->mEnumerators.empty()) // \note we can update the enum's meta if it was declared previously not defined
+				{
+					return;
+				}
+
+				mpEnums[iter->second] = &type;
+			}
+
+			return;
+		}
+
 		mpEnums.push_back(&type);
 	}
 
