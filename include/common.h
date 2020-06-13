@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 
 namespace TDEngine2
@@ -53,4 +54,36 @@ namespace TDEngine2
 		};
 
 	)";
+
+
+	class IOutputStream
+	{
+		public:
+			virtual ~IOutputStream() = default;
+
+			virtual bool Open() = 0;
+			virtual bool Close() = 0;
+
+			virtual bool WriteString(const std::string& data) = 0;
+		protected:
+			IOutputStream() = default;
+	};
+
+
+	class FileOutputStream : public IOutputStream
+	{
+		public:
+			FileOutputStream() = delete;
+			explicit FileOutputStream(const std::string& filename);
+			virtual ~FileOutputStream();
+
+			bool Open() override;
+			bool Close() override;
+
+			bool WriteString(const std::string& data) override;
+		private:
+			std::string mFilename;
+
+			std::ofstream mFileStream;
+	};
 }

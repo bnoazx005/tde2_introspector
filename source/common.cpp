@@ -99,4 +99,55 @@ namespace TDEngine2
 
 		return headersPaths;
 	}
+
+
+	/*!
+		\brief FileOutputStream's definition
+	*/
+
+	FileOutputStream::FileOutputStream(const std::string& filename):
+		IOutputStream(), mFilename(filename)
+	{
+	}
+
+	FileOutputStream::~FileOutputStream()
+	{
+		Close();
+	}
+
+	bool FileOutputStream::Open()
+	{
+		if (mFilename.empty() || mFileStream.is_open())
+		{
+			return false;
+		}
+
+		mFileStream.open(mFilename);
+
+		return true;
+	}
+
+	bool FileOutputStream::Close()
+	{
+		if (!mFileStream.is_open())
+		{
+			return true;
+		}
+
+		mFileStream.close();
+
+		return true;
+	}
+
+	bool FileOutputStream::WriteString(const std::string& data)
+	{
+		if (!mFileStream.is_open())
+		{
+			return false;
+		}
+
+		mFileStream << data;
+
+		return true;
+	}
 }
