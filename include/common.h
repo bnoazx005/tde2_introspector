@@ -44,17 +44,28 @@ namespace TDEngine2
 
 
 	const std::string GeneratedHeaderPrelude = R"(
-		/*
-			\brief The section is auto generated code that contains all needed types, functcions and other
-			infrastructure to provide correct work of meta-data
-		*/
+#include <array>
 
-		template <typename TEnum>
-		struct EnumFieldInfo
-		{
-			const TEnum       value;
-			const std::string name;
-		};
+/*
+	\brief The section is auto generated code that contains all needed types, functcions and other
+	infrastructure to provide correct work of meta-data
+*/
+
+template <typename TEnum>
+struct EnumFieldInfo
+{
+	const TEnum       value;
+	const std::string name;
+};
+
+template <typename TEnum>
+struct EnumTrait
+{
+	const bool         isOpaque = false;
+	const unsigned int elementsCount = 0;
+
+    EnumFieldInfo<TEnum>* GetFields() const { return nullptr; }
+};
 
 	)";
 
@@ -94,6 +105,8 @@ namespace TDEngine2
 	class StringUtils
 	{
 		public:
+			static std::string ReplaceAll(const std::string& input, const std::string& what, const std::string& replacement);
+
 			template <typename... TArgs>
 			static std::string Format(const std::string& formatStr, TArgs&&... args)
 			{

@@ -18,7 +18,7 @@ namespace TDEngine2
 
 		virtual ~TType() = default;
 
-		virtual void Visit(ITypeVisitor& visitor);
+		virtual void Visit(ITypeVisitor& visitor) const;
 
 		std::string mId;
 	};
@@ -28,7 +28,7 @@ namespace TDEngine2
 	{
 		virtual ~TNamespaceType() = default;
 
-		void Visit(ITypeVisitor& visitor) override;
+		void Visit(ITypeVisitor& visitor)  const override;
 	};
 
 
@@ -36,7 +36,7 @@ namespace TDEngine2
 	{
 		virtual ~TEnumType() = default;
 
-		void Visit(ITypeVisitor& visitor) override;
+		void Visit(ITypeVisitor& visitor) const override;
 
 		bool                     mIsStronglyTyped = false;
 		bool                     mIsIntrospectable = false;

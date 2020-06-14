@@ -4,6 +4,7 @@
 #include "../include/lexer.h"
 #include "../include/parser.h"
 #include "../include/symtable.h"
+#include "../include/codegenerator.h"
 
 
 using namespace TDEngine2;
@@ -66,6 +67,14 @@ int main(int argc, const char** argv)
 	}
 
 	// \todo Generate meta-information as cpp files
+	CodeGenerator codeGenerator;
+
+	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, "metadata"))
+	{
+		return -1;
+	}
+
+	codeGenerator.WriteEnumsMetaData(enumsExtractor);
 
 	return 0;
 }

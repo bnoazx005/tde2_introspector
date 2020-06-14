@@ -6,17 +6,17 @@
 namespace TDEngine2
 {
 
-	void TType::Visit(ITypeVisitor& visitor)
+	void TType::Visit(ITypeVisitor& visitor) const
 	{
 		visitor.VisitBaseType(*this);
 	}
 
-	void TNamespaceType::Visit(ITypeVisitor& visitor)
+	void TNamespaceType::Visit(ITypeVisitor& visitor) const
 	{
 		visitor.VisitNamespaceType(*this);
 	}
 
-	void TEnumType::Visit(ITypeVisitor& visitor)
+	void TEnumType::Visit(ITypeVisitor& visitor) const
 	{
 		visitor.VisitEnumType(*this);
 	}

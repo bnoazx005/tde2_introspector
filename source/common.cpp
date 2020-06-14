@@ -150,4 +150,20 @@ namespace TDEngine2
 
 		return true;
 	}
+
+
+	std::string StringUtils::ReplaceAll(const std::string& input, const std::string& what, const std::string& replacement)
+	{
+		std::string output = input;
+
+		std::string::size_type pos = 0;
+		std::string::size_type whatStrLength = what.length();
+
+		while ((pos = output.find_first_of(what)) != std::string::npos)
+		{
+			output = output.substr(0, pos) + replacement + output.substr(pos + whatStrLength);
+		}
+
+		return output;
+	}
 }
