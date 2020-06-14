@@ -28,17 +28,15 @@ namespace TDEngine2
 			bool WriteEnumsMetaData(const EnumsMetaExtractor& enumsMeta);
 		private:
 			void _writeHeaderPrelude();
-			void _writeSourcePrelude();
 		private:
 			std::unique_ptr<IOutputStream> mpHeaderOutputStream;
-			std::unique_ptr<IOutputStream> mpSourceOutputStream;
+			//std::unique_ptr<IOutputStream> mpSourceOutputStream;
 
 			TOutputStreamFactoryFunctor    mOutputStreamFactoryFunctor;
 
 			std::string                    mOutputFilenamesName;
 
 			static const std::string       mEnumTraitTemplateSpecializationHeaderPattern;
-			static const std::string       mEnumTraitTemplateSpecializationSourcePattern;
 			static const std::string       mEnumeratorFieldPattern;
 
 			static const std::string       mTrueConstant;

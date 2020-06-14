@@ -23,10 +23,6 @@ struct EnumTrait<{0}>
 };
 )";
 
-	const std::string CodeGenerator::mEnumTraitTemplateSpecializationSourcePattern = R"(
-
-)";
-
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
 
 	const std::string CodeGenerator::mTrueConstant = "true";
@@ -42,11 +38,6 @@ struct EnumTrait<{0}>
 		{
 			mpHeaderOutputStream->Close();
 		}
-
-		if (mpSourceOutputStream)
-		{
-			mpSourceOutputStream->Close();
-		}
 	}
 
 	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename)
@@ -60,20 +51,18 @@ struct EnumTrait<{0}>
 		mOutputFilenamesName = outputFilename;
 
 		mpHeaderOutputStream = outputStreamsFactory(outputFilename + ".h");
-		mpSourceOutputStream = outputStreamsFactory(outputFilename + ".cpp");
 
-		if (!mpHeaderOutputStream || !mpSourceOutputStream)
+		if (!mpHeaderOutputStream)
 		{
 			return false;
 		}
 
-		if (!mpHeaderOutputStream->Open() || !mpSourceOutputStream->Open())
+		if (!mpHeaderOutputStream->Open())
 		{
 			return false;
 		}
 
 		_writeHeaderPrelude();
-		_writeSourcePrelude();
 
 		return true;
 	}
@@ -140,10 +129,5 @@ struct EnumTrait<{0}>
 	{
 		mpHeaderOutputStream->WriteString("#pragma once\n\n");
 		mpHeaderOutputStream->WriteString(GeneratedHeaderPrelude);
-	}
-
-	void CodeGenerator::_writeSourcePrelude()
-	{
-		mpSourceOutputStream->WriteString("#include \"metadata.h\"\n");
 	}
 }

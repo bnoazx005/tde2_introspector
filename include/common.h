@@ -61,10 +61,10 @@ struct EnumFieldInfo
 template <typename TEnum>
 struct EnumTrait
 {
-	const bool         isOpaque = false;
-	const unsigned int elementsCount = 0;
+	static const bool         isOpaque = false;
+	static const unsigned int elementsCount = 0;
 
-    EnumFieldInfo<TEnum>* GetFields() const { return nullptr; }
+    static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() { return {}; }
 };
 
 	)";
