@@ -113,9 +113,15 @@ struct EnumTrait<{0}>
 /*
 	enums' meta declarations
 */
+
 )");
 
 		auto&& enums = enumsMeta.GetEnums();
+
+		for (auto currEnumMeta : enums)
+		{
+			mpHeaderOutputStream->WriteString(StringUtils::Format("#include \"{0}\"\n", currEnumMeta->mpOwner->GetSourceFilename()));
+		}
 
 		for (auto currEnumMeta : enums)
 		{

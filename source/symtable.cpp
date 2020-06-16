@@ -175,6 +175,16 @@ namespace TDEngine2
 		return mangledId;
 	}
 
+	void SymTable::SetSourceFilename(const std::string& filename)
+	{
+		mSourceFilename = filename;
+	}
+
+	const std::string& SymTable::GetSourceFilename() const
+	{
+		return mSourceFilename;
+	}
+
 	bool SymTable::_createAnonymousScope()
 	{
 		int32_t nextScopeIndex = static_cast<int32_t>(mpCurrScope->mpNestedScopes.size());

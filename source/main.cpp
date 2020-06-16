@@ -1,5 +1,6 @@
 #include <iostream>
 #include <array>
+#include <experimental/filesystem>
 #include "../include/common.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
@@ -48,6 +49,7 @@ int main(int argc, const char** argv)
 			Lexer lexer{ *pFileStream };
 
 			symbolsPerFile[i] = std::make_unique<SymTable>();
+			symbolsPerFile[i]->SetSourceFilename(std::experimental::filesystem::absolute(currFilename).string());
 
 			bool hasErrors = false;
 

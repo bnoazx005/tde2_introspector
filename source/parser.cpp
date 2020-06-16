@@ -225,6 +225,7 @@ namespace TDEngine2
 			pEnumTypeDesc->mId              = enumName;
 			pEnumTypeDesc->mMangledId       = mpSymTable->GetMangledNameForNamedScope(enumName);
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
+			pEnumTypeDesc->mpOwner          = mpSymTable;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{

@@ -10,6 +10,7 @@
 namespace TDEngine2
 {
 	class ITypeVisitor;
+	class SymTable;
 
 
 	struct TType
@@ -21,6 +22,8 @@ namespace TDEngine2
 		virtual void Visit(ITypeVisitor& visitor) const;
 
 		std::string mId;
+
+		SymTable* mpOwner = nullptr;
 	};
 
 	
@@ -97,7 +100,11 @@ namespace TDEngine2
 
 			TScopeEntity* LookUpNamedScope(const std::string& name);
 
+			void SetSourceFilename(const std::string& filename);
+
 			std::string GetMangledNameForNamedScope(const std::string& id);
+
+			const std::string& GetSourceFilename() const;
 		private:
 			bool _createAnonymousScope();
 			bool _createNamedScope(const std::string& name);
@@ -115,6 +122,8 @@ namespace TDEngine2
 
 			int32_t       mLastVisitedScopeIndex = -1;
 			int32_t       mPrevVisitedScopeIndex; ///< \note The field is only updated when visiting VisitNamedScope
+
+			std::string   mSourceFilename;
 	};
 
 
