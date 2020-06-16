@@ -1,5 +1,6 @@
 #include "../include/codegenerator.h"
 #include "../include/common.h"
+#include <set>
 
 
 namespace TDEngine2
@@ -118,9 +119,16 @@ struct EnumTrait<{0}>
 
 		auto&& enums = enumsMeta.GetEnums();
 
+		std::set<std::string> neededIncludes;
+
 		for (auto currEnumMeta : enums)
 		{
-			mpHeaderOutputStream->WriteString(StringUtils::Format("#include \"{0}\"\n", currEnumMeta->mpOwner->GetSourceFilename()));
+			neededIncludes.insert(StringUtils::Format("#include \"{0}\"\n", currEnumMeta->mpOwner->GetSourceFilename()));
+		}
+
+		for (const std::string& currIncludeFilename : neededIncludes)
+		{
+			mpHeaderOutputStream->WriteString(currIncludeFilename);
 		}
 
 		for (auto currEnumMeta : enums)
