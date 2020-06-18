@@ -21,6 +21,21 @@ struct EnumTrait<{0}>
 
 		return fields;
 	}
+
+	static std::string ToString({0} value)
+	{
+		static auto&& elements = GetFields();
+
+		for (auto&& currElement : elements)
+		{
+			if (currElement.value == value)
+			{
+				return currElement.name;
+			}
+		}
+
+		return "";
+	}
 };
 )";
 
@@ -96,11 +111,6 @@ struct EnumTrait<{0}>
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
 															  enumeratorsCount, fieldsStr));
-
-		/*mpSourceOutputStream->WriteString(StringUtils::Format(mEnumTraitTemplateSpecializationSourcePattern,
-															  fullEnumName,
-															  fieldsStr,
-															  enumeratorsCount));*/
 	}
 
 	void CodeGenerator::VisitNamespaceType(const TNamespaceType& type)
