@@ -206,7 +206,9 @@ namespace TDEngine2
 
 		mpLexer->GetNextToken();
 
-		// \todo parse enumeration's underlying type
+		std::string underlyingTypeStr;
+
+		// \note parse enumeration's underlying type
 		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COLON)
 		{
 			mpLexer->GetNextToken();

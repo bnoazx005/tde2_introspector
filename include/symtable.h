@@ -45,6 +45,7 @@ namespace TDEngine2
 		bool                     mIsIntrospectable = false;
 
 		std::string              mMangledId; // \note contains full path to enum Namespace..ClassName@Enum
+		std::string              mUnderlyingTypeStr = "int";
 
 		std::vector<std::string> mEnumerators;
 	};

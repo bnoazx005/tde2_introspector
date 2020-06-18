@@ -45,6 +45,7 @@ namespace TDEngine2
 
 	const std::string GeneratedHeaderPrelude = R"(
 #include <array>
+#include <string>
 
 /*
 	\brief The section is auto generated code that contains all needed types, functcions and other

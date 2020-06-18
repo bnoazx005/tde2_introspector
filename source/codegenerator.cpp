@@ -9,6 +9,8 @@ namespace TDEngine2
 template <>
 struct EnumTrait<{0}>
 {
+	using UnderlyingType = {4};
+
 	static const bool         isOpaque = {1};
 	static const unsigned int elementsCount = {2};
 
@@ -35,6 +37,21 @@ struct EnumTrait<{0}>
 		}
 
 		return "";
+	}
+
+	static {0} FromString(const std::string& value)
+	{
+		static auto&& elements = GetFields();
+
+		for (auto&& currElement : elements)
+		{
+			if (currElement.name == value)
+			{
+				return currElement.value;
+			}
+		}
+
+		return (elements.size() > 0) ? elements[0].value : static_cast<{0}>(0);
 	}
 };
 )";
@@ -110,7 +127,7 @@ struct EnumTrait<{0}>
 		mpHeaderOutputStream->WriteString(StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
-															  enumeratorsCount, fieldsStr));
+															  enumeratorsCount, fieldsStr, type.mUnderlyingTypeStr));
 	}
 
 	void CodeGenerator::VisitNamespaceType(const TNamespaceType& type)
