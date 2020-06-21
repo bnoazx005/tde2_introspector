@@ -6,6 +6,7 @@
 #include "../include/parser.h"
 #include "../include/symtable.h"
 #include "../include/codegenerator.h"
+#include "../include/jobmanager.h"
 
 
 using namespace TDEngine2;
@@ -30,19 +31,21 @@ int main(int argc, const char** argv)
 	std::vector<std::unique_ptr<SymTable>> symbolsPerFile { filesToProcess.size() };
 
 	EnumsMetaExtractor enumsExtractor;
+	
+	JobManager jobManager(options.mCurrNumOfThreads);
 
 	// \note Run for each header parser utility
 	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
 	{
 		const std::string& currFilename = filesToProcess[i];
 
-		std::cout << ((i == 0) ? "" : "\n") << "Process " << currFilename << " file... ";
+		WriteOutput(std::string((i == 0) ? "" : "\n").append("Process ").append(currFilename).append(" file... "));
 
 		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
 		{
 			if (!pFileStream->Open())
 			{
-				std::cerr << "\nError (" << currFilename << "): File's not found\n";
+				WriteOutput(std::string("\nError (").append(currFilename).append("): File's not found\n"));
 				continue;
 			}
 
@@ -56,12 +59,12 @@ int main(int argc, const char** argv)
 			Parser{ lexer, *symbolsPerFile[i], [&currFilename, &hasErrors](auto&& error)
 			{
 				hasErrors = true;
-				std::cerr << "\nError (" << currFilename << ")" << error.ToString();
+				WriteOutput(std::string("\nError (").append(currFilename).append(")").append(error.ToString()));
 			} }.Parse();
 
 			if (!hasErrors)
 			{
-				std::cout << "OK\n";
+				WriteOutput("OK\n");
 			}
 
 			symbolsPerFile[i]->Visit(enumsExtractor);

@@ -43,6 +43,9 @@ namespace TDEngine2
 
 	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT;
 
+	
+	void WriteOutput(const std::string& text) TDE2_NOEXCEPT;
+
 
 	const std::string GeneratedHeaderPrelude = R"(
 #include <array>

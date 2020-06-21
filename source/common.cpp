@@ -3,6 +3,7 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <array>
+#include <mutex>
 
 
 namespace TDEngine2
@@ -105,6 +106,15 @@ namespace TDEngine2
 		}
 
 		return headersPaths;
+	}
+
+
+	static std::mutex StdoutMutex;
+
+	void WriteOutput(const std::string& text)
+	{
+		std::lock_guard<std::mutex> lock(StdoutMutex);
+		std::cout << text;
 	}
 
 
