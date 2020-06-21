@@ -23,6 +23,7 @@ set(HEADERS
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/tokens.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/symtable.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/codegenerator.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/jobmanager.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/common.h")
 
 set(SOURCES
@@ -33,6 +34,7 @@ set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/tokens.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/symtable.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/codegenerator.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/jobmanager.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp")
 
 source_group("includes" FILES ${HEADERS})
