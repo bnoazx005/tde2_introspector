@@ -71,7 +71,7 @@ int main(int argc, const char** argv)
 	// \todo Generate meta-information as cpp files
 	CodeGenerator codeGenerator;
 
-	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, "metadata"))
+	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, options.mOutputFilename))
 	{
 		return -1;
 	}

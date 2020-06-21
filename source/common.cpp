@@ -20,12 +20,14 @@ namespace TDEngine2
 		int showVersion = 0;
 
 		const char* pOutputDirectory = nullptr;
+		const char* pOutputFilename = nullptr;
 
 		struct argparse_option options[] = {
 			OPT_HELP(),
 			OPT_GROUP("Basic options"),
 			OPT_BOOLEAN('V', "version", &showVersion, "Print version info and exit"),
-			OPT_STRING('o', "outdir", &pOutputDirectory, "Write output into specified <dirname>"),
+			OPT_STRING('O', "outdir", &pOutputDirectory, "Write output into specified <dirname>"),
+			OPT_STRING('o', "outfile", &pOutputFilename, "Output file's name <filename>"),
 			OPT_END(),
 		};
 
@@ -57,6 +59,11 @@ namespace TDEngine2
 		{
 			utilityOptions.mOutputDirname = std::experimental::filesystem::path(pOutputDirectory).string();
 		}		
+
+		if (pOutputFilename)
+		{
+			utilityOptions.mOutputFilename = pOutputFilename;
+		}
 		
 #if 0
 		compilerOptions.mPrintFlags = pPrintArg ? ((strcmp(pPrintArg, "symtable-dump") == 0) ? PF_SYMTABLE_DUMP :

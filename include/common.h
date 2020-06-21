@@ -32,6 +32,7 @@ namespace TDEngine2
 
 		std::string               mInputDirname = ".";
 		std::string               mOutputDirname = ".";
+		std::string               mOutputFilename = "metadata.h";
 
 		uint16_t                  mCurrNumOfThreads = 1;
 

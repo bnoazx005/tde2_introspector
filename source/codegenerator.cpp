@@ -83,7 +83,7 @@ struct EnumTrait<{0}>
 		mOutputStreamFactoryFunctor = outputStreamsFactory;
 		mOutputFilenamesName = outputFilename;
 
-		mpHeaderOutputStream = outputStreamsFactory(outputFilename + ".h");
+		mpHeaderOutputStream = outputStreamsFactory(outputFilename);
 
 		if (!mpHeaderOutputStream)
 		{
