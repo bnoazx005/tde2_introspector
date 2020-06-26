@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdint>
 #include <sstream>
+#include <memory>
 
 
 namespace TDEngine2
@@ -16,6 +17,9 @@ namespace TDEngine2
 #else 
 	#define TDE2_NOEXCEPT 
 #endif
+
+
+	class SymTable;
 
 
 	static struct TVersion
@@ -42,9 +46,10 @@ namespace TDEngine2
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT;
 
 	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT;
-
 	
 	void WriteOutput(const std::string& text) TDE2_NOEXCEPT;
+
+	std::unique_ptr<SymTable> ProcessHeaderFile(const std::string& filename) TDE2_NOEXCEPT;
 
 
 	const std::string GeneratedHeaderPrelude = R"(

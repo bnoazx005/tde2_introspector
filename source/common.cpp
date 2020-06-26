@@ -1,4 +1,7 @@
 #include "../include/common.h"
+#include "../include/lexer.h"
+#include "../include/parser.h"
+#include "../include/symtable.h"
 #include "../deps/argparse/argparse.h"
 #include <iostream>
 #include <experimental/filesystem>
@@ -19,6 +22,7 @@ namespace TDEngine2
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT
 	{
 		int showVersion = 0;
+		int numOfThreads = 1;
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
@@ -29,6 +33,7 @@ namespace TDEngine2
 			OPT_BOOLEAN('V', "version", &showVersion, "Print version info and exit"),
 			OPT_STRING('O', "outdir", &pOutputDirectory, "Write output into specified <dirname>"),
 			OPT_STRING('o', "outfile", &pOutputFilename, "Output file's name <filename>"),
+			OPT_INTEGER('T', "num-threads", &numOfThreads, "A number of available threads to process a few header files simultaneously"),
 			OPT_END(),
 		};
 
@@ -65,6 +70,14 @@ namespace TDEngine2
 		{
 			utilityOptions.mOutputFilename = pOutputFilename;
 		}
+
+		if (numOfThreads <= 0 || numOfThreads > (std::numeric_limits<int>::max() / 2))
+		{
+			std::cerr << "Error: too many threads cound was specified\n";
+			std::terminate();
+		}
+
+		utilityOptions.mCurrNumOfThreads = static_cast<uint16_t>(numOfThreads);
 		
 #if 0
 		compilerOptions.mPrintFlags = pPrintArg ? ((strcmp(pPrintArg, "symtable-dump") == 0) ? PF_SYMTABLE_DUMP :
@@ -115,6 +128,42 @@ namespace TDEngine2
 	{
 		std::lock_guard<std::mutex> lock(StdoutMutex);
 		std::cout << text;
+	}
+
+	std::unique_ptr<SymTable> ProcessHeaderFile(const std::string& filename) TDE2_NOEXCEPT
+	{
+		WriteOutput(std::string("\n").append("Process ").append(filename).append(" file... "));
+
+		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(filename) })
+		{
+			if (!pFileStream->Open())
+			{
+				WriteOutput(std::string("\nError (").append(filename).append("): File's not found\n"));
+				return nullptr;
+			}
+
+			Lexer lexer{ *pFileStream };
+
+			std::unique_ptr<SymTable> pSymTable = std::make_unique<SymTable>();
+			pSymTable->SetSourceFilename(std::experimental::filesystem::absolute(filename).string());
+
+			bool hasErrors = false;
+
+			Parser{ lexer, *pSymTable, [&filename, &hasErrors](auto&& error)
+			{
+				hasErrors = true;
+				WriteOutput(std::string("\nError (").append(filename).append(")").append(error.ToString()));
+			} }.Parse();
+
+			if (!hasErrors)
+			{
+				WriteOutput("OK\n");
+			}
+
+			return pSymTable;
+		}
+
+		return nullptr;
 	}
 
 

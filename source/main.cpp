@@ -30,53 +30,33 @@ int main(int argc, const char** argv)
 
 	std::vector<std::unique_ptr<SymTable>> symbolsPerFile { filesToProcess.size() };
 
-	EnumsMetaExtractor enumsExtractor;
-	
-	JobManager jobManager(options.mCurrNumOfThreads);
-
-	// \note Run for each header parser utility
-	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
 	{
-		const std::string& currFilename = filesToProcess[i];
+		JobManager jobManager(options.mCurrNumOfThreads); // jobManager as a scoped object makes us possible to wait for all jobs will be done to the end of the scope
 
-		WriteOutput(std::string((i == 0) ? "" : "\n").append("Process ").append(currFilename).append(" file... "));
-
-		if (std::unique_ptr<IInputStream> pFileStream{ new FileInputStream(currFilename) })
+		// \note Build symbol tables for each header file
+		for (size_t i = 0; i < filesToProcess.size(); ++i)
 		{
-			if (!pFileStream->Open())
+			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, i]
 			{
-				WriteOutput(std::string("\nError (").append(currFilename).append("): File's not found\n"));
-				continue;
-			}
-
-			Lexer lexer{ *pFileStream };
-
-			symbolsPerFile[i] = std::make_unique<SymTable>();
-			symbolsPerFile[i]->SetSourceFilename(std::experimental::filesystem::absolute(currFilename).string());
-
-			bool hasErrors = false;
-
-			Parser{ lexer, *symbolsPerFile[i], [&currFilename, &hasErrors](auto&& error)
-			{
-				hasErrors = true;
-				WriteOutput(std::string("\nError (").append(currFilename).append(")").append(error.ToString()));
-			} }.Parse();
-
-			if (!hasErrors)
-			{
-				WriteOutput("OK\n");
-			}
-
-			symbolsPerFile[i]->Visit(enumsExtractor);
+				symbolsPerFile[i] = std::move(ProcessHeaderFile(filesToProcess[i]));
+			}));
 		}
 	}
 
-	// \todo Generate meta-information as cpp files
+	// \note Generate meta-information as cpp files
 	CodeGenerator codeGenerator;
 
 	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, options.mOutputFilename))
 	{
 		return -1;
+	}
+
+	EnumsMetaExtractor enumsExtractor;
+
+	// \note Run for each header parser utility
+	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
+	{
+		symbolsPerFile[i]->Visit(enumsExtractor);
 	}
 
 	codeGenerator.WriteEnumsMetaData(enumsExtractor);

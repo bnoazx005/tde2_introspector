@@ -214,9 +214,14 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 
 			// \note Parse base type of the enumeration
-			if (!_parseTypeSpecifiers())
+			/*if (!_parseTypeSpecifiers())
 			{
 				return false;
+			}*/
+			// \todo replace it
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+			{
+				mpLexer->GetNextToken();
 			}
 		}
 
