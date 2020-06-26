@@ -213,10 +213,10 @@ namespace TDEngine2
 		{
 			mpLexer->GetNextToken();
 
-			// \todo Replace it with parseEnumUnderlyingType
-			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+			// \note Parse base type of the enumeration
+			if (!_parseTypeSpecifiers())
 			{
-				mpLexer->GetNextToken();
+				return false;
 			}
 		}
 
@@ -300,6 +300,17 @@ namespace TDEngine2
 		}
 
 		return true;
+	}
+
+	std::unique_ptr<TType> Parser::_parseTypeSpecifiers()
+	{
+		// \todo replace it
+		while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+		{
+			mpLexer->GetNextToken();
+		}
+
+		return nullptr;
 	}
 
 	bool Parser::_eatUnknownTokens()

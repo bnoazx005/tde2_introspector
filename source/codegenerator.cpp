@@ -9,7 +9,7 @@ namespace TDEngine2
 template <>
 struct EnumTrait<{0}>
 {
-	using UnderlyingType = {4};
+	using UnderlyingType = typename std::underlying_type<{0}>::type;
 
 	static const bool         isOpaque = {1};
 	static const unsigned int elementsCount = {2};
@@ -127,7 +127,7 @@ struct EnumTrait<{0}>
 		mpHeaderOutputStream->WriteString(StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
-															  enumeratorsCount, fieldsStr, type.mUnderlyingTypeStr));
+															  enumeratorsCount, fieldsStr));
 	}
 
 	void CodeGenerator::VisitNamespaceType(const TNamespaceType& type)
