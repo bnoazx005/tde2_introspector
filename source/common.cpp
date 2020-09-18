@@ -7,6 +7,10 @@
 #include <experimental/filesystem>
 #include <array>
 #include <mutex>
+#include <unordered_set>
+
+
+namespace fs = std::experimental::filesystem;
 
 
 namespace TDEngine2
@@ -15,7 +19,8 @@ namespace TDEngine2
 
 	constexpr const char* Usage[] =
 	{
-		"tde2_introspector input [options]",
+		"tde2_introspector <input> .. <input> [options]",
+		"where <usage> - single file path or directory",
 		0
 	};
 
@@ -53,11 +58,20 @@ namespace TDEngine2
 		utilityOptions.mIsValid = true;
 
 		// \note parse input files before any option, because argparse library will remove all argv's values after it processes that
-		utilityOptions.mInputDirname = argc < 1 ? utilityOptions.mInputDirname : argparse.out[0];
-
-		if (utilityOptions.mInputDirname.empty())
+		if (argc >= 1)
 		{
-			std::cerr << "Error: no input directory's found\n";
+			auto& sources = utilityOptions.mInputSources;
+			sources.clear();
+
+			for (int i = 0; i < argc; ++i)
+			{
+				sources.push_back(argparse.out[i]);
+			}
+		}
+
+		if (utilityOptions.mInputSources.empty())
+		{
+			std::cerr << "Error: no input found\n";
 			std::terminate();
 		}
 
@@ -97,24 +111,54 @@ namespace TDEngine2
 	}
 
 
-	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT
+	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories) TDE2_NOEXCEPT
 	{
-		if (directory.empty())
+		if (directories.empty())
 		{
 			return {};
 		}
 
 		static const std::array<std::string, 2> extensions { ".h", ".hpp" };
 
+		auto&& hasValidExtension = [=](const std::string& ext)
+		{
+			return (ext == extensions[0]) || (ext == extensions[1]);
+		};
+
+		std::unordered_set<std::string> processedPaths; // contains absolute paths that already have been processed 
+
 		std::vector<std::string> headersPaths;
 
-		for (auto&& directory : std::experimental::filesystem::recursive_directory_iterator{ directory })
+		for (auto&& currSource : directories)
 		{
-			auto&& path = directory.path();
-
-			if (path.extension() == extensions[0] || path.extension() == extensions[1])
+			// files
+			if (!fs::is_directory(currSource))
 			{
-				headersPaths.emplace_back(path.string());
+				auto&& path = fs::path{ currSource };
+
+				auto&& absPathStr = fs::canonical(currSource).string();
+
+				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && hasValidExtension(path.extension().string()))
+				{
+					headersPaths.emplace_back(currSource);
+					processedPaths.emplace(absPathStr);
+				}
+
+				continue;
+			}
+
+			// directories
+			for (auto&& directory : fs::recursive_directory_iterator{ currSource })
+			{
+				auto&& path = directory.path();
+
+				auto&& absPathStr = fs::canonical(path).string();
+
+				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && hasValidExtension(path.extension().string()))
+				{
+					headersPaths.emplace_back(path.string());
+					processedPaths.emplace(absPathStr);
+				}
 			}
 		}
 
@@ -145,7 +189,7 @@ namespace TDEngine2
 			Lexer lexer{ *pFileStream };
 
 			std::unique_ptr<SymTable> pSymTable = std::make_unique<SymTable>();
-			pSymTable->SetSourceFilename(std::experimental::filesystem::absolute(filename).string());
+			pSymTable->SetSourceFilename(fs::canonical(filename).string());
 
 			bool hasErrors = false;
 

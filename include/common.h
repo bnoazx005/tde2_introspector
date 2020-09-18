@@ -34,7 +34,7 @@ namespace TDEngine2
 
 		bool                      mIsValid;
 
-		std::string               mInputDirname = ".";
+		std::vector<std::string>  mInputSources { "." };
 		std::string               mOutputDirname = ".";
 		std::string               mOutputFilename = "metadata.h";
 
@@ -45,7 +45,7 @@ namespace TDEngine2
 
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT;
 
-	std::vector<std::string> GetHeaderFiles(const std::string& directory) TDE2_NOEXCEPT;
+	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories) TDE2_NOEXCEPT;
 	
 	void WriteOutput(const std::string& text) TDE2_NOEXCEPT;
 

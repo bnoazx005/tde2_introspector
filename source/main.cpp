@@ -21,7 +21,7 @@ int main(int argc, const char** argv)
 	}
 
 	// \note Scan given directory for cpp header files
-	std::vector<std::string> filesToProcess = GetHeaderFiles(options.mInputDirname);
+	std::vector<std::string> filesToProcess = GetHeaderFiles(options.mInputSources);
 	if (filesToProcess.empty())
 	{
 		std::cout << "Nothing to process... Exit\n";
