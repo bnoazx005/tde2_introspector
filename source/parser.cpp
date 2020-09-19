@@ -292,9 +292,14 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 
 			// \todo for now we just skip this part
-			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_COMMA && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_COMMA &&
+				   mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_CLOSE_BRACE &&
+				   mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
 			{
-				mpLexer->GetNextToken();
+				if (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_CLOSE_BRACE) // \note the close brase will be eaten in caller method
+				{
+					mpLexer->GetNextToken();
+				}
 			}
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF)

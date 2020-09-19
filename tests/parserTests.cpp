@@ -96,4 +96,34 @@ TEST_CASE("Parser tests")
 			REQUIRE(false);
 		}).Parse();
 	}
+
+	SECTION("TestParse_PassEnumDefinition_ProcessWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"enum class Test { Invalid = 0x0 };",
+				"enum TEST { FIRST, SECOND, THIRD };",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+
+		auto pTestEnumScope = symTable.LookUpNamedScope("TEST");
+		REQUIRE(pTestEnumScope);
+
+		TEnumType* pTypeDesc = dynamic_cast<TEnumType*>(pTestEnumScope->mpType.get());
+		REQUIRE(pTypeDesc);
+
+		auto&& enumerators = pTypeDesc->mEnumerators;
+
+		REQUIRE((enumerators.size() == 3 &&
+			enumerators[0] == "FIRST" &&
+			enumerators[1] == "SECOND" &&
+			enumerators[2] == "THIRD"));
+	}
 }
