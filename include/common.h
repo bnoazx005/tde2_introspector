@@ -122,7 +122,7 @@ struct EnumInfo
 };
 
 
-sturct ClassInfo
+struct ClassInfo
 {
 };
 
