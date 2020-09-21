@@ -57,6 +57,44 @@ namespace TDEngine2
 #include <string>
 #include <type_traits>
 
+
+enum class Type: uint8_t
+{
+	Enum,
+	Class,
+	Struct,
+	Function,
+	Method,
+	Unknown
+};
+
+
+/*!
+	\brief The method computes 32 bits hash based on an input string's value.
+	The underlying algorithm's description can be found here
+	http://www.cse.yorku.ca/~oz/hash.html
+
+	\param[in] pStr An input string
+	\param[in] hash The argument is used to store current hash value during a recursion
+
+	\return 32 bits hash of the input string
+*/
+
+constexpr uint32_t ComputeHash(const char* pStr, uint32_t hash = 5381)
+{
+	return (*pStr != 0) ? ComputeHash(pStr + 1, ((hash << 5) + hash) + *pStr) : hash;
+}
+
+
+enum class TypeID : uint32_t 
+{
+	Invalid = 0x0
+};
+
+
+#define TYPEID(TypeName) static_cast<TypeID>(ComputeHash(#TypeName))
+
+
 /*
 	\brief The section is auto generated code that contains all needed types, functcions and other
 	infrastructure to provide correct work of meta-data
@@ -76,6 +114,29 @@ struct EnumTrait
 	static const unsigned int elementsCount = 0;
 
     static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() { return {}; }
+};
+
+
+struct EnumInfo
+{	
+};
+
+
+sturct ClassInfo
+{
+};
+
+
+struct TypeInfo
+{
+    TypeID      mID;
+	Type        mType;
+	std::string mName;
+
+	union
+	{
+		/// 
+	}           mRawInfo;
 };
 
 	)";
