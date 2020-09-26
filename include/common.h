@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <sstream>
 #include <memory>
+#include <functional>
 
 
 namespace TDEngine2
@@ -95,6 +96,13 @@ enum class TypeID : uint32_t
 #define TYPEID(TypeName) static_cast<TypeID>(ComputeHash(#TypeName))
 
 
+/*!
+	\brief Use Type<TYPEID(...)>::Value to get type by its TypeID
+*/
+
+template <TypeID id> struct Type { };
+
+
 /*
 	\brief The section is auto generated code that contains all needed types, functcions and other
 	infrastructure to provide correct work of meta-data
@@ -114,6 +122,17 @@ struct EnumTrait
 	static const unsigned int elementsCount = 0;
 
     static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() { return {}; }
+};
+
+
+template <typename TClass>
+struct ClassTrait
+{
+	static const std::string name;
+	static constexpr TypeID  typeID;
+
+	static const bool isInterface;
+	static const bool isAbstract;
 };
 
 
@@ -177,6 +196,12 @@ struct TypeInfo
 	class StringUtils
 	{
 		public:
+			static const inline std::string& GetEmptyStr()
+			{
+				static const std::string emptyStr{};
+				return emptyStr;
+			}
+
 			static std::string ReplaceAll(const std::string& input, const std::string& what, const std::string& replacement);
 
 			template <typename... TArgs>
@@ -228,4 +253,28 @@ struct TypeInfo
 			_convertToStringsArray<size, Tail...>(outArray, std::forward<Tail>(rest)...);
 		}
 	};
+
+
+	class DeferOperation
+	{
+		public:
+			DeferOperation() = delete;
+			DeferOperation(const std::function<void()>& action) :
+				mAction(action)
+			{
+			}
+
+			~DeferOperation()
+			{
+				if (mAction)
+				{
+					mAction();
+				}
+			}
+
+		private:
+			std::function<void()> mAction = nullptr;
+	};
+
+#define DEFER(...) DeferOperation deferOp(__VA_ARGS__)
 }

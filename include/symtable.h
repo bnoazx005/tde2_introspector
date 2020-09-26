@@ -22,6 +22,7 @@ namespace TDEngine2
 		virtual void Visit(ITypeVisitor& visitor) const;
 
 		std::string mId;
+		std::string mMangledId; // \note contains full path to type Namespace..ClassName@Type
 
 		SymTable* mpOwner = nullptr;
 	};
@@ -44,10 +45,37 @@ namespace TDEngine2
 		bool                     mIsStronglyTyped = false;
 		bool                     mIsIntrospectable = false;
 
-		std::string              mMangledId; // \note contains full path to enum Namespace..ClassName@Enum
 		std::string              mUnderlyingTypeStr = "int";
 
 		std::vector<std::string> mEnumerators;
+	};
+
+
+	struct TClassType : TType
+	{
+		enum class E_ACCESS_SPECIFIER_TYPE : uint8_t
+		{
+			PUBLIC,
+			PROTECTED,
+			PRIVATE
+		};
+
+		struct TBaseClassInfo
+		{
+			std::string mFullName; /// Includes full path with namespaces 
+
+			bool mIsVirtualInherited = false;
+			
+			E_ACCESS_SPECIFIER_TYPE mAccessSpecifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE; // default access for classes is private as described in specification
+		};
+
+		virtual ~TClassType() = default;
+
+		void Visit(ITypeVisitor& visitor) const override;
+
+		bool mIsFinal = false;
+
+		std::vector<TBaseClassInfo> mBaseClasses;
 	};
 
 
@@ -142,6 +170,7 @@ namespace TDEngine2
 		virtual void VisitBaseType(const TType& type) = 0;
 		virtual void VisitEnumType(const TEnumType& type) = 0;
 		virtual void VisitNamespaceType(const TNamespaceType& type) = 0;
+		virtual void VisitClassType(const TClassType& type) = 0;
 	};
 
 
@@ -182,6 +211,7 @@ namespace TDEngine2
 			void VisitBaseType(const TType& type) override;
 			void VisitEnumType(const TEnumType& type) override;
 			void VisitNamespaceType(const TNamespaceType& type) override;
+			void VisitClassType(const TClassType& type) override;
 
 			const TEnumsArray& GetEnums() const;
 		private:

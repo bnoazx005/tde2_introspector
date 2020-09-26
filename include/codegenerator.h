@@ -24,6 +24,7 @@ namespace TDEngine2
 			void VisitBaseType(const TType& type) override;
 			void VisitEnumType(const TEnumType& type) override;
 			void VisitNamespaceType(const TNamespaceType& type) override;
+			void VisitClassType(const TClassType& type) override;
 
 			bool WriteEnumsMetaData(const EnumsMetaExtractor& enumsMeta);
 		private:

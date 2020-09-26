@@ -21,6 +21,11 @@ namespace TDEngine2
 		visitor.VisitEnumType(*this);
 	}
 
+	void TClassType::Visit(ITypeVisitor& visitor) const
+	{
+		visitor.VisitClassType(*this);
+	}
+
 
 	const TSymbolDesc TSymbolDesc::mInvalid { "", nullptr };
 
@@ -352,6 +357,10 @@ namespace TDEngine2
 	}
 
 	void EnumsMetaExtractor::VisitNamespaceType(const TNamespaceType& type)
+	{
+	}
+
+	void EnumsMetaExtractor::VisitClassType(const TClassType& type)
 	{
 	}
 

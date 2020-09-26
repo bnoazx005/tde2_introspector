@@ -135,6 +135,11 @@ struct EnumTrait<{0}>
 
 	}
 
+	void CodeGenerator::VisitClassType(const TClassType& type)
+	{
+
+	}
+
 	bool CodeGenerator::WriteEnumsMetaData(const EnumsMetaExtractor& enumsMeta)
 	{
 		mpHeaderOutputStream->WriteString(R"(

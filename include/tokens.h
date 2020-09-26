@@ -23,6 +23,7 @@ namespace TDEngine2
 		TT_PROTECTED,
 		TT_VIRTUAL,
 		TT_OVERRIDE,
+		TT_FINAL,
 
 		// symbols
 		TT_COLON,
@@ -31,6 +32,8 @@ namespace TDEngine2
 		TT_SEMICOLON,
 		TT_ASSIGN_OP,
 		TT_COMMA,
+		TT_LESS,
+		TT_GREAT,
 
 		// attributes
 		TT_ENUM_META_ATTRIBUTE,

@@ -126,4 +126,25 @@ TEST_CASE("Parser tests")
 			enumerators[1] == "SECOND" &&
 			enumerators[2] == "THIRD"));
 	}
+
+	SECTION("TestParse_PassClassDeclaration_ProcessWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"class A;",
+				"class B { };",
+				"class C: public B { };",
+				"class D final : public B { };",
+				"class E : D { };",
+				"class F : protected C, public A { };",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+	}
 }

@@ -5,6 +5,7 @@
 #include <tuple>
 #include <cstdint>
 #include <memory>
+#include <string>
 
 
 namespace TDEngine2
@@ -78,6 +79,13 @@ namespace TDEngine2
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
 			std::unique_ptr<TType> _parseTypeSpecifiers();
+
+			bool _parseClassDeclaration();
+			bool _parseClassHeader(const std::string& className);
+			bool _parseClassBody(const std::string& className);
+
+			std::string _parseClassIdentifier();
+			std::string _parseSimpleTemplateIdentifier();
 
 			bool _eatUnknownTokens();
 		private:

@@ -66,6 +66,7 @@ namespace TDEngine2
 		{ "private", E_TOKEN_TYPE::TT_PRIVATE },
 		{ "virtual", E_TOKEN_TYPE::TT_VIRTUAL },
 		{ "override", E_TOKEN_TYPE::TT_OVERRIDE },
+		{ "final", E_TOKEN_TYPE::TT_FINAL },
 		{ "ENUM_META", E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE },
 		{ "CLASS_META", E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE },
 		{ "INTERFACE_META", E_TOKEN_TYPE::TT_INTERFACE_META_ATTRIBUTE },
@@ -75,6 +76,8 @@ namespace TDEngine2
 		{ ";", E_TOKEN_TYPE::TT_SEMICOLON },
 		{ "=", E_TOKEN_TYPE::TT_ASSIGN_OP },
 		{ ",", E_TOKEN_TYPE::TT_COMMA },
+		{ "<", E_TOKEN_TYPE::TT_LESS },
+		{ ">", E_TOKEN_TYPE::TT_GREAT },
 	};
 
 	Lexer::Lexer(IInputStream& streamSource):
