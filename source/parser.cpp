@@ -344,7 +344,11 @@ namespace TDEngine2
 			return false;
 		}
 
-		assert(mpSymTable->CreateScope(className));
+		if (!mpSymTable->CreateScope(className))
+		{
+			// This case assumes that we've already met forward declaration earlier
+			assert(mpSymTable->EnterScope(className));
+		}
 
 		DEFER([this]
 		{

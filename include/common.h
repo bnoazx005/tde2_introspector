@@ -277,4 +277,21 @@ struct TypeInfo
 	};
 
 #define DEFER(...) DeferOperation deferOp(__VA_ARGS__)
+
+
+	/*!
+		\brief The method computes 32 bits hash based on an input string's value.
+		The underlying algorithm's description can be found here
+		http://www.cse.yorku.ca/~oz/hash.html
+
+		\param[in] pStr An input string
+		\param[in] hash The argument is used to store current hash value during a recursion
+
+		\return 32 bits hash of the input string
+	*/
+
+	constexpr uint32_t ComputeHash(const char* pStr, uint32_t hash = 5381)
+	{
+		return (*pStr != 0) ? ComputeHash(pStr + 1, ((hash << 5) + hash) + *pStr) : hash;
+	}
 }

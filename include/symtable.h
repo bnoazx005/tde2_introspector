@@ -190,32 +190,87 @@ namespace TDEngine2
 	};
 
 
+	template <typename Type>
+	class MetaExtractor: public ISymTableVisitor, public ITypeVisitor
+	{
+		public:
+			using TTypesArray = std::vector<const Type*>;
+			using TTypesHashMap = std::unordered_map<std::string, uint32_t>; // key is a full name of an entity which is consists of mangled name like the following Name@..@TypeName
+		
+		public:
+			MetaExtractor() = default;
+			virtual ~MetaExtractor() = default;
+
+			void VisitScope(const SymTable::TScopeEntity& scope) override
+			{
+				for (auto&& pCurrScope : scope.mpNestedScopes)
+				{
+					VisitScope(*pCurrScope);
+				}
+
+				for (auto&& currNamedScope : scope.mpNamedScopes)
+				{
+					VisitNamedScope(*currNamedScope.second);
+				}
+			}
+
+			void VisitNamedScope(const SymTable::TScopeEntity& namedScope) override
+			{
+				if (TType* pScopeType = namedScope.mpType.get()) // \note this scope isn't namespace probably class, struct or enum
+				{
+					pScopeType->Visit(*this);
+				}
+
+				for (auto&& pCurrScope : namedScope.mpNestedScopes)
+				{
+					VisitScope(*pCurrScope);
+				}
+
+				for (auto&& currNamedScope : namedScope.mpNamedScopes)
+				{
+					VisitNamedScope(*currNamedScope.second);
+				}
+			}
+
+			void VisitBaseType(const TType& type) override {}
+			void VisitEnumType(const TEnumType& type) override {}
+			void VisitNamespaceType(const TNamespaceType& type) override {}
+			void VisitClassType(const TClassType& type) override {}
+
+			const TTypesArray& GetTypesInfo() const { return mpTypesInfo; }
+
+		protected:
+			TTypesHashMap mTypesHashTable;
+			TTypesArray   mpTypesInfo;
+	};
+
+
 	/*!
 		class EnumsMetaExtractor
 
 		\brief The class extracts all enumerations declarations from symbol table and puts them in single contiguous array
 	*/
 
-	class EnumsMetaExtractor : public ISymTableVisitor, public ITypeVisitor
+	class EnumsMetaExtractor : public MetaExtractor<TEnumType>
 	{
-		public:
-			using TEnumsArray = std::vector<const TEnumType*>;
-			using TEnumsHashMap = std::unordered_map<std::string, uint32_t>; // key is a full name of an enum which is consists of mangled name like the following Name@..@EnumName
 		public:
 			EnumsMetaExtractor() = default;
 			virtual ~EnumsMetaExtractor() = default;
 
-			void VisitScope(const SymTable::TScopeEntity& scope) override;
-			void VisitNamedScope(const SymTable::TScopeEntity& namedScope) override;
-
-			void VisitBaseType(const TType& type) override;
 			void VisitEnumType(const TEnumType& type) override;
-			void VisitNamespaceType(const TNamespaceType& type) override;
-			void VisitClassType(const TClassType& type) override;
+	};
 
-			const TEnumsArray& GetEnums() const;
-		private:
-			TEnumsHashMap mEnumsHashTable;
-			TEnumsArray   mpEnums;
+
+	/*!
+		\brief The class extracts information about declared classes
+	*/
+
+	class ClassMetaExtractor : public MetaExtractor<TClassType>
+	{
+		public:
+			ClassMetaExtractor() = default;
+			virtual ~ClassMetaExtractor() = default;
+
+			void VisitClassType(const TClassType& type) override;
 	};
 }

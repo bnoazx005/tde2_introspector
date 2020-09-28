@@ -59,7 +59,16 @@ int main(int argc, const char** argv)
 		symbolsPerFile[i]->Visit(enumsExtractor);
 	}
 
-	codeGenerator.WriteEnumsMetaData(enumsExtractor);
+	codeGenerator.WriteMetaData("\n/*\n\tEnum's meta\n*/\n\n", enumsExtractor);
+
+	ClassMetaExtractor classesExtractor;
+
+	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
+	{
+		symbolsPerFile[i]->Visit(classesExtractor);
+	}
+
+	codeGenerator.WriteMetaData("\n/*\n\tClasses's meta\n*/\n\n", classesExtractor);
 
 	return 0;
 }

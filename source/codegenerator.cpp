@@ -56,6 +56,20 @@ struct EnumTrait<{0}>
 };
 )";
 
+	const std::string CodeGenerator::mClassTraitTemplateSpecializationHeaderPattern = R"(
+template <>
+struct ClassTrait<{0}>
+{
+	static const std::string name = "{0}";
+	static constexpr TypeID  typeID = TYPEID({0});
+
+	static const bool isInterface = false;
+	static const bool isAbstract = false;
+};
+
+template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
+)";
+
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
 
 	const std::string CodeGenerator::mTrueConstant = "true";
@@ -137,38 +151,9 @@ struct EnumTrait<{0}>
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
+		std::string fullClassIdentifier = StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
-	}
-
-	bool CodeGenerator::WriteEnumsMetaData(const EnumsMetaExtractor& enumsMeta)
-	{
-		mpHeaderOutputStream->WriteString(R"(
-/*
-	enums' meta declarations
-*/
-
-)");
-
-		auto&& enums = enumsMeta.GetEnums();
-
-		std::set<std::string> neededIncludes;
-
-		for (auto currEnumMeta : enums)
-		{
-			neededIncludes.insert(StringUtils::Format("#include \"{0}\"\n", currEnumMeta->mpOwner->GetSourceFilename()));
-		}
-
-		for (const std::string& currIncludeFilename : neededIncludes)
-		{
-			mpHeaderOutputStream->WriteString(currIncludeFilename);
-		}
-
-		for (auto currEnumMeta : enums)
-		{
-			currEnumMeta->Visit(*this);
-		}
-
-		return true;
+		mpHeaderOutputStream->WriteString(StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern, fullClassIdentifier));
 	}
 
 	void CodeGenerator::_writeHeaderPrelude()

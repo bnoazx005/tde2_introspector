@@ -30,7 +30,7 @@ TEST_CASE("EnumExtractor's tests")
 		EnumsMetaExtractor extractor;
 		extractor.VisitScope(*pRootScope.get());
 
-		auto&& enums = extractor.GetEnums();
+		auto&& enums = extractor.GetTypesInfo();
 		REQUIRE((enums.size() == 1 && enums[0]->mId == "TestEnum" && enums[0]->mEnumerators.size() == 3));
 	}
 

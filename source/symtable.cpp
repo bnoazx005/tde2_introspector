@@ -299,73 +299,40 @@ namespace TDEngine2
 		\brief EnumsExtractor's definition
 	*/
 
-	void EnumsMetaExtractor::VisitScope(const SymTable::TScopeEntity& scope)
-	{
-		for (auto&& pCurrScope : scope.mpNestedScopes)
-		{
-			VisitScope(*pCurrScope);
-		}
-
-		for (auto&& currNamedScope : scope.mpNamedScopes)
-		{
-			VisitNamedScope(*currNamedScope.second);
-		}
-	}
-
-	void EnumsMetaExtractor::VisitNamedScope(const SymTable::TScopeEntity& namedScope)
-	{
-		if (TType* pScopeType = namedScope.mpType.get()) // \note this scope isn't namespace probably class, struct or enum
-		{
-			pScopeType->Visit(*this);
-		}
-
-		for (auto&& pCurrScope : namedScope.mpNestedScopes)
-		{
-			VisitScope(*pCurrScope);
-		}
-
-		for (auto&& currNamedScope : namedScope.mpNamedScopes)
-		{
-			VisitNamedScope(*currNamedScope.second);
-		}
-	}
-
-	void EnumsMetaExtractor::VisitBaseType(const TType& type)
-	{
-		// do nothing here
-	}
-
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
-		auto iter = mEnumsHashTable.find(type.mMangledId);
-		if (iter != mEnumsHashTable.cend())
+		auto iter = mTypesHashTable.find(type.mMangledId);
+		if (iter != mTypesHashTable.cend())
 		{
-			if (const TEnumType* pOtherEnum = mpEnums[iter->second])
+			if (const TEnumType* pOtherEnum = mpTypesInfo[iter->second])
 			{
 				if (!pOtherEnum->mEnumerators.empty()) // \note we can update the enum's meta if it was declared previously not defined
 				{
 					return;
 				}
 
-				mpEnums[iter->second] = &type;
+				mpTypesInfo[iter->second] = &type;
 			}
 
 			return;
 		}
 
-		mpEnums.push_back(&type);
+		mpTypesInfo.push_back(&type);
 	}
 
-	void EnumsMetaExtractor::VisitNamespaceType(const TNamespaceType& type)
+	void ClassMetaExtractor::VisitClassType(const TClassType& type)
 	{
-	}
+		auto iter = mTypesHashTable.find(type.mMangledId);
+		if (iter != mTypesHashTable.cend())
+		{
+			if (const TClassType* pOtherClass = mpTypesInfo[iter->second])
+			{				
+				mpTypesInfo[iter->second] = &type;
+			}
 
-	void EnumsMetaExtractor::VisitClassType(const TClassType& type)
-	{
-	}
+			return;
+		}
 
-	const EnumsMetaExtractor::TEnumsArray& EnumsMetaExtractor::GetEnums() const
-	{
-		return mpEnums;
+		mpTypesInfo.push_back(&type);
 	}
 }

@@ -147,4 +147,21 @@ TEST_CASE("Parser tests")
 			REQUIRE(false);
 		}).Parse();
 	}
+
+	SECTION("TestParse_PassClassThatAppearedTwoTimes_CorrectlyRegisterForwardDeclarationAndUpdatesItLater")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"class A;",
+				"class A { };"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+	}
 }
