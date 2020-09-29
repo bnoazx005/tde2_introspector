@@ -56,6 +56,10 @@ namespace TDEngine2
 			}
 		private:
 			void _writeHeaderPrelude();
+
+			static std::vector<std::string> _getParentClasses(const TClassType& classType);
+			static std::string _vectorToString(const std::vector<std::string>& types);
+
 		private:
 			std::unique_ptr<IOutputStream> mpHeaderOutputStream;
 			//std::unique_ptr<IOutputStream> mpSourceOutputStream;

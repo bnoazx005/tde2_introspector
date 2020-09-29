@@ -63,8 +63,18 @@ struct ClassTrait<{0}>
 	static const std::string name = "{0}";
 	static constexpr TypeID  typeID = TYPEID({0});
 
-	static const bool isInterface = false;
-	static const bool isAbstract = false;
+	static const bool isInterface = {1};
+	static const bool isAbstract = {2};
+
+	static const std::array<TypeID, {3}> interfaces
+	{
+		{5}
+	};
+
+	static const std::array<TypeID, {4}> parentClasses
+	{
+		{6}
+	};
 };
 
 template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
@@ -153,12 +163,45 @@ template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 	{
 		std::string fullClassIdentifier = StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
-		mpHeaderOutputStream->WriteString(StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern, fullClassIdentifier));
+		auto&& parentClasses = _getParentClasses(type);
+
+		mpHeaderOutputStream->WriteString(StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern, 
+															  fullClassIdentifier,
+															  mFalseConstant,
+															  mFalseConstant,
+															  0, 
+															  parentClasses.size(), 
+															  "",
+															  _vectorToString(parentClasses)));
 	}
 
 	void CodeGenerator::_writeHeaderPrelude()
 	{
 		mpHeaderOutputStream->WriteString("#pragma once\n\n");
 		mpHeaderOutputStream->WriteString(GeneratedHeaderPrelude);
+	}
+
+	std::vector<std::string> CodeGenerator::_getParentClasses(const TClassType& classType)
+	{
+		std::vector<std::string> parentClasses;
+
+		for (auto&& currBaseClassInfo : classType.mBaseClasses)
+		{
+			parentClasses.push_back(StringUtils::Format("TYPEID({0})", currBaseClassInfo.mFullName));
+		}
+
+		return parentClasses;
+	}
+
+	std::string CodeGenerator::_vectorToString(const std::vector<std::string>& types)
+	{
+		std::string outputString{};
+
+		for (auto&& currTypeId : types)
+		{
+			outputString.append(currTypeId).append(", ");
+		}
+
+		return outputString;
 	}
 }
