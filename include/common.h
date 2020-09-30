@@ -63,7 +63,10 @@ namespace TDEngine2
 #include <type_traits>
 
 
-enum class Type: uint8_t
+namespace Meta 
+{
+
+enum class MetaEntityType: uint8_t
 {
 	Enum,
 	Class,
@@ -125,7 +128,7 @@ struct EnumTrait
 	static const bool         isOpaque = false;
 	static const unsigned int elementsCount = 0;
 
-    static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() { return {}; }
+	static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() { return {}; }
 };
 
 
@@ -133,7 +136,7 @@ template <typename TClass>
 struct ClassTrait
 {
 	static const std::string name;
-	static constexpr TypeID  typeID;
+	static constexpr TypeID  typeID = TypeID::Invalid;
 
 	static const bool isInterface;
 	static const bool isAbstract;
@@ -152,14 +155,14 @@ struct ClassInfo
 
 struct TypeInfo
 {
-    TypeID      mID;
-	Type        mType;
-	std::string mName;
+	TypeID         mID;
+	MetaEntityType mType;
+	std::string    mName;
 
 	union
 	{
 		/// 
-	}           mRawInfo;
+	}              mRawInfo;
 };
 
 	)";

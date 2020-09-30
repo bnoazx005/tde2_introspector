@@ -124,7 +124,7 @@ namespace TDEngine2
 		{
 			return (ext == extensions[0]) || (ext == extensions[1]);
 		};
-
+		
 		std::unordered_set<std::string> processedPaths; // contains absolute paths that already have been processed 
 
 		std::vector<std::string> headersPaths;

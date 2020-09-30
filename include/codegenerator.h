@@ -39,7 +39,7 @@ namespace TDEngine2
 
 				for (auto currMetaEntity : entities)
 				{
-					neededIncludes.insert(StringUtils::Format("#include \"{0}\"\n", currMetaEntity->mpOwner->GetSourceFilename()));
+					neededIncludes.insert(StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/")));
 				}
 
 				for (const std::string& currIncludeFilename : neededIncludes)

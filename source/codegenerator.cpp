@@ -60,24 +60,25 @@ struct EnumTrait<{0}>
 template <>
 struct ClassTrait<{0}>
 {
-	static const std::string name = "{0}";
+	static const std::string name;
 	static constexpr TypeID  typeID = TYPEID({0});
 
 	static const bool isInterface = {1};
 	static const bool isAbstract = {2};
 
-	static const std::array<TypeID, {3}> interfaces
-	{
-		{5}
-	};
-
-	static const std::array<TypeID, {4}> parentClasses
-	{
-		{6}
-	};
+	static const std::array<TypeID, {3}> interfaces;
+	static const std::array<TypeID, {4}> parentClasses;
 };
 
-template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
+const std::string ClassTrait<{0}>::name = "{0}";
+
+const std::array<TypeID, {3}> ClassTrait<{0}>::interfaces {5};
+
+const std::array<TypeID, {4}> ClassTrait<{0}>::parentClasses {6};
+
+template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
+
+
 )";
 
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
@@ -93,6 +94,7 @@ template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 	{
 		if (mpHeaderOutputStream)
 		{
+			mpHeaderOutputStream->WriteString("\n}");
 			mpHeaderOutputStream->Close();
 		}
 	}
@@ -171,7 +173,7 @@ template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 															  mFalseConstant,
 															  0, 
 															  parentClasses.size(), 
-															  "",
+															  "{}",
 															  _vectorToString(parentClasses)));
 	}
 
@@ -195,12 +197,24 @@ template struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	std::string CodeGenerator::_vectorToString(const std::vector<std::string>& types)
 	{
-		std::string outputString{};
+		std::string outputString{ "{ " };
+		
+		if (!types.empty())
+		{
+			outputString.push_back('\n');
+		}
 
 		for (auto&& currTypeId : types)
 		{
 			outputString.append(currTypeId).append(", ");
 		}
+
+		if (!types.empty())
+		{
+			outputString.push_back('\n');
+		}
+
+		outputString.append(" }");
 
 		return outputString;
 	}
