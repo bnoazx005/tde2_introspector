@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Support of a 'Tagged only' mode
-- Remove duplicate inclusions of header files
+- Support of parsing of class's members, methods and nested types
 
 ## [Template] - YYYY-MM-DD
 

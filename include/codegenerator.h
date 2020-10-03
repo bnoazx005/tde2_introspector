@@ -44,7 +44,15 @@ namespace TDEngine2
 
 				for (auto currMetaEntity : entities)
 				{
-					neededIncludes.insert(StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/")));
+					std::string path = StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
+
+					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
+					{
+						continue;
+					}
+
+					neededIncludes.insert(path);
+					mIncludedHeaders.emplace(path);
 				}
 
 				for (const std::string& currIncludeFilename : neededIncludes)
@@ -71,6 +79,8 @@ namespace TDEngine2
 			//std::unique_ptr<IOutputStream> mpSourceOutputStream;
 
 			TOutputStreamFactoryFunctor    mOutputStreamFactoryFunctor;
+
+			std::set<std::string>          mIncludedHeaders; ///< Contains all headers that have been appeared in a generated file
 
 			std::string                    mOutputFilenamesName;
 
