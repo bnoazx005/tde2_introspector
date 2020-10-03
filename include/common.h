@@ -34,6 +34,7 @@ namespace TDEngine2
 		static constexpr uint16_t mMaxNumOfThreads = 32;
 
 		bool                      mIsValid;
+		bool                      mIsTaggedOnlyModeEnabled = false;
 
 		std::vector<std::string>  mInputSources { "." };
 		std::string               mOutputDirname = ".";

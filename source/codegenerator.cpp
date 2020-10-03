@@ -126,6 +126,29 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		return true;
 	}
 
+	bool CodeGenerator::Generate(TSymbolTablesArray&& symbolTablesPerFile)
+	{
+		EnumsMetaExtractor enumsExtractor;
+		ClassMetaExtractor classesExtractor;
+
+		// \note Collect data from symbol tables
+		for (auto&& pCurrSymbolTable : symbolTablesPerFile)
+		{
+			if (!pCurrSymbolTable)
+			{
+				continue;
+			}
+
+			pCurrSymbolTable->Visit(enumsExtractor);
+			pCurrSymbolTable->Visit(classesExtractor);
+		}
+
+		const bool enumsWriteResult   = WriteMetaData("\n/*\n\tEnum's meta\n*/\n\n", enumsExtractor);
+		const bool classesWriteResult = WriteMetaData("\n/*\n\tClasses's meta\n*/\n\n", classesExtractor);
+
+		return enumsWriteResult && classesWriteResult;
+	}
+
 	void CodeGenerator::VisitBaseType(const TType& type)
 	{
 

@@ -28,7 +28,7 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
-	std::vector<std::unique_ptr<SymTable>> symbolsPerFile { filesToProcess.size() };
+	CodeGenerator::TSymbolTablesArray symbolsPerFile { filesToProcess.size() };
 
 	{
 		JobManager jobManager(options.mCurrNumOfThreads); // jobManager as a scoped object makes us possible to wait for all jobs will be done to the end of the scope
@@ -51,24 +51,10 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
-	EnumsMetaExtractor enumsExtractor;
-
-	// \note Run for each header parser utility
-	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
+	if (!codeGenerator.Generate(std::move(symbolsPerFile)))
 	{
-		symbolsPerFile[i]->Visit(enumsExtractor);
+		return -1;
 	}
-
-	codeGenerator.WriteMetaData("\n/*\n\tEnum's meta\n*/\n\n", enumsExtractor);
-
-	ClassMetaExtractor classesExtractor;
-
-	for (size_t i = 0; i < symbolsPerFile.size(); ++i)
-	{
-		symbolsPerFile[i]->Visit(classesExtractor);
-	}
-
-	codeGenerator.WriteMetaData("\n/*\n\tClasses's meta\n*/\n\n", classesExtractor);
 
 	return 0;
 }

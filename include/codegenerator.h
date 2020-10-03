@@ -17,11 +17,16 @@ namespace TDEngine2
 	{
 		public:
 			using TOutputStreamFactoryFunctor = std::function<std::unique_ptr<IOutputStream>(const std::string)>;
+			using TSymbolTablesArray = std::vector<std::unique_ptr<SymTable>>;
 		public:
 			CodeGenerator();
 			~CodeGenerator();
 
 			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename);
+
+			bool Generate(TSymbolTablesArray&& symbolTablesPerFile);
+
+		private:
 
 			void VisitBaseType(const TType& type) override;
 			void VisitEnumType(const TEnumType& type) override;
@@ -54,6 +59,7 @@ namespace TDEngine2
 
 				return true;
 			}
+
 		private:
 			void _writeHeaderPrelude();
 

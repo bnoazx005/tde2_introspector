@@ -28,6 +28,7 @@ namespace TDEngine2
 	{
 		int showVersion = 0;
 		int numOfThreads = 1;
+		int taggedOnly = 0;
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
@@ -39,6 +40,7 @@ namespace TDEngine2
 			OPT_STRING('O', "outdir", &pOutputDirectory, "Write output into specified <dirname>"),
 			OPT_STRING('o', "outfile", &pOutputFilename, "Output file's name <filename>"),
 			OPT_INTEGER('T', "num-threads", &numOfThreads, "A number of available threads to process a few header files simultaneously"),
+			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_END(),
 		};
 
@@ -56,6 +58,7 @@ namespace TDEngine2
 		TIntrospectorOptions utilityOptions;
 
 		utilityOptions.mIsValid = true;
+		utilityOptions.mIsTaggedOnlyModeEnabled = static_cast<bool>(taggedOnly);
 
 		// \note parse input files before any option, because argparse library will remove all argv's values after it processes that
 		if (argc >= 1)
