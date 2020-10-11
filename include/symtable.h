@@ -21,11 +21,26 @@ namespace TDEngine2
 
 	struct TType
 	{
+		enum class E_SUBTYPE: uint32_t
+		{
+			BASE = 0,
+			NAMESPACE,
+			ENUM,
+			CLASS,
+		};
+
 		using UniquePtr = std::unique_ptr<TType>;
 
 		virtual ~TType() = default;
 
+		static std::unique_ptr<TType> Deserialize(FileReaderArchive& archive);
+
+		virtual bool Load(FileReaderArchive& archive);
+		virtual bool Save(FileWriterArchive& archive);
+
 		virtual void Visit(ITypeVisitor& visitor) const;
+
+		virtual E_SUBTYPE GetSubtype() const { return E_SUBTYPE::BASE; }
 
 		std::string mId;
 		std::string mMangledId; // \note contains full path to type Namespace..ClassName@Type
@@ -39,6 +54,8 @@ namespace TDEngine2
 		virtual ~TNamespaceType() = default;
 
 		void Visit(ITypeVisitor& visitor)  const override;
+
+		E_SUBTYPE GetSubtype() const override { return E_SUBTYPE::NAMESPACE; }
 	};
 
 
@@ -46,7 +63,12 @@ namespace TDEngine2
 	{
 		virtual ~TEnumType() = default;
 
+		bool Load(FileReaderArchive& archive) override;
+		bool Save(FileWriterArchive& archive) override;
+
 		void Visit(ITypeVisitor& visitor) const override;
+
+		E_SUBTYPE GetSubtype() const override { return E_SUBTYPE::ENUM; }
 
 		bool                     mIsStronglyTyped = false;
 		bool                     mIsIntrospectable = false;
@@ -77,7 +99,12 @@ namespace TDEngine2
 
 		virtual ~TClassType() = default;
 
+		bool Load(FileReaderArchive& archive) override;
+		bool Save(FileWriterArchive& archive) override;
+
 		void Visit(ITypeVisitor& visitor) const override;
+
+		E_SUBTYPE GetSubtype() const override { return E_SUBTYPE::CLASS; }
 
 		bool mIsFinal = false;
 
@@ -201,18 +228,6 @@ namespace TDEngine2
 
 			virtual void VisitScope(const SymTable::TScopeEntity& scope) = 0;
 			virtual void VisitNamedScope(const SymTable::TScopeEntity& namedScope) = 0;
-	};
-
-
-	class TypeSerializer : public ITypeVisitor
-	{
-		public:
-			virtual ~TypeSerializer() = default;
-
-			void VisitBaseType(const TType& type) override;
-			void VisitEnumType(const TEnumType& type) override;
-			void VisitNamespaceType(const TNamespaceType& type) override;
-			void VisitClassType(const TClassType& type) override;
 	};
 
 

@@ -1,10 +1,57 @@
 #include "../include/symtable.h"
+#include "../deps/archive/archive.h"
 #include <algorithm>
 #include <cassert>
 
 
 namespace TDEngine2
 {
+	std::unique_ptr<TType> Deserialize(FileReaderArchive& archive)
+	{
+		uint32_t subtypeValue = 0;
+		archive >> subtypeValue;
+
+		std::unique_ptr<TType> pType = nullptr;
+
+		switch (static_cast<TType::E_SUBTYPE>(subtypeValue))
+		{
+			case TType::E_SUBTYPE::BASE:
+				pType = std::make_unique<TType>();
+				break;
+			case TType::E_SUBTYPE::ENUM:
+				pType = std::make_unique<TEnumType>();
+				break;
+			case TType::E_SUBTYPE::CLASS:
+				pType = std::make_unique<TClassType>();
+				break;
+			case TType::E_SUBTYPE::NAMESPACE:
+				pType = std::make_unique<TNamespaceType>();
+				break;
+		}
+
+		if (!pType)
+		{
+			return nullptr;
+		}
+
+		pType->Load(archive);
+
+		return pType;
+	}
+
+	bool TType::Load(FileReaderArchive& archive)
+	{
+		archive >> mId;
+		return true;
+	}
+
+	bool TType::Save(FileWriterArchive& archive)
+	{
+		archive << static_cast<uint32_t>(GetSubtype());
+		archive << mId << mMangledId;
+
+		return true;
+	}
 
 	void TType::Visit(ITypeVisitor& visitor) const
 	{
@@ -16,9 +63,86 @@ namespace TDEngine2
 		visitor.VisitNamespaceType(*this);
 	}
 
+	bool TEnumType::Load(FileReaderArchive& archive)
+	{
+		archive >> mIsStronglyTyped >> mIsIntrospectable;
+		archive >> mUnderlyingTypeStr;
+
+		size_t enumeratorsCount = 0;
+		archive >> enumeratorsCount;
+
+		std::string currEnumeratorValue;
+
+		for (size_t i = 0; i < enumeratorsCount; ++i)
+		{
+			archive >> currEnumeratorValue;
+			mEnumerators.emplace_back(currEnumeratorValue);
+		}
+
+		return true;
+	}
+
+	bool TEnumType::Save(FileWriterArchive& archive)
+	{
+		bool result = TType::Save(archive);
+
+		archive << mIsStronglyTyped << mIsIntrospectable;
+		archive << mUnderlyingTypeStr;
+
+		archive << mEnumerators.size();
+
+		for (auto&& currEnumeratorStr : mEnumerators)
+		{
+			archive << currEnumeratorStr;
+		}
+
+		return result;
+	}
+
 	void TEnumType::Visit(ITypeVisitor& visitor) const
 	{
 		visitor.VisitEnumType(*this);
+	}
+
+	bool TClassType::Load(FileReaderArchive& archive)
+	{
+		archive >> mIsFinal;
+
+		size_t baseClassesCount = 0;
+		archive >> baseClassesCount;
+
+		std::string fullNameStr;
+		bool isVirtualInherited;
+		uint32_t accessSpecifier;
+
+		for (size_t i = 0; i < baseClassesCount; ++i)
+		{
+			archive >> fullNameStr;
+			archive >> isVirtualInherited;
+			archive >> accessSpecifier;
+
+			mBaseClasses.push_back({ fullNameStr, isVirtualInherited, static_cast<E_ACCESS_SPECIFIER_TYPE>(accessSpecifier) });
+		}
+
+		return true;
+	}
+
+	bool TClassType::Save(FileWriterArchive& archive)
+	{
+		bool result = TType::Save(archive);
+
+		archive << mIsFinal;
+
+		archive << mBaseClasses.size();
+
+		for (auto&& baseClassEntity : mBaseClasses)
+		{
+			archive << baseClassEntity.mFullName;
+			archive << baseClassEntity.mIsVirtualInherited;
+			archive << static_cast<uint32_t>(baseClassEntity.mAccessSpecifier);
+		}
+
+		return result;
 	}
 
 	void TClassType::Visit(ITypeVisitor& visitor) const
@@ -331,31 +455,6 @@ namespace TDEngine2
 		}
 
 		return TSymbolDesc::mInvalid;
-	}
-
-
-	/*!
-		\brief TypeSerializer's definition
-	*/
-
-	void TypeSerializer::VisitBaseType(const TType& type)
-	{
-
-	}
-
-	void TypeSerializer::VisitEnumType(const TEnumType& type)
-	{
-
-	}
-
-	void TypeSerializer::VisitNamespaceType(const TNamespaceType& type)
-	{
-
-	}
-
-	void TypeSerializer::VisitClassType(const TClassType& type)
-	{
-
 	}
 
 
