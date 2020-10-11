@@ -158,13 +158,13 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 	{
 		std::string fullEnumName = StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
-		uint32_t enumeratorsCount = type.mEnumerators.size();
+		size_t enumeratorsCount = type.mEnumerators.size();
 
 		std::string fieldsStr = "";
 
 		auto&& enumerators = type.mEnumerators;
 
-		for (uint32_t i = 0; i < enumeratorsCount; ++i)
+		for (size_t i = 0; i < enumeratorsCount; ++i)
 		{
 			auto&& currEnumerator = enumerators[i];
 

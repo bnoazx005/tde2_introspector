@@ -51,6 +51,31 @@ namespace TDEngine2
 		// \todo add deletion
 	}
 
+	bool SymTable::TScopeEntity::Save(FileWriterArchive& archive)
+	{
+		return false;
+	}
+
+	bool SymTable::TScopeEntity::Load(FileReaderArchive& archive)
+	{
+		return false;
+	}
+
+	bool SymTable::Save(FileWriterArchive& archive)
+	{
+		return mpGlobalScope->Save(archive);
+	}
+
+	bool SymTable::Load(FileReaderArchive& archive)
+	{
+		_reset();
+
+		mpGlobalScope = new TScopeEntity{};
+		mpCurrScope = mpGlobalScope;
+
+		return mpGlobalScope->Load(archive);
+	}
+
 	void SymTable::Visit(ISymTableVisitor& visitor)
 	{
 		visitor.VisitScope(*mpGlobalScope);
@@ -190,6 +215,20 @@ namespace TDEngine2
 		return mSourceFilename;
 	}
 
+	void SymTable::_reset()
+	{
+		mpGlobalScope = nullptr;
+		mpCurrScope = nullptr;
+		mpPrevScope = nullptr;
+
+		mIsReadOnlyMode = false;
+
+		mLastVisitedScopeIndex = -1;
+		mPrevVisitedScopeIndex = -1;
+
+		mSourceFilename = "";
+	}
+
 	bool SymTable::_createAnonymousScope()
 	{
 		int32_t nextScopeIndex = static_cast<int32_t>(mpCurrScope->mpNestedScopes.size());
@@ -292,6 +331,31 @@ namespace TDEngine2
 		}
 
 		return TSymbolDesc::mInvalid;
+	}
+
+
+	/*!
+		\brief TypeSerializer's definition
+	*/
+
+	void TypeSerializer::VisitBaseType(const TType& type)
+	{
+
+	}
+
+	void TypeSerializer::VisitEnumType(const TEnumType& type)
+	{
+
+	}
+
+	void TypeSerializer::VisitNamespaceType(const TNamespaceType& type)
+	{
+
+	}
+
+	void TypeSerializer::VisitClassType(const TClassType& type)
+	{
+
 	}
 
 

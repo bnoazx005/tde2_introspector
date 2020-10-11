@@ -164,4 +164,22 @@ TEST_CASE("Parser tests")
 			REQUIRE(false);
 		}).Parse();
 	}
+
+	SECTION("TestParse_PassClassBody_CorrectlyProcessMembers")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"class A {",
+				" ",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+	}
 }

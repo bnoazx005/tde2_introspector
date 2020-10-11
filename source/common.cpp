@@ -3,11 +3,15 @@
 #include "../include/parser.h"
 #include "../include/symtable.h"
 #include "../deps/argparse/argparse.h"
+#include "../deps/PicoSHA2/picosha2.h"
+#include "../deps/archive/archive.h"
 #include <iostream>
+#include <fstream>
 #include <experimental/filesystem>
 #include <array>
 #include <mutex>
 #include <unordered_set>
+#include <cstring>
 
 
 namespace fs = std::experimental::filesystem;
@@ -33,12 +37,15 @@ namespace TDEngine2
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
 
+		const char* pCacheOutputDirectory = nullptr;
+
 		struct argparse_option options[] = {
 			OPT_HELP(),
 			OPT_GROUP("Basic options"),
 			OPT_BOOLEAN('V', "version", &showVersion, "Print version info and exit"),
 			OPT_STRING('O', "outdir", &pOutputDirectory, "Write output into specified <dirname>"),
 			OPT_STRING('o', "outfile", &pOutputFilename, "Output file's name <filename>"),
+			OPT_STRING('C', "cache-dir", &pOutputFilename, "All cache files will be written into the specified <dirname>"),
 			OPT_INTEGER('T', "num-threads", &numOfThreads, "A number of available threads to process a few header files simultaneously"),
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_END(),
@@ -86,6 +93,11 @@ namespace TDEngine2
 		if (pOutputFilename)
 		{
 			utilityOptions.mOutputFilename = pOutputFilename;
+		}
+
+		if (pCacheOutputDirectory)
+		{
+			utilityOptions.mCacheDirname = pCacheOutputDirectory;
 		}
 
 		if (numOfThreads <= 0 || numOfThreads > (std::numeric_limits<int>::max() / 2))
@@ -162,6 +174,19 @@ namespace TDEngine2
 					headersPaths.emplace_back(path.string());
 					processedPaths.emplace(absPathStr);
 				}
+			}
+		}
+
+		// \note exclude 'metadata.h' file from the list
+		{
+			auto iter = std::find_if(headersPaths.cbegin(), headersPaths.cend(), [](const std::string& filename)
+			{
+				return filename.find("metadata") != std::string::npos;
+			});
+
+			if (iter != headersPaths.cend()) 
+			{
+				headersPaths.erase(iter);
 			}
 		}
 
@@ -278,5 +303,142 @@ namespace TDEngine2
 		}
 
 		return output;
+	}
+
+	bool TCacheData::Load(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
+	{
+		std::ifstream inputFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename));
+
+		DEFER([&inputFile]
+		{
+			inputFile.close();
+		});
+
+		if (!inputFile.is_open())
+		{
+			return false;
+		}
+
+		Archive<std::ifstream> cacheArchive{ inputFile };
+
+		cacheArchive >> mInputHash;
+		
+		size_t entitiesCount = 0;
+
+		cacheArchive >> entitiesCount;
+
+		std::string currPath;
+		std::string currHash;
+
+		for (size_t i = 0; i < entitiesCount; ++i)
+		{
+			cacheArchive >> currPath >> currHash;
+			mSymTablesTable.emplace(currPath, currHash);
+		}
+
+		return true;
+	}
+
+	bool TCacheData::Save(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
+	{
+		std::ofstream cacheFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename));
+
+		DEFER([&cacheFile]
+		{
+			cacheFile.close();
+		});
+
+		Archive<std::ofstream> cacheArchive { cacheFile };
+
+		cacheArchive << mInputHash;
+
+		cacheArchive << mSymTablesTable.size();
+
+		for (auto&& currSymTableInfo : mSymTablesTable)
+		{
+			cacheArchive << currSymTableInfo.first << currSymTableInfo.second;
+		}
+
+		return true;
+	}
+
+	void TCacheData::Reset()
+	{
+		std::lock_guard<std::mutex> lock{ mMutex };
+
+		mInputHash.clear();
+		mSymTablesTable.clear();
+	}
+
+	void TCacheData::AddSymTableEntity(const std::string& filePath, const std::string& fileHash)
+	{
+		std::lock_guard<std::mutex> lock{ mMutex };
+		mSymTablesTable.emplace(filePath, fileHash);
+	}
+
+	bool TCacheData::Contains(const std::string& filePath) const
+	{
+		std::lock_guard<std::mutex> lock{ mMutex };
+		return (mSymTablesTable.find(filePath) != mSymTablesTable.cend());
+	}
+
+	void TCacheData::SetInputHash(const std::string& hash)
+	{
+		std::lock_guard<std::mutex> lock{ mMutex };
+		mInputHash = hash;
+	}
+
+	void TCacheData::SetSymTablesIndex(TCacheIndexTable&& table)
+	{
+		std::lock_guard<std::mutex> lock{ mMutex };
+		std::swap(mSymTablesTable, table);
+	}
+
+	const TCacheData::TCacheIndexTable& TCacheData::GetSymTablesIndex() const
+	{
+		return mSymTablesTable;
+	}
+
+	const std::string& TCacheData::GetInputHash() const
+	{
+		return mInputHash;
+	}
+
+
+	std::string GetHashFromInputFiles(const std::vector<std::string>& inputFiles)
+	{
+		picosha2::hash256_one_by_one hashGenerator;
+
+		hashGenerator.init();
+
+		for (auto&& currInputFilePath : inputFiles)
+		{
+			hashGenerator.process(currInputFilePath.cbegin(), currInputFilePath.cend());
+		}
+
+		hashGenerator.finish();
+
+		std::string outputHashStr;
+		picosha2::get_hash_hex_string(hashGenerator, outputHashStr);
+
+		return outputHashStr;
+	}
+
+	std::string GetHashFromFilePath(const std::string& value)
+	{
+		picosha2::hash256_one_by_one hashGenerator;
+
+		hashGenerator.init();
+		hashGenerator.process(value.cbegin(), value.cend());
+
+		std::string timestampStr = std::to_string(std::experimental::filesystem::last_write_time(value).time_since_epoch().count());
+		hashGenerator.process(timestampStr.cbegin(), timestampStr.cend());
+
+		hashGenerator.finish();
+
+		std::string outputHashStr;
+		picosha2::get_hash_hex_string(hashGenerator, outputHashStr);
+
+		return outputHashStr;
 	}
 }

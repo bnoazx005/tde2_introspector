@@ -5,12 +5,18 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
+
+
+template<typename T> class Archive;
 
 
 namespace TDEngine2
 {
 	class ITypeVisitor;
 	class SymTable;
+	using FileReaderArchive = Archive<std::ifstream>;
+	using FileWriterArchive = Archive<std::ofstream>;
 
 
 	struct TType
@@ -100,6 +106,9 @@ namespace TDEngine2
 		public:
 			struct TScopeEntity
 			{
+				bool Save(FileWriterArchive& archive);
+				bool Load(FileReaderArchive& archive);
+
 				TScopeEntity* mpParentScope;
 
 				std::vector<TScopeEntity*> mpNestedScopes;
@@ -115,6 +124,9 @@ namespace TDEngine2
 		public:
 			SymTable();
 			~SymTable();
+
+			bool Save(FileWriterArchive& archive);
+			bool Load(FileReaderArchive& archive);
 
 			void Visit(ISymTableVisitor& visitor);
 
@@ -135,6 +147,8 @@ namespace TDEngine2
 
 			const std::string& GetSourceFilename() const;
 		private:
+			void _reset();
+
 			bool _createAnonymousScope();
 			bool _createNamedScope(const std::string& name);
 
@@ -187,6 +201,18 @@ namespace TDEngine2
 
 			virtual void VisitScope(const SymTable::TScopeEntity& scope) = 0;
 			virtual void VisitNamedScope(const SymTable::TScopeEntity& namedScope) = 0;
+	};
+
+
+	class TypeSerializer : public ITypeVisitor
+	{
+		public:
+			virtual ~TypeSerializer() = default;
+
+			void VisitBaseType(const TType& type) override;
+			void VisitEnumType(const TEnumType& type) override;
+			void VisitNamespaceType(const TNamespaceType& type) override;
+			void VisitClassType(const TClassType& type) override;
 	};
 
 

@@ -486,11 +486,42 @@ namespace TDEngine2
 			pClassScopeEntity->mpType = std::move(pClassTypeDesc);
 		});
 
-		// \todo Implement body's parsing
-		// For now we just eat all the tokens between { and }
-		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != mpLexer->GetCurrToken().mType)
+		const TToken* pCurrToken = &mpLexer->GetCurrToken();
+
+		TClassType::E_ACCESS_SPECIFIER_TYPE currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+
+		// \note Implement body's parsing
+		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != pCurrToken->mType)
 		{
-			mpLexer->GetNextToken(); 
+#if 0
+			if (E_TOKEN_TYPE::TT_PUBLIC == pCurrToken->mType ||
+				E_TOKEN_TYPE::TT_PROTECTED == pCurrToken->mType ||
+				E_TOKEN_TYPE::TT_PRIVATE == pCurrToken->mType)
+			{
+				switch (pCurrToken->mType)
+				{
+					case E_TOKEN_TYPE::TT_PUBLIC:
+						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PUBLIC;
+						break;
+					case E_TOKEN_TYPE::TT_PROTECTED:
+						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PROTECTED;
+						break;
+					case E_TOKEN_TYPE::TT_PRIVATE:
+						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+						break;
+				}
+
+				mpLexer->GetNextToken();
+
+				if (!_expect(E_TOKEN_TYPE::TT_COLON, mpLexer->GetCurrToken()) ||
+					!_parseClassMemberDeclaration(className))
+				{
+					return false;
+				}
+			}
+#endif
+
+			pCurrToken = &mpLexer->GetNextToken(); 
 		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))
@@ -499,6 +530,13 @@ namespace TDEngine2
 		}
 
 		mpLexer->GetNextToken();
+
+		return true;
+	}
+
+	bool Parser::_parseClassMemberDeclaration(const std::string& className)
+	{
+
 
 		return true;
 	}

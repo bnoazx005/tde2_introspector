@@ -14,7 +14,7 @@ namespace TDEngine2
 	class SymTable;
 
 	struct TToken;
-	class TType;
+	struct TType;
 	struct TEnumType;
 
 	enum class E_TOKEN_TYPE : uint16_t;
@@ -83,6 +83,7 @@ namespace TDEngine2
 			bool _parseClassDeclaration();
 			bool _parseClassHeader(const std::string& className);
 			bool _parseClassBody(const std::string& className);
+			bool _parseClassMemberDeclaration(const std::string& className);
 
 			std::string _parseClassIdentifier();
 			std::string _parseSimpleTemplateIdentifier();

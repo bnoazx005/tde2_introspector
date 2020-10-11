@@ -40,8 +40,6 @@ namespace TDEngine2
 
 				auto&& entities = metaExtractor.GetTypesInfo();
 
-				std::set<std::string> neededIncludes;
-
 				for (auto currMetaEntity : entities)
 				{
 					std::string path = StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
@@ -51,13 +49,9 @@ namespace TDEngine2
 						continue;
 					}
 
-					neededIncludes.insert(path);
-					mIncludedHeaders.emplace(path);
-				}
+					mpHeaderOutputStream->WriteString(path);
 
-				for (const std::string& currIncludeFilename : neededIncludes)
-				{
-					mpHeaderOutputStream->WriteString(currIncludeFilename);
+					mIncludedHeaders.emplace(path);
 				}
 
 				for (auto currMetaEntity : entities)

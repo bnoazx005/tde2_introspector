@@ -9,6 +9,8 @@
 #include <sstream>
 #include <memory>
 #include <functional>
+#include <unordered_map>
+#include <mutex>
 
 
 namespace TDEngine2
@@ -37,6 +39,10 @@ namespace TDEngine2
 		bool                      mIsTaggedOnlyModeEnabled = false;
 
 		std::vector<std::string>  mInputSources { "." };
+
+		std::string               mCacheDirname = "cache/";
+		std::string               mCacheIndexFilename = "index.cache";
+
 		std::string               mOutputDirname = ".";
 		std::string               mOutputFilename = "metadata.h";
 
@@ -302,4 +308,52 @@ struct TypeInfo
 	{
 		return (*pStr != 0) ? ComputeHash(pStr + 1, ((hash << 5) + hash) + *pStr) : hash;
 	}
+
+
+	class TCacheData
+	{
+		public:
+			using TCacheIndexTable = std::unordered_map<std::string, std::string>;
+
+		public:
+			/*!
+				\brief The function returns an index of cached symbols per file. The key of the table
+				is a full header's path, the value is a name of corresponding cache file. The name is
+				SHA-256 hashsum
+			*/
+
+			bool Load(const std::string& cacheSourceDirectory, const std::string& cacheFilename);
+
+			/*!
+				\brief The functions writes down current options into a main cache file
+			*/
+
+			bool Save(const std::string& cacheSourceDirectory, const std::string& cacheFilename);
+
+			void Reset();
+
+			void AddSymTableEntity(const std::string& filePath, const std::string& fileHash);
+
+			bool Contains(const std::string& filePath) const;
+
+			void SetInputHash(const std::string& hash);
+			void SetSymTablesIndex(TCacheIndexTable&& table);
+
+			const TCacheIndexTable& GetSymTablesIndex() const;
+			const std::string& GetInputHash() const;
+		private:
+			mutable std::mutex mMutex;
+
+			std::string mInputHash;
+
+			TCacheIndexTable mSymTablesTable;
+	};
+
+	
+	/*!
+		\brief All file paths within the vector should have canonical form to prevent different hashes for representations of same files
+	*/
+
+	std::string GetHashFromInputFiles(const std::vector<std::string>& inputFiles);
+	std::string GetHashFromFilePath(const std::string& value);
 }
