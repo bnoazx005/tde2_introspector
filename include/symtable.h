@@ -119,7 +119,7 @@ namespace TDEngine2
 	{
 		std::string              mName;
 
-		TType::UniquePtr         mType = nullptr;
+		TType::UniquePtr         mpType = nullptr;
 
 		static const TSymbolDesc mInvalid;
 	};
@@ -133,14 +133,16 @@ namespace TDEngine2
 		public:
 			struct TScopeEntity
 			{
+				using Ptr = std::unique_ptr<TScopeEntity>;
+
 				bool Save(FileWriterArchive& archive);
 				bool Load(FileReaderArchive& archive);
 
 				TScopeEntity* mpParentScope;
 
-				std::vector<TScopeEntity*> mpNestedScopes;
+				std::vector<Ptr> mpNestedScopes;
 
-				std::unordered_map<std::string, TScopeEntity*> mpNamedScopes;
+				std::unordered_map<std::string, Ptr> mpNamedScopes;
 
 				std::vector<TSymbolDesc> mVariables;
 
@@ -184,9 +186,9 @@ namespace TDEngine2
 
 			const TSymbolDesc& _lookUpInternal(const std::string& id) const;
 		private:
-			TScopeEntity* mpGlobalScope;
-			TScopeEntity* mpCurrScope;
-			TScopeEntity* mpPrevScope;
+			TScopeEntity::Ptr mpGlobalScope;
+			TScopeEntity*     mpCurrScope;
+			TScopeEntity*     mpPrevScope;
 
 			bool          mIsReadOnlyMode = false; // \note It's set to true if EnterScope is used
 

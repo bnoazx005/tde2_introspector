@@ -38,7 +38,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_SEMICOLON,
 		};
 
-		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		while ((pCurrToken = &lexer.GetNextToken())->mpType != E_TOKEN_TYPE::TT_EOF)
 		{
 			if (currExpectedTokenIndex >= expectedTokens.size())
 			{
@@ -46,7 +46,7 @@ TEST_CASE("Lexer tests")
 				break;
 			}
 
-			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+			REQUIRE(pCurrToken->mpType == expectedTokens[currExpectedTokenIndex++]);
 		}
 	}
 
@@ -73,7 +73,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_CLOSE_BRACE,
 		};
 
-		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		while ((pCurrToken = &lexer.GetNextToken())->mpType != E_TOKEN_TYPE::TT_EOF)
 		{
 			if (currExpectedTokenIndex >= expectedTokens.size())
 			{
@@ -81,7 +81,7 @@ TEST_CASE("Lexer tests")
 				break;
 			}
 
-			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+			REQUIRE(pCurrToken->mpType == expectedTokens[currExpectedTokenIndex++]);
 		}
 	}
 
@@ -94,7 +94,7 @@ TEST_CASE("Lexer tests")
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 
 	SECTION("TestGetNextToken_PassSimpleMultiLineComments_ReturnsNothing")
@@ -106,7 +106,7 @@ TEST_CASE("Lexer tests")
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 
 	SECTION("TestGetNextToken_PassNestedMultiLineComments_ReturnsNothing")
@@ -118,7 +118,7 @@ TEST_CASE("Lexer tests")
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 
 	SECTION("TestGetNextToken_PassMultiLineComments_ReturnsNothing")
@@ -133,7 +133,7 @@ TEST_CASE("Lexer tests")
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 
 	/*SECTION("TestGetNextToken_PassNumberLiterals_ReturnsSequenceOfTokens")
@@ -200,7 +200,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_SEMICOLON,
 		};
 
-		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		while ((pCurrToken = &lexer.GetNextToken())->mpType != E_TOKEN_TYPE::TT_EOF)
 		{
 			if (currExpectedTokenIndex >= expectedTokens.size())
 			{
@@ -208,7 +208,7 @@ TEST_CASE("Lexer tests")
 				break;
 			}
 
-			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+			REQUIRE(pCurrToken->mpType == expectedTokens[currExpectedTokenIndex++]);
 		}
 	}
 
@@ -228,7 +228,7 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 2));
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 3));
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 4));
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 
 	SECTION("TestGetNextToken_PassMultilineStream_ReturnsCorrectHorizontalLineIndexesNumbersInTokens")
@@ -244,6 +244,6 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(3, 1));
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(5, 1));
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(7, 1));
-		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
 }

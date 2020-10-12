@@ -6,7 +6,7 @@
 
 namespace TDEngine2
 {
-	std::unique_ptr<TType> Deserialize(FileReaderArchive& archive)
+	std::unique_ptr<TType> TType::Deserialize(FileReaderArchive& archive)
 	{
 		uint32_t subtypeValue = 0;
 		archive >> subtypeValue;
@@ -165,24 +165,111 @@ namespace TDEngine2
 
 
 	SymTable::SymTable():
-		mpGlobalScope(new TScopeEntity), mpCurrScope(mpGlobalScope), mpPrevScope(nullptr)
+		mpGlobalScope(new TScopeEntity), mpCurrScope(mpGlobalScope.get()), mpPrevScope(nullptr)
 	{
 		mpGlobalScope->mpParentScope = nullptr;
 	}
 
 	SymTable::~SymTable()
 	{
-		// \todo add deletion
 	}
 
 	bool SymTable::TScopeEntity::Save(FileWriterArchive& archive)
 	{
-		return false;
+		archive << mpNestedScopes.size();
+
+		for (auto&& pCurrScope : mpNestedScopes)
+		{
+			if (!pCurrScope)
+			{
+				continue; 
+			}
+
+			pCurrScope->Save(archive);
+		}
+
+		archive << mpNamedScopes.size();
+
+		for (auto&& currScopeEntity : mpNamedScopes)
+		{
+			archive << currScopeEntity.first;
+
+			if (!currScopeEntity.second)
+			{
+				continue;
+			}
+
+			currScopeEntity.second->Save(archive);
+		}
+
+		// \note Save variables
+		archive << mVariables.size();
+
+		for (auto&& currVariableInfo : mVariables)
+		{
+			archive << currVariableInfo.mName;
+			
+			if (currVariableInfo.mpType)
+			{
+				currVariableInfo.mpType->Save(archive);
+			}
+		}
+
+		archive << mIndex;
+		
+		if (mpType)
+		{
+			mpType->Save(archive);
+		}
+
+		return true;
 	}
 
 	bool SymTable::TScopeEntity::Load(FileReaderArchive& archive)
 	{
-		return false;
+		size_t nestedScopesCount = 0;
+		archive >> nestedScopesCount;
+
+		for (size_t i = 0; i < nestedScopesCount; ++i)
+		{
+			mpNestedScopes.emplace_back(std::make_unique<TScopeEntity>());
+			mpNestedScopes.back()->Load(archive);
+		}
+
+		size_t namedScopesCount = 0;
+		archive >> namedScopesCount;
+
+		std::string scopeName;
+
+		for (size_t i = 0; i < namedScopesCount; ++i)
+		{
+			archive >> scopeName;
+
+			mpNamedScopes.emplace(scopeName, std::make_unique<TScopeEntity>());
+			mpNamedScopes[scopeName]->Load(archive);
+		}
+
+		// \note Save variables
+		size_t variablesCount = 0;
+		archive >> variablesCount;
+
+		mVariables.resize(variablesCount);
+
+		std::string variableId;
+
+		for (size_t i = 0; i < variablesCount; ++i)
+		{
+			archive >> variableId;
+
+			mVariables[i].mName = variableId;
+			mVariables[i].mpType = std::move(TType::Deserialize(archive));
+		}
+
+		archive >> mIndex;
+
+		mpType = std::move(TType::Deserialize(archive));
+
+		return true;
 	}
 
 	bool SymTable::Save(FileWriterArchive& archive)
@@ -194,8 +281,8 @@ namespace TDEngine2
 	{
 		_reset();
 
-		mpGlobalScope = new TScopeEntity{};
-		mpCurrScope = mpGlobalScope;
+		mpGlobalScope = std::make_unique<TScopeEntity>();
+		mpCurrScope = mpGlobalScope.get();
 
 		return mpGlobalScope->Load(archive);
 	}
@@ -214,7 +301,7 @@ namespace TDEngine2
 		auto iter = std::find_if(symbols.begin(), symbols.end(), [&desc](const TSymbolDesc& entity) { return desc.mName == entity.mName; });
 		if (iter != symbols.end()) // \note there is already symbol with the same name than update it
 		{
-			iter->mType = std::move(desc.mType);
+			iter->mpType = std::move(desc.mpType);
 			return;
 		}
 
@@ -278,7 +365,7 @@ namespace TDEngine2
 				return nullptr;
 			}
 
-			return iter->second;
+			return (iter->second).get();
 		};
 		
 		if (TScopeEntity* pResult = findScope(mpCurrScope))
@@ -357,8 +444,9 @@ namespace TDEngine2
 	{
 		int32_t nextScopeIndex = static_cast<int32_t>(mpCurrScope->mpNestedScopes.size());
 
-		TScopeEntity* pNewScope = new TScopeEntity;
-		mpCurrScope->mpNestedScopes.push_back(pNewScope);
+		mpCurrScope->mpNestedScopes.emplace_back(std::make_unique<TScopeEntity>());
+
+		TScopeEntity* pNewScope = mpCurrScope->mpNestedScopes.back().get();
 		
 		pNewScope->mpParentScope = mpCurrScope;
 		pNewScope->mIndex        = nextScopeIndex;
@@ -370,14 +458,14 @@ namespace TDEngine2
 
 	bool SymTable::_createNamedScope(const std::string& name)
 	{
-		TScopeEntity* pNewScope = new TScopeEntity;
-
 		if (mpCurrScope->mpNamedScopes.find(name) != mpCurrScope->mpNamedScopes.cend())
 		{
 			return false;
 		}
 
-		mpCurrScope->mpNamedScopes[name] = pNewScope;
+		mpCurrScope->mpNamedScopes.emplace(name, std::make_unique<TScopeEntity>());
+
+		TScopeEntity* pNewScope = mpCurrScope->mpNamedScopes[name].get();
 
 		pNewScope->mpParentScope = mpCurrScope;
 		pNewScope->mIndex        = -1;
@@ -390,7 +478,7 @@ namespace TDEngine2
 	bool SymTable::_visitAnonymousScope()
 	{
 		mpPrevScope = mpCurrScope;
-		mpCurrScope = mpCurrScope->mpNestedScopes[mLastVisitedScopeIndex + 1];
+		mpCurrScope = mpCurrScope->mpNestedScopes[mLastVisitedScopeIndex + 1].get();
 
 		mLastVisitedScopeIndex = -1;
 
@@ -414,7 +502,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		mpCurrScope = iter->second;
+		mpCurrScope = (iter->second).get();
 
 		mLastVisitedScopeIndex = -1;
 

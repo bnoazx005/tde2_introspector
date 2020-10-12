@@ -25,7 +25,7 @@ TEST_CASE("EnumExtractor's tests")
 		}
 
 		ScopePtr pRootScope = std::make_unique<Scope>();
-		pRootScope->mpNamedScopes["TestEnum"] = pEnumScope.get();
+		pRootScope->mpNamedScopes["TestEnum"] = std::move(pEnumScope);
 
 		EnumsMetaExtractor extractor;
 		extractor.VisitScope(*pRootScope.get());
