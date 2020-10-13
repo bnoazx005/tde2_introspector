@@ -27,12 +27,14 @@ namespace TDEngine2
 			NAMESPACE,
 			ENUM,
 			CLASS,
+			UNKNOWN
 		};
 
 		using UniquePtr = std::unique_ptr<TType>;
 
 		virtual ~TType() = default;
 
+		static bool SafeSerialize(FileWriterArchive& archive, TType* pType);
 		static std::unique_ptr<TType> Deserialize(FileReaderArchive& archive);
 
 		virtual bool Load(FileReaderArchive& archive);

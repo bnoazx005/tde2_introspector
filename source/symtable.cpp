@@ -6,6 +6,17 @@
 
 namespace TDEngine2
 {
+	bool TType::SafeSerialize(FileWriterArchive& archive, TType* pType)
+	{
+		if (!pType)
+		{
+			archive << static_cast<uint32_t>(E_SUBTYPE::UNKNOWN);
+			return true;
+		}
+
+		return pType->Save(archive);
+	}
+
 	std::unique_ptr<TType> TType::Deserialize(FileReaderArchive& archive)
 	{
 		uint32_t subtypeValue = 0;
@@ -27,6 +38,8 @@ namespace TDEngine2
 			case TType::E_SUBTYPE::NAMESPACE:
 				pType = std::make_unique<TNamespaceType>();
 				break;
+			case TType::E_SUBTYPE::UNKNOWN:
+				break;
 		}
 
 		if (!pType)
@@ -41,7 +54,7 @@ namespace TDEngine2
 
 	bool TType::Load(FileReaderArchive& archive)
 	{
-		archive >> mId;
+		archive >> mId >> mMangledId;
 		return true;
 	}
 
@@ -65,6 +78,8 @@ namespace TDEngine2
 
 	bool TEnumType::Load(FileReaderArchive& archive)
 	{
+		bool result = TType::Load(archive);
+
 		archive >> mIsStronglyTyped >> mIsIntrospectable;
 		archive >> mUnderlyingTypeStr;
 
@@ -79,7 +94,7 @@ namespace TDEngine2
 			mEnumerators.emplace_back(currEnumeratorValue);
 		}
 
-		return true;
+		return result;
 	}
 
 	bool TEnumType::Save(FileWriterArchive& archive)
@@ -106,6 +121,8 @@ namespace TDEngine2
 
 	bool TClassType::Load(FileReaderArchive& archive)
 	{
+		bool result = TType::Load(archive);
+
 		archive >> mIsFinal;
 
 		size_t baseClassesCount = 0;
@@ -124,7 +141,7 @@ namespace TDEngine2
 			mBaseClasses.push_back({ fullNameStr, isVirtualInherited, static_cast<E_ACCESS_SPECIFIER_TYPE>(accessSpecifier) });
 		}
 
-		return true;
+		return result;
 	}
 
 	bool TClassType::Save(FileWriterArchive& archive)
@@ -209,18 +226,12 @@ namespace TDEngine2
 		{
 			archive << currVariableInfo.mName;
 			
-			if (currVariableInfo.mpType)
-			{
-				currVariableInfo.mpType->Save(archive);
-			}
+			TType::SafeSerialize(archive, currVariableInfo.mpType.get());
 		}
 
 		archive << mIndex;
-		
-		if (mpType)
-		{
-			mpType->Save(archive);
-		}
+
+		TType::SafeSerialize(archive, mpType.get());
 
 		return true;
 	}
@@ -233,7 +244,11 @@ namespace TDEngine2
 		for (size_t i = 0; i < nestedScopesCount; ++i)
 		{
 			mpNestedScopes.emplace_back(std::make_unique<TScopeEntity>());
-			mpNestedScopes.back()->Load(archive);
+
+			auto pCurrScope = mpNestedScopes.back().get();
+			pCurrScope->Load(archive);
+
+			pCurrScope->mpParentScope = this;
 		}
 
 		size_t namedScopesCount = 0;
