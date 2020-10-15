@@ -49,7 +49,7 @@ int main(int argc, const char** argv)
 			{
 				const std::string hash = GetHashFromFilePath(filesToProcess[i]);
 
-				if (cachedData.Contains(filesToProcess[i]))
+				if (cachedData.Contains(filesToProcess[i], hash))
 				{
 					// \note Deserialize data
 					std::ifstream symTableSourceFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash), std::ios::binary);

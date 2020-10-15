@@ -307,7 +307,7 @@ namespace TDEngine2
 
 	bool TCacheData::Load(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
 	{
-		std::ifstream inputFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename));
+		std::ifstream inputFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
 
 		DEFER([&inputFile]
 		{
@@ -341,7 +341,7 @@ namespace TDEngine2
 
 	bool TCacheData::Save(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
 	{
-		std::ofstream cacheFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename));
+		std::ofstream cacheFile(std::experimental::filesystem::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
 
 		DEFER([&cacheFile]
 		{
@@ -373,13 +373,23 @@ namespace TDEngine2
 	void TCacheData::AddSymTableEntity(const std::string& filePath, const std::string& fileHash)
 	{
 		std::lock_guard<std::mutex> lock{ mMutex };
-		mSymTablesTable.emplace(filePath, fileHash);
+
+		if (mSymTablesTable.find(filePath) == mSymTablesTable.cend())
+		{
+			mSymTablesTable.emplace(filePath, fileHash);
+			return;
+		}
+
+		mSymTablesTable[filePath] = fileHash;
 	}
 
-	bool TCacheData::Contains(const std::string& filePath) const
+	bool TCacheData::Contains(const std::string& filePath, const std::string& fileHash) const
 	{
 		std::lock_guard<std::mutex> lock{ mMutex };
-		return (mSymTablesTable.find(filePath) != mSymTablesTable.cend());
+
+		auto iter = mSymTablesTable.find(filePath);
+		
+		return (iter != mSymTablesTable.cend()) && (iter->second == fileHash);
 	}
 
 	void TCacheData::SetInputHash(const std::string& hash)

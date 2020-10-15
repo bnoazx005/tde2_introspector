@@ -334,7 +334,7 @@ struct TypeInfo
 
 			void AddSymTableEntity(const std::string& filePath, const std::string& fileHash);
 
-			bool Contains(const std::string& filePath) const;
+			bool Contains(const std::string& filePath, const std::string& fileHash) const;
 
 			void SetInputHash(const std::string& hash);
 			void SetSymTablesIndex(TCacheIndexTable&& table);
