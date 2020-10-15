@@ -47,12 +47,17 @@ int main(int argc, const char** argv)
 		{
 			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, &cachedData, i, cacheDirectory = options.mCacheDirname]
 			{
-				const std::string hash = GetHashFromFilePath(filesToProcess[i]);
+				const std::string& filename = filesToProcess[i];
+				const std::string hash = GetHashFromFilePath(filename);
 
-				if (cachedData.Contains(filesToProcess[i], hash))
+				auto&& cachePath = std::experimental::filesystem::path{ cacheDirectory }.concat(hash);
+
+				if (cachedData.Contains(filename, hash))
 				{
+					WriteOutput(std::string("\n").append("Reuse cached version of ").append(filename).append(" file... "));
+
 					// \note Deserialize data
-					std::ifstream symTableSourceFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash), std::ios::binary);
+					std::ifstream symTableSourceFile(cachePath, std::ios::binary);
 					Archive<std::ifstream> symTableSourceArchive(symTableSourceFile);
 
 					symbolsPerFile[i] = std::make_unique<SymTable>();
@@ -63,18 +68,18 @@ int main(int argc, const char** argv)
 					return;
 				}
 
-				symbolsPerFile[i] = std::move(ProcessHeaderFile(filesToProcess[i]));
+				symbolsPerFile[i] = std::move(ProcessHeaderFile(filename));
 
 				// \note Serialize data
 				{
-					std::ofstream symTableOutputFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash), std::ios::binary);
+					std::ofstream symTableOutputFile(cachePath, std::ios::binary);
 					Archive<std::ofstream> symTableOutputArchive(symTableOutputFile);
 
 					symbolsPerFile[i]->Save(symTableOutputArchive);
 
 					symTableOutputFile.close();
 
-					cachedData.AddSymTableEntity(filesToProcess[i], hash);
+					cachedData.AddSymTableEntity(filename, hash);
 				}
 			}));
 		}

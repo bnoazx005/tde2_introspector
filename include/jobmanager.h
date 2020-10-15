@@ -7,6 +7,8 @@
 #include <atomic>
 #include <mutex>
 #include <memory>
+#include <functional>
+#include <condition_variable>
 
 
 namespace TDEngine2

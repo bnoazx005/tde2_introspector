@@ -380,7 +380,8 @@ namespace TDEngine2
 		pClassTypeDesc->mpOwner    = mpSymTable;
 
 		// \note 'final' specifier parsing
-		if (pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mpType))
+		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mpType);
+		if (pClassTypeDesc->mIsFinal)
 		{
 			mpLexer->GetNextToken();
 		}

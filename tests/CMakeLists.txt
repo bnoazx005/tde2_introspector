@@ -31,7 +31,7 @@ set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/lexer.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../source/tokens.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../source/symTable.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../source/symtable.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/lexerTests.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/parserTests.cpp"
@@ -74,7 +74,12 @@ if (UNIX)
 endif (UNIX)
 
 add_executable(${TDE2_INTROSPECTOR_TESTS_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2)
+
+if (UNIX)
+	target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2 -lc++fs -lc++experimental -lpthread)
+else()
+	target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2)
+endif (UNIX)
 
 include(CTest)
 include(Catch)

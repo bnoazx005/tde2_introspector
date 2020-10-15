@@ -136,12 +136,12 @@ namespace TDEngine2
 				continue;
 			}
 
-			if (pRecognizedToken = std::move(_parseNumbers()))
+			if ((pRecognizedToken = std::move(_parseNumbers())))
 			{
 				return std::move(pRecognizedToken);
 			}
 
-			if (pRecognizedToken = std::move(_parseReservedKeywordsAndIdentifiers()))
+			if ((pRecognizedToken = std::move(_parseReservedKeywordsAndIdentifiers())))
 			{
 				return std::move(pRecognizedToken);
 			}
@@ -292,7 +292,7 @@ namespace TDEngine2
 		/*uint32_t x = mCurrPos;
 		uint32_t y = mCurrLine;*/
 
-		while ((currCh = _getNextChar()) != EOF && currCh != '*' ||
+		while (((currCh = _getNextChar()) != EOF && currCh != '*') ||
 			(currCh == '*' && (nextCh = _peekNextChar(1)) != '/'))
 		{
 			_skipComments();
