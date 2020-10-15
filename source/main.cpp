@@ -52,7 +52,7 @@ int main(int argc, const char** argv)
 				if (cachedData.Contains(filesToProcess[i]))
 				{
 					// \note Deserialize data
-					std::ifstream symTableSourceFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash));
+					std::ifstream symTableSourceFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash), std::ios::binary);
 					Archive<std::ifstream> symTableSourceArchive(symTableSourceFile);
 
 					symbolsPerFile[i] = std::make_unique<SymTable>();
@@ -67,7 +67,7 @@ int main(int argc, const char** argv)
 
 				// \note Serialize data
 				{
-					std::ofstream symTableOutputFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash));
+					std::ofstream symTableOutputFile(std::experimental::filesystem::path{ cacheDirectory }.concat(hash), std::ios::binary);
 					Archive<std::ofstream> symTableOutputArchive(symTableOutputFile);
 
 					symbolsPerFile[i]->Save(symTableOutputArchive);

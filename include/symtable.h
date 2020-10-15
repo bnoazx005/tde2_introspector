@@ -35,7 +35,7 @@ namespace TDEngine2
 		virtual ~TType() = default;
 
 		static bool SafeSerialize(FileWriterArchive& archive, TType* pType);
-		static std::unique_ptr<TType> Deserialize(FileReaderArchive& archive);
+		static std::unique_ptr<TType> Deserialize(FileReaderArchive& archive, SymTable* pSymTable = nullptr);
 
 		virtual bool Load(FileReaderArchive& archive);
 		virtual bool Save(FileWriterArchive& archive);
@@ -138,7 +138,7 @@ namespace TDEngine2
 				using Ptr = std::unique_ptr<TScopeEntity>;
 
 				bool Save(FileWriterArchive& archive);
-				bool Load(FileReaderArchive& archive);
+				bool Load(FileReaderArchive& archive, SymTable* symTable);
 
 				TScopeEntity* mpParentScope;
 

@@ -17,7 +17,7 @@ namespace TDEngine2
 		return pType->Save(archive);
 	}
 
-	std::unique_ptr<TType> TType::Deserialize(FileReaderArchive& archive)
+	std::unique_ptr<TType> TType::Deserialize(FileReaderArchive& archive, SymTable* pSymTable)
 	{
 		uint32_t subtypeValue = 0;
 		archive >> subtypeValue;
@@ -48,6 +48,7 @@ namespace TDEngine2
 		}
 
 		pType->Load(archive);
+		pType->mpOwner = pSymTable;
 
 		return pType;
 	}
@@ -83,7 +84,7 @@ namespace TDEngine2
 		archive >> mIsStronglyTyped >> mIsIntrospectable;
 		archive >> mUnderlyingTypeStr;
 
-		size_t enumeratorsCount = 0;
+		uint32_t enumeratorsCount = 0;
 		archive >> enumeratorsCount;
 
 		std::string currEnumeratorValue;
@@ -91,7 +92,7 @@ namespace TDEngine2
 		for (size_t i = 0; i < enumeratorsCount; ++i)
 		{
 			archive >> currEnumeratorValue;
-			mEnumerators.emplace_back(currEnumeratorValue);
+			mEnumerators.push_back(currEnumeratorValue);
 		}
 
 		return result;
@@ -104,7 +105,7 @@ namespace TDEngine2
 		archive << mIsStronglyTyped << mIsIntrospectable;
 		archive << mUnderlyingTypeStr;
 
-		archive << mEnumerators.size();
+		archive << static_cast<uint32_t>(mEnumerators.size());
 
 		for (auto&& currEnumeratorStr : mEnumerators)
 		{
@@ -229,14 +230,14 @@ namespace TDEngine2
 			TType::SafeSerialize(archive, currVariableInfo.mpType.get());
 		}
 
-		archive << mIndex;
+		archive << (mIndex >= 0 ? mIndex : (std::numeric_limits<int>::max)());
 
 		TType::SafeSerialize(archive, mpType.get());
 
 		return true;
 	}
 
-	bool SymTable::TScopeEntity::Load(FileReaderArchive& archive)
+	bool SymTable::TScopeEntity::Load(FileReaderArchive& archive, SymTable* symTable)
 	{
 		size_t nestedScopesCount = 0;
 		archive >> nestedScopesCount;
@@ -246,8 +247,8 @@ namespace TDEngine2
 			mpNestedScopes.emplace_back(std::make_unique<TScopeEntity>());
 
 			auto pCurrScope = mpNestedScopes.back().get();
-			pCurrScope->Load(archive);
 
+			pCurrScope->Load(archive, symTable);
 			pCurrScope->mpParentScope = this;
 		}
 
@@ -261,7 +262,11 @@ namespace TDEngine2
 			archive >> scopeName;
 
 			mpNamedScopes.emplace(scopeName, std::make_unique<TScopeEntity>());
-			mpNamedScopes[scopeName]->Load(archive);
+			
+			auto pCurrScope = mpNamedScopes[scopeName].get();
+
+			pCurrScope->Load(archive, symTable);
+			pCurrScope->mpParentScope = this;
 		}
 
 		// \note Save variables
@@ -277,19 +282,25 @@ namespace TDEngine2
 			archive >> variableId;
 
 			mVariables[i].mName = variableId;
-			mVariables[i].mpType = std::move(TType::Deserialize(archive));
+			mVariables[i].mpType = std::move(TType::Deserialize(archive, symTable));
 		}
 
 		archive >> mIndex;
 
-		mpType = std::move(TType::Deserialize(archive));
+		mIndex = (mIndex == (std::numeric_limits<int>::max)()) ? -1 : mIndex;
+
+		mpType = std::move(TType::Deserialize(archive, symTable));
 
 		return true;
 	}
 
 	bool SymTable::Save(FileWriterArchive& archive)
 	{
-		return mpGlobalScope->Save(archive);
+		bool result = mpGlobalScope->Save(archive);
+
+		archive << mSourceFilename;
+
+		return result;
 	}
 
 	bool SymTable::Load(FileReaderArchive& archive)
@@ -299,7 +310,11 @@ namespace TDEngine2
 		mpGlobalScope = std::make_unique<TScopeEntity>();
 		mpCurrScope = mpGlobalScope.get();
 
-		return mpGlobalScope->Load(archive);
+		bool result = mpGlobalScope->Load(archive, this);
+
+		archive >> mSourceFilename;
+
+		return result;
 	}
 
 	void SymTable::Visit(ISymTableVisitor& visitor)

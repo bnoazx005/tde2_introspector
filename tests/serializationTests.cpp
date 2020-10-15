@@ -15,6 +15,7 @@ TEST_CASE("Serialization tests")
 {
 	SECTION("TestEnumTypeSerializationDeserialization")
 	{
+		const std::string filename = "broken_serialization";
 		const std::string enumName = "Test";
 
 		// Serialization
@@ -25,8 +26,9 @@ TEST_CASE("Serialization tests")
 			pType->mEnumerators.push_back("FIRST");
 			pType->mEnumerators.push_back("SECOND");
 			pType->mEnumerators.push_back("THIRD");
+			pType->mEnumerators.push_back("RV_UNRECOGNIZED_TOKENS_SEQ");
 
-			std::ofstream outfile(TestSerializationFilename);
+			std::ofstream outfile(filename, std::ios::binary);
 			Archive<std::ofstream> archive(outfile);
 
 			REQUIRE(pType->Save(archive));
@@ -36,14 +38,14 @@ TEST_CASE("Serialization tests")
 		
 		// Deserialization
 		{
-			std::ifstream infile(TestSerializationFilename);
+			std::ifstream infile(filename, std::ios::binary);
 			Archive<std::ifstream> archive(infile);
 
 			std::unique_ptr<TType> pType = TType::Deserialize(archive);
 			REQUIRE(pType);
 
 			TEnumType* pEnumType = dynamic_cast<TEnumType*>(pType.get());
-			REQUIRE((pEnumType && pEnumType->mId == enumName && pEnumType->mEnumerators.size() == 3));
+			REQUIRE((pEnumType && pEnumType->mId == enumName && pEnumType->mEnumerators.size() == 4));
 
 			infile.close();
 		}		
@@ -169,7 +171,7 @@ TEST_CASE("Serialization tests")
 			Archive<std::ifstream> archive(infile);
 
 			std::unique_ptr<SymTable::TScopeEntity> pScope = std::make_unique<SymTable::TScopeEntity>();
-			REQUIRE(pScope->Load(archive));
+			REQUIRE(pScope->Load(archive, nullptr));
 
 			REQUIRE(pScope->mIndex == 2);
 			REQUIRE(pScope->mVariables.size() == 2);
@@ -209,7 +211,7 @@ TEST_CASE("Serialization tests")
 			Archive<std::ifstream> archive(infile);
 
 			std::unique_ptr<SymTable::TScopeEntity> pScope = std::make_unique<SymTable::TScopeEntity>();
-			REQUIRE(pScope->Load(archive));
+			REQUIRE(pScope->Load(archive, nullptr));
 
 			REQUIRE(pScope->mIndex == 2);
 			REQUIRE(pScope->mVariables.size() == 2);
