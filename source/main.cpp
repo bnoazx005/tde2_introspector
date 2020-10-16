@@ -1,6 +1,6 @@
 #include <iostream>
 #include <array>
-#include <experimental/filesystem>
+#include <filesystem>
 #include "../include/common.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
@@ -50,7 +50,7 @@ int main(int argc, const char** argv)
 				const std::string& filename = filesToProcess[i];
 				const std::string hash = GetHashFromFilePath(filename);
 
-				auto&& cachePath = std::experimental::filesystem::path{ cacheDirectory }.concat(hash);
+				auto&& cachePath = std::filesystem::path{ cacheDirectory }.concat(hash);
 
 				if (cachedData.Contains(filename, hash))
 				{
