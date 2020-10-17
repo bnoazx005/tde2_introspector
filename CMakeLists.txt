@@ -78,7 +78,7 @@ endif (UNIX)
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ${HEADERS})
 
 if (UNIX)
-	target_link_libraries(${EXECUTABLE_NAME} pthread)
+	target_link_libraries(${EXECUTABLE_NAME} pthread stdc++fs)
 endif()
 
 
