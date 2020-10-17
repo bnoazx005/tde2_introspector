@@ -70,6 +70,8 @@ namespace TDEngine2
 #include <string>
 #include <type_traits>
 
+{0}
+
 
 namespace Meta 
 {

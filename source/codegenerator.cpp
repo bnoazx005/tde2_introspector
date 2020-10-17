@@ -121,8 +121,6 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			return false;
 		}
 
-		_writeHeaderPrelude();
-
 		return true;
 	}
 
@@ -143,6 +141,11 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			pCurrSymbolTable->Visit(classesExtractor);
 		}
 
+		std::string dependenciesInclusionsStr = WriteInclusions(enumsExtractor);
+		dependenciesInclusionsStr.append(WriteInclusions(classesExtractor));
+
+		_writeHeaderPrelude(dependenciesInclusionsStr);
+
 		const bool enumsWriteResult   = WriteMetaData("\n/*\n\tEnum's meta\n*/\n\n", enumsExtractor);
 		const bool classesWriteResult = WriteMetaData("\n/*\n\tClasses's meta\n*/\n\n", classesExtractor);
 
@@ -156,7 +159,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitEnumType(const TEnumType& type)
 	{
-		std::string fullEnumName = StringUtils::ReplaceAll(type.mMangledId, "@", "::");
+		std::string fullEnumName = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		size_t enumeratorsCount = type.mEnumerators.size();
 
@@ -186,7 +189,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
-		std::string fullClassIdentifier = StringUtils::ReplaceAll(type.mMangledId, "@", "::");
+		std::string fullClassIdentifier = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		auto&& parentClasses = _getParentClasses(type);
 
@@ -200,10 +203,10 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 															  _vectorToString(parentClasses)));
 	}
 
-	void CodeGenerator::_writeHeaderPrelude()
+	void CodeGenerator::_writeHeaderPrelude(const std::string& inclusionsPart)
 	{
 		mpHeaderOutputStream->WriteString("#pragma once\n\n");
-		mpHeaderOutputStream->WriteString(GeneratedHeaderPrelude);
+		mpHeaderOutputStream->WriteString(StringUtils::Format(GeneratedHeaderPrelude, inclusionsPart));
 	}
 
 	std::vector<std::string> CodeGenerator::_getParentClasses(const TClassType& classType)

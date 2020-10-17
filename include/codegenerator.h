@@ -42,6 +42,21 @@ namespace TDEngine2
 
 				for (auto currMetaEntity : entities)
 				{
+					currMetaEntity->Visit(*this);
+				}
+
+				return true;
+			}
+
+			template <typename T>
+			std::string WriteInclusions(const MetaExtractor<T>& metaExtractor)
+			{
+				std::string result;
+
+				auto&& entities = metaExtractor.GetTypesInfo();
+
+				for (auto currMetaEntity : entities)
+				{
 					std::string path = StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
 					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
@@ -49,21 +64,16 @@ namespace TDEngine2
 						continue;
 					}
 
-					mpHeaderOutputStream->WriteString(path);
+					result.append(path);
 
 					mIncludedHeaders.emplace(path);
 				}
 
-				for (auto currMetaEntity : entities)
-				{
-					currMetaEntity->Visit(*this);
-				}
-
-				return true;
+				return result;
 			}
 
 		private:
-			void _writeHeaderPrelude();
+			void _writeHeaderPrelude(const std::string& inclusionsPart);
 
 			static std::vector<std::string> _getParentClasses(const TClassType& classType);
 			static std::string _vectorToString(const std::vector<std::string>& types);
