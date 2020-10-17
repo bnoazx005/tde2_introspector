@@ -21,11 +21,23 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
+	auto&& coutStreamBuffer = std::cout.rdbuf();
+
+	if (!options.mIsLogOutputEnabled)
+	{
+		std::cout.set_rdbuf(nullptr); // \note disable standard console output here and restore at the end of execution
+	}
+
+	DEFER([coutStreamBuffer]
+	{
+		std::cout.set_rdbuf(coutStreamBuffer);
+	});
+
 	// \note Scan given directory for cpp header files
 	const std::vector<std::string>& filesToProcess = GetHeaderFiles(options.mInputSources);
 	if (filesToProcess.empty())
 	{
-		std::cout << "Nothing to process... Exit\n";
+		WriteOutput("Nothing to process... Exit\n");
 		return -1;
 	}
 
