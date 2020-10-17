@@ -10,6 +10,10 @@ sudo apt-get install -qq unzip
 
 sudo apt-get install -qq build-essential xorg-dev libc++-dev
 
+sudo apt-get install -qq clang-9 
+sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-9 900
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-9 900
+
 CMAKE_VERSION=3.10.1
 CMAKE_VERSION_DIR=v3.10
 
