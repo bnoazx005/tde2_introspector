@@ -77,6 +77,10 @@ endif (UNIX)
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ${HEADERS})
 
+if (UNIX)
+	target_link_libraries(${EXECUTABLE_NAME} pthread)
+endif()
+
 
 if (IS_TESTING_ENABLED)
 	enable_testing()
