@@ -29,6 +29,12 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
+	auto&& cacheDirectory = std::filesystem::path(options.mCacheDirname);
+	if (!std::filesystem::exists(cacheDirectory))
+	{
+		std::filesystem::create_directory(cacheDirectory);
+	}
+
 	TCacheData cachedData;
 	cachedData.Load(options.mCacheDirname, options.mCacheIndexFilename);
 
@@ -50,22 +56,26 @@ int main(int argc, const char** argv)
 				const std::string& filename = filesToProcess[i];
 				const std::string hash = GetHashFromFilePath(filename);
 
-				auto&& cachePath = std::filesystem::path{ cacheDirectory }.concat(hash);
+				const auto& cachePath = std::filesystem::path(cacheDirectory).concat(hash).string();
 
 				if (cachedData.Contains(filename, hash))
 				{
-					WriteOutput(std::string("\n").append("Reuse cached version of ").append(filename).append(" file... "));
-
-					// \note Deserialize data
+					// \note If the specified file exists then reuse data inside it
 					std::ifstream symTableSourceFile(cachePath, std::ios::binary);
-					Archive<std::ifstream> symTableSourceArchive(symTableSourceFile);
 
-					symbolsPerFile[i] = std::make_unique<SymTable>();
-					symbolsPerFile[i]->Load(symTableSourceArchive);
+					if (symTableSourceFile.is_open())
+					{
+						WriteOutput(std::string("\n").append("Reuse cached version of ").append(filename).append(" file... "));
 
-					symTableSourceFile.close();
+						Archive<std::ifstream> symTableSourceArchive(symTableSourceFile);
 
-					return;
+						symbolsPerFile[i] = std::make_unique<SymTable>();
+						symbolsPerFile[i]->Load(symTableSourceArchive);
+
+						symTableSourceFile.close();
+
+						return;
+					}					
 				}
 
 				symbolsPerFile[i] = std::move(ProcessHeaderFile(filename));

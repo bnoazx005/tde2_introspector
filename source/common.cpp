@@ -32,7 +32,10 @@ namespace TDEngine2
 	{
 		int showVersion = 0;
 		int numOfThreads = 1;
+
+		// flags
 		int taggedOnly = 0;
+		int suppressLogOutput = 0;
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
@@ -48,6 +51,7 @@ namespace TDEngine2
 			OPT_STRING('C', "cache-dir", &pOutputFilename, "All cache files will be written into the specified <dirname>"),
 			OPT_INTEGER('T', "num-threads", &numOfThreads, "A number of available threads to process a few header files simultaneously"),
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
+			OPT_BOOLEAN('q', "quiet", &suppressLogOutput, "Enables suppresion of program's output"),
 			OPT_END(),
 		};
 
@@ -66,6 +70,7 @@ namespace TDEngine2
 
 		utilityOptions.mIsValid = true;
 		utilityOptions.mIsTaggedOnlyModeEnabled = static_cast<bool>(taggedOnly);
+		utilityOptions.mIsLogOutputEnabled = !static_cast<bool>(suppressLogOutput);
 
 		// \note parse input files before any option, because argparse library will remove all argv's values after it processes that
 		if (argc >= 1)

@@ -37,10 +37,11 @@ namespace TDEngine2
 
 		bool                      mIsValid;
 		bool                      mIsTaggedOnlyModeEnabled = false;
+		bool                      mIsLogOutputEnabled = true;
 
 		std::vector<std::string>  mInputSources { "." };
 
-		std::string               mCacheDirname = "cache/";
+		std::string               mCacheDirname = "./cache/";
 		std::string               mCacheIndexFilename = "index.cache";
 
 		std::string               mOutputDirname = ".";
