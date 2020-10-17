@@ -47,6 +47,12 @@ int main(int argc, const char** argv)
 		std::filesystem::create_directory(cacheDirectory);
 	}
 
+	auto&& outputDirectory = std::filesystem::path(options.mOutputDirname);
+	if (!std::filesystem::exists(outputDirectory))
+	{
+		std::filesystem::create_directory(outputDirectory);
+	}
+
 	TCacheData cachedData;
 	cachedData.Load(options.mCacheDirname, options.mCacheIndexFilename);
 
@@ -110,7 +116,9 @@ int main(int argc, const char** argv)
 	// \note Generate meta-information as cpp files
 	CodeGenerator codeGenerator;
 
-	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, options.mOutputFilename))
+	const std::string outputFilename = std::filesystem::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
+
+	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, outputFilename))
 	{
 		return -1;
 	}
