@@ -74,6 +74,7 @@ namespace TDEngine2
 
 		bool                     mIsStronglyTyped = false;
 		bool                     mIsIntrospectable = false;
+		bool                     mIsForwardDeclaration = false;
 
 		std::string              mUnderlyingTypeStr = "int";
 

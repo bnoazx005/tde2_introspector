@@ -81,7 +81,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Load(archive);
 
-		archive >> mIsStronglyTyped >> mIsIntrospectable;
+		archive >> mIsStronglyTyped >> mIsIntrospectable >> mIsForwardDeclaration;
 		archive >> mUnderlyingTypeStr;
 
 		uint32_t enumeratorsCount = 0;
@@ -102,7 +102,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Save(archive);
 
-		archive << mIsStronglyTyped << mIsIntrospectable;
+		archive << mIsStronglyTyped << mIsIntrospectable << mIsForwardDeclaration;
 		archive << mUnderlyingTypeStr;
 
 		archive << static_cast<uint32_t>(mEnumerators.size());

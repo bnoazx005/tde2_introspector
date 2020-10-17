@@ -206,7 +206,8 @@ namespace TDEngine2
 
 		std::string enumName = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
 
-		assert(mpSymTable->CreateScope(enumName));
+		bool result = mpSymTable->CreateScope(enumName);
+		assert(result);
 
 		mpLexer->GetNextToken();
 
@@ -230,13 +231,14 @@ namespace TDEngine2
 		}
 
 		if (auto pEnumScopeEntity = mpSymTable->LookUpNamedScope(enumName))
-		{
+		{			
 			auto pEnumTypeDesc = std::make_unique<TEnumType>();
 
-			pEnumTypeDesc->mId              = enumName;
-			pEnumTypeDesc->mMangledId       = mpSymTable->GetMangledNameForNamedScope(enumName);
+			pEnumTypeDesc->mId = enumName;
+			pEnumTypeDesc->mMangledId = mpSymTable->GetMangledNameForNamedScope(enumName);
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
-			pEnumTypeDesc->mpOwner          = mpSymTable;
+			pEnumTypeDesc->mIsForwardDeclaration = (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_SEMICOLON);
+			pEnumTypeDesc->mpOwner = mpSymTable;
 
 			if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{

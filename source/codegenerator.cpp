@@ -159,6 +159,11 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitEnumType(const TEnumType& type)
 	{
+		if (type.mIsForwardDeclaration) // \note skip forward declarations to prevent duplicates of traits of the same type
+		{
+			return;
+		}
+
 		std::string fullEnumName = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		size_t enumeratorsCount = type.mEnumerators.size();
