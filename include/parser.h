@@ -81,7 +81,7 @@ namespace TDEngine2
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
 			bool _parseClassDeclaration();
-			bool _parseClassHeader(const std::string& className);
+			bool _parseClassHeader(const std::string& className, bool isStruct = false);
 			bool _parseClassBody(const std::string& className);
 			bool _parseClassMemberDeclaration(const std::string& className);
 

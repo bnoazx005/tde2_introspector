@@ -75,6 +75,7 @@ namespace TDEngine2
 					_parseEnumDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
+				case E_TOKEN_TYPE::TT_STRUCT:
 					_parseClassDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
@@ -331,7 +332,9 @@ namespace TDEngine2
 
 	bool Parser::_parseClassDeclaration()
 	{
-		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mpType)
+		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mpType);
+
+		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mpType && !isStruct)
 		{
 			return false;
 		}
@@ -358,7 +361,7 @@ namespace TDEngine2
 			mpSymTable->ExitScope();
 		});
 
-		if (!_parseClassHeader(className) || 
+		if (!_parseClassHeader(className, isStruct) ||
 			!_parseClassBody(className))
 		{
 			return false;
@@ -367,7 +370,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className)
+	bool Parser::_parseClassHeader(const std::string& className, bool isStruct)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -380,6 +383,7 @@ namespace TDEngine2
 		pClassTypeDesc->mId        = className;
 		pClassTypeDesc->mMangledId = mpSymTable->GetMangledNameForNamedScope(className);
 		pClassTypeDesc->mpOwner    = mpSymTable;
+		pClassTypeDesc->mIsStruct  = isStruct;
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mpType);

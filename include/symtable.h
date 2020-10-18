@@ -110,6 +110,7 @@ namespace TDEngine2
 		E_SUBTYPE GetSubtype() const override { return E_SUBTYPE::CLASS; }
 
 		bool mIsFinal = false;
+		bool mIsStruct = false;
 
 		std::vector<TBaseClassInfo> mBaseClasses;
 	};
