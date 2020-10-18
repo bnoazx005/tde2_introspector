@@ -21,16 +21,14 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
-	auto&& coutStreamBuffer = std::cout.rdbuf();
-
 	if (!options.mIsLogOutputEnabled)
 	{
-		std::cout.set_rdbuf(nullptr); // \note disable standard console output here and restore at the end of execution
+		std::cout.setstate(std::ios_base::failbit); // \note disable standard console output here and restore at the end of execution
 	}
 
-	DEFER([coutStreamBuffer]
+	DEFER([]
 	{
-		std::cout.set_rdbuf(coutStreamBuffer);
+		std::cout.clear();
 	});
 
 	// \note Scan given directory for cpp header files
@@ -38,26 +36,27 @@ int main(int argc, const char** argv)
 	if (filesToProcess.empty())
 	{
 		WriteOutput("Nothing to process... Exit\n");
-		return -1;
+		return 0;
 	}
 
-	auto&& cacheDirectory = std::filesystem::path(options.mCacheDirname);
-	if (!std::filesystem::exists(cacheDirectory))
+	auto createDirectoryIfDoesntExist = [](const std::string& path)
 	{
-		std::filesystem::create_directory(cacheDirectory);
-	}
+		auto&& cacheDirectory = std::filesystem::path(path);
+		if (!std::filesystem::exists(cacheDirectory))
+		{
+			std::filesystem::create_directory(cacheDirectory);
+		}
+	};
 
-	auto&& outputDirectory = std::filesystem::path(options.mOutputDirname);
-	if (!std::filesystem::exists(outputDirectory))
-	{
-		std::filesystem::create_directory(outputDirectory);
-	}
+	createDirectoryIfDoesntExist(options.mCacheDirname);
+	createDirectoryIfDoesntExist(options.mOutputDirname);
 
 	TCacheData cachedData;
 	cachedData.Load(options.mCacheDirname, options.mCacheIndexFilename);
 
 	if (cachedData.GetInputHash() != GetHashFromInputFiles(options.mInputSources)) // \note Reset cache if we introspect another headers pack
 	{
+		// \todo Remove all cached files
 		cachedData.Reset();
 	}
 
