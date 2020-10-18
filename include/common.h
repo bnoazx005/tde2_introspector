@@ -38,6 +38,7 @@ namespace TDEngine2
 		bool                      mIsValid;
 		bool                      mIsTaggedOnlyModeEnabled = false;
 		bool                      mIsLogOutputEnabled = true;
+		bool                      mIsForceModeEnabled = false;
 
 		std::vector<std::string>  mInputSources { "." };
 

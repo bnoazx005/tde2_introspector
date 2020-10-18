@@ -36,6 +36,7 @@ namespace TDEngine2
 		// flags
 		int taggedOnly = 0;
 		int suppressLogOutput = 0;
+		int forceMode = 0;
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
@@ -52,6 +53,7 @@ namespace TDEngine2
 			OPT_INTEGER('T', "num-threads", &numOfThreads, "A number of available threads to process a few header files simultaneously"),
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_BOOLEAN('q', "quiet", &suppressLogOutput, "Enables suppresion of program's output"),
+			OPT_BOOLEAN('F', "force", &forceMode, "Enables force mode for the utility, all cached data will be ignored"),
 			OPT_END(),
 		};
 
@@ -71,6 +73,7 @@ namespace TDEngine2
 		utilityOptions.mIsValid = true;
 		utilityOptions.mIsTaggedOnlyModeEnabled = static_cast<bool>(taggedOnly);
 		utilityOptions.mIsLogOutputEnabled = !static_cast<bool>(suppressLogOutput);
+		utilityOptions.mIsForceModeEnabled = static_cast<bool>(forceMode);
 
 		// \note parse input files before any option, because argparse library will remove all argv's values after it processes that
 		if (argc >= 1)

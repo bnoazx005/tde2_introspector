@@ -66,17 +66,19 @@ int main(int argc, const char** argv)
 	{
 		JobManager jobManager(options.mCurrNumOfThreads); // jobManager as a scoped object makes us possible to wait for all jobs will be done to the end of the scope
 
+		const bool isForceModeEnabled = options.mIsForceModeEnabled;
+
 		// \note Build symbol tables for each header file
 		for (size_t i = 0; i < filesToProcess.size(); ++i)
 		{
-			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, &cachedData, i, cacheDirectory = options.mCacheDirname]
+			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, &cachedData, i, cacheDirectory = options.mCacheDirname, isForceModeEnabled]
 			{
 				const std::string& filename = filesToProcess[i];
 				const std::string hash = GetHashFromFilePath(filename);
 
 				const auto& cachePath = std::filesystem::path(cacheDirectory).concat(hash).string();
 
-				if (cachedData.Contains(filename, hash))
+				if (cachedData.Contains(filename, hash) && !isForceModeEnabled)
 				{
 					// \note If the specified file exists then reuse data inside it
 					std::ifstream symTableSourceFile(cachePath, std::ios::binary);
