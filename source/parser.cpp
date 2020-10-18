@@ -281,7 +281,7 @@ namespace TDEngine2
 
 	bool Parser::_parseEnumeratorDefinition(TEnumType* pEnumType)
 	{
-		if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+		if (E_TOKEN_TYPE::TT_IDENTIFIER != mpLexer->GetCurrToken().mpType)
 		{
 			return false;
 		}

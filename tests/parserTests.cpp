@@ -127,6 +127,24 @@ TEST_CASE("Parser tests")
 			enumerators[2] == "THIRD"));
 	}
 
+	SECTION("TestParse_PassEnumWithinNamespace_CorrectlyProcessIt")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"namespace Test {",
+				" enum class Enum { };",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+	}
+
 	SECTION("TestParse_PassClassDeclaration_ProcessWithoutErrors")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
