@@ -478,15 +478,20 @@ namespace TDEngine2
 			return false;
 		}
 
+		auto pClassTypeDesc = pClassScopeEntity->mpType ? std::move(pClassScopeEntity->mpType) : std::make_unique<TClassType>();
+
 		// \note Try to parse body, it starts from {
 		if (E_TOKEN_TYPE::TT_OPEN_BRACE != mpLexer->GetCurrToken().mpType)
 		{
+			if (auto pClassTypeInfo = dynamic_cast<TClassType*>(pClassTypeDesc.get()))
+			{
+				pClassTypeInfo->mIsForwardDeclaration = true;
+			}
+
 			return true;
 		}
 
 		mpLexer->GetNextToken();
-
-		auto pClassTypeDesc = pClassScopeEntity->mpType ? std::move(pClassScopeEntity->mpType) : std::make_unique<TClassType>();
 
 		DEFER([this, pClassScopeEntity, &pClassTypeDesc] 
 		{

@@ -194,6 +194,11 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
+		if (type.mIsForwardDeclaration) // \note skip forward declarations to prevent duplicates of traits of the same type
+		{
+			return;
+		}
+
 		std::string fullClassIdentifier = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		auto&& parentClasses = _getParentClasses(type);

@@ -111,6 +111,7 @@ namespace TDEngine2
 
 		bool mIsFinal = false;
 		bool mIsStruct = false;
+		bool mIsForwardDeclaration = false;
 
 		std::vector<TBaseClassInfo> mBaseClasses;
 	};
