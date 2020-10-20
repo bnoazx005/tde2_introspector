@@ -1,0 +1,3 @@
+[submodule "deps/Wrench"]
+	path = deps/Wrench
+	url = https://github.com/bnoazx005/Wrench.git
