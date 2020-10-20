@@ -8,6 +8,7 @@
 #include "../include/codegenerator.h"
 #include "../include/jobmanager.h"
 #include "../deps/archive/archive.h"
+#include "../deps/Wrench/source/stringUtils.hpp"
 
 
 using namespace TDEngine2;
@@ -119,7 +120,7 @@ int main(int argc, const char** argv)
 
 	const std::string outputFilename = std::filesystem::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
 
-	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, outputFilename))
+	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, outputFilename, options.mEmitFlags))
 	{
 		return -1;
 	}

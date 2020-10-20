@@ -99,7 +99,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		}
 	}
 
-	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename)
+	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags)
 	{
 		if (!outputStreamsFactory)
 		{
@@ -110,6 +110,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		mOutputFilenamesName = outputFilename;
 
 		mpHeaderOutputStream = outputStreamsFactory(outputFilename);
+
+		mEmitFlags = flags;
 
 		if (!mpHeaderOutputStream)
 		{
@@ -126,8 +128,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	bool CodeGenerator::Generate(TSymbolTablesArray&& symbolTablesPerFile)
 	{
-		EnumsMetaExtractor enumsExtractor;
-		ClassMetaExtractor classesExtractor;
+		EnumsMetaExtractor enumsExtractor(mEmitFlags);
+		ClassMetaExtractor classesExtractor(mEmitFlags);
 
 		// \note Collect data from symbol tables
 		for (auto&& pCurrSymbolTable : symbolTablesPerFile)
@@ -177,11 +179,11 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			auto&& currEnumerator = enumerators[i];
 
 			fieldsStr
-				.append(StringUtils::Format(mEnumeratorFieldPattern, fullEnumName, fullEnumName + "::" + currEnumerator, currEnumerator))
+				.append(Wrench::StringUtils::Format(mEnumeratorFieldPattern, fullEnumName, fullEnumName + "::" + currEnumerator, currEnumerator))
 				.append(i + 1 < enumeratorsCount ? "," : "").append("\n\t\t\t");
 		}
 
-		mpHeaderOutputStream->WriteString(StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
+		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
 															  enumeratorsCount, fieldsStr));
@@ -203,7 +205,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 		auto&& parentClasses = _getParentClasses(type);
 
-		mpHeaderOutputStream->WriteString(StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern, 
+		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern,
 															  fullClassIdentifier,
 															  mFalseConstant,
 															  mFalseConstant,
@@ -216,7 +218,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 	void CodeGenerator::_writeHeaderPrelude(const std::string& inclusionsPart)
 	{
 		mpHeaderOutputStream->WriteString("#pragma once\n\n");
-		mpHeaderOutputStream->WriteString(StringUtils::Format(GeneratedHeaderPrelude, inclusionsPart));
+		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(GeneratedHeaderPrelude, inclusionsPart));
 	}
 
 	std::vector<std::string> CodeGenerator::_getParentClasses(const TClassType& classType)
@@ -225,7 +227,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 		for (auto&& currBaseClassInfo : classType.mBaseClasses)
 		{
-			parentClasses.push_back(StringUtils::Format("TYPEID({0})", currBaseClassInfo.mFullName));
+			parentClasses.push_back(Wrench::StringUtils::Format("TYPEID({0})", currBaseClassInfo.mFullName));
 		}
 
 		return parentClasses;

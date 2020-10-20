@@ -3,6 +3,7 @@
 
 #include "symtable.h"
 #include "common.h"
+#include "../deps/Wrench/source/stringUtils.hpp"
 #include <functional>
 #include <set>
 
@@ -22,7 +23,7 @@ namespace TDEngine2
 			CodeGenerator();
 			~CodeGenerator();
 
-			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename);
+			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags);
 
 			bool Generate(TSymbolTablesArray&& symbolTablesPerFile);
 
@@ -57,7 +58,7 @@ namespace TDEngine2
 
 				for (auto currMetaEntity : entities)
 				{
-					std::string path = StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
+					std::string path = Wrench::StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
 					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
 					{
@@ -95,5 +96,7 @@ namespace TDEngine2
 
 			static const std::string       mTrueConstant;
 			static const std::string       mFalseConstant;
+
+			E_EMIT_FLAGS                   mEmitFlags;
 	};
 }

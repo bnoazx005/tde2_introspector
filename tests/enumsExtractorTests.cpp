@@ -27,7 +27,7 @@ TEST_CASE("EnumExtractor's tests")
 		ScopePtr pRootScope = std::make_unique<Scope>();
 		pRootScope->mpNamedScopes["TestEnum"] = std::move(pEnumScope);
 
-		EnumsMetaExtractor extractor;
+		EnumsMetaExtractor extractor(E_EMIT_FLAGS::ALL);
 		extractor.VisitScope(*pRootScope.get());
 
 		auto&& enums = extractor.GetTypesInfo();

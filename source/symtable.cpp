@@ -124,7 +124,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Load(archive);
 
-		archive >> mIsFinal;
+		archive >> mIsFinal >> mIsForwardDeclaration >> mIsStruct;
 
 		size_t baseClassesCount = 0;
 		archive >> baseClassesCount;
@@ -149,7 +149,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Save(archive);
 
-		archive << mIsFinal;
+		archive << mIsFinal << mIsForwardDeclaration << mIsStruct;
 
 		archive << mBaseClasses.size();
 
@@ -580,8 +580,18 @@ namespace TDEngine2
 		\brief EnumsExtractor's definition
 	*/
 
+	EnumsMetaExtractor::EnumsMetaExtractor(const E_EMIT_FLAGS& flags):
+		MetaExtractor(flags)
+	{
+	}
+
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
+		if ((mEmitFlags & E_EMIT_FLAGS::ENUMS) != E_EMIT_FLAGS::ENUMS)
+		{
+			return;
+		}
+
 		auto iter = mTypesHashTable.find(type.mMangledId);
 		if (iter != mTypesHashTable.cend())
 		{
@@ -601,8 +611,24 @@ namespace TDEngine2
 		mpTypesInfo.push_back(&type);
 	}
 
+
+	/*!
+		\brief ClassesExtractor's definition
+	*/
+
+	ClassMetaExtractor::ClassMetaExtractor(const E_EMIT_FLAGS& flags) :
+		MetaExtractor(flags)
+	{
+	}
+
 	void ClassMetaExtractor::VisitClassType(const TClassType& type)
 	{
+		if ((!type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::CLASSES) != E_EMIT_FLAGS::CLASSES)) || 
+			(type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::STRUCTS) != E_EMIT_FLAGS::STRUCTS)))
+		{
+			return;
+		}
+
 		auto iter = mTypesHashTable.find(type.mMangledId);
 		if (iter != mTypesHashTable.cend())
 		{

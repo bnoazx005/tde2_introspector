@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include "common.h"
 
 
 template<typename T> class Archive;
@@ -246,7 +247,11 @@ namespace TDEngine2
 			using TTypesHashMap = std::unordered_map<std::string, uint32_t>; // key is a full name of an entity which is consists of mangled name like the following Name@..@TypeName
 		
 		public:
-			MetaExtractor() = default;
+			MetaExtractor(const E_EMIT_FLAGS& flags) :
+				mEmitFlags(flags)
+			{
+			}
+
 			virtual ~MetaExtractor() = default;
 
 			void VisitScope(const SymTable::TScopeEntity& scope) override
@@ -288,8 +293,13 @@ namespace TDEngine2
 			const TTypesArray& GetTypesInfo() const { return mpTypesInfo; }
 
 		protected:
+			MetaExtractor() = default;
+
+		protected:
 			TTypesHashMap mTypesHashTable;
 			TTypesArray   mpTypesInfo;
+
+			E_EMIT_FLAGS  mEmitFlags;
 	};
 
 
@@ -302,10 +312,12 @@ namespace TDEngine2
 	class EnumsMetaExtractor : public MetaExtractor<TEnumType>
 	{
 		public:
-			EnumsMetaExtractor() = default;
+			EnumsMetaExtractor(const E_EMIT_FLAGS& flags);
 			virtual ~EnumsMetaExtractor() = default;
 
 			void VisitEnumType(const TEnumType& type) override;
+		private:
+			EnumsMetaExtractor() = default;
 	};
 
 
@@ -316,9 +328,11 @@ namespace TDEngine2
 	class ClassMetaExtractor : public MetaExtractor<TClassType>
 	{
 		public:
-			ClassMetaExtractor() = default;
+			ClassMetaExtractor(const E_EMIT_FLAGS& flags);
 			virtual ~ClassMetaExtractor() = default;
 
 			void VisitClassType(const TClassType& type) override;
+		private:
+			ClassMetaExtractor() = default;
 	};
 }

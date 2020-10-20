@@ -20,6 +20,7 @@ set(HEADERS
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/archive/archive.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/PicoSHA2/picosha2.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/deps/Wrench/source/stringUtils.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/lexer.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/parser.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/tokens.h"

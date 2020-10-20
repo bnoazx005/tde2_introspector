@@ -5,6 +5,7 @@
 #include "../deps/argparse/argparse.h"
 #include "../deps/PicoSHA2/picosha2.h"
 #include "../deps/archive/archive.h"
+#include "../deps/Wrench/source/stringUtils.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -28,6 +29,7 @@ namespace TDEngine2
 		0
 	};
 
+
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT
 	{
 		int showVersion = 0;
@@ -37,9 +39,11 @@ namespace TDEngine2
 		int taggedOnly = 0;
 		int suppressLogOutput = 0;
 		int forceMode = 0;
+		int emitFlags = 0;
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
+		const char* pEmitType = nullptr;
 
 		const char* pCacheOutputDirectory = nullptr;
 
@@ -54,6 +58,9 @@ namespace TDEngine2
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_BOOLEAN('q', "quiet", &suppressLogOutput, "Enables suppresion of program's output"),
 			OPT_BOOLEAN('F', "force", &forceMode, "Enables force mode for the utility, all cached data will be ignored"),
+			OPT_BIT(0, "emit-enums", &emitFlags, "Enables code generation for enumerations", NULL, static_cast<int>(E_EMIT_FLAGS::ENUMS), OPT_NONEG),
+			OPT_BIT(0, "emit-classes", &emitFlags, "Enables code generation for classes", NULL, static_cast<int>(E_EMIT_FLAGS::CLASSES), OPT_NONEG),
+			OPT_BIT(0, "emit-structs", &emitFlags, "Enables code generation for structures", NULL, static_cast<int>(E_EMIT_FLAGS::STRUCTS), OPT_NONEG),
 			OPT_END(),
 		};
 
@@ -115,21 +122,8 @@ namespace TDEngine2
 		}
 
 		utilityOptions.mCurrNumOfThreads = static_cast<uint16_t>(numOfThreads);
+		utilityOptions.mEmitFlags = static_cast<E_EMIT_FLAGS>(emitFlags);
 		
-#if 0
-		compilerOptions.mPrintFlags = pPrintArg ? ((strcmp(pPrintArg, "symtable-dump") == 0) ? PF_SYMTABLE_DUMP :
-			((strcmp(pPrintArg, "targets") == 0) ?
-				PF_COMPILER_TARGETS : 0x0)) : 0x0;
-		compilerOptions.mEmitFlag = pEmitArg ? ((strcmp(pEmitArg, "llvm-ir") == 0) ?
-			E_EMIT_FLAGS::EF_LLVM_IR :
-			((strcmp(pEmitArg, "llvm-bc") == 0) ?
-				E_EMIT_FLAGS::EF_LLVM_BC :
-				((strcmp(pEmitArg, "asm") == 0) ?
-					E_EMIT_FLAGS::EF_ASM :
-					E_EMIT_FLAGS::EF_NONE))) : E_EMIT_FLAGS::EF_NONE;
-
-		compilerOptions.mOptimizationLevel = std::min<U8>(3, std::max<U8>(0, compilerOptions.mOptimizationLevel)); // in range of [0; 3]
-#endif
 		return std::move(utilityOptions);
 	}
 

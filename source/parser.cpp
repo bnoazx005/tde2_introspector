@@ -3,6 +3,8 @@
 #include "../include/tokens.h"
 #include "../include/symtable.h"
 #include "../include/common.h"
+#define STR_UTILS_IMPLEMENTATION
+#include "../deps/Wrench/source/stringUtils.hpp"
 #include <cassert>
 
 
@@ -571,7 +573,7 @@ namespace TDEngine2
 			return dynamic_cast<const TIdentifierToken&>(currToken).mId;
 		}
 		
-		return StringUtils::GetEmptyStr();
+		return Wrench::StringUtils::GetEmptyStr();
 	}
 
 	std::string Parser::_parseSimpleTemplateIdentifier()
@@ -599,7 +601,7 @@ namespace TDEngine2
 
 				if (!_expect(E_TOKEN_TYPE::TT_GREAT, mpLexer->GetCurrToken().mpType))
 				{
-					return StringUtils::GetEmptyStr();
+					return Wrench::StringUtils::GetEmptyStr();
 				}
 
 				templateIdentifier.push_back('>');
@@ -607,10 +609,10 @@ namespace TDEngine2
 				return templateIdentifier;
 			}
 
-			return StringUtils::GetEmptyStr();
+			return Wrench::StringUtils::GetEmptyStr();
 		}
 
-		return StringUtils::GetEmptyStr();
+		return Wrench::StringUtils::GetEmptyStr();
 	}
 
 	bool Parser::_eatUnknownTokens()
