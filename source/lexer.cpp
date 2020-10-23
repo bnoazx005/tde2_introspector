@@ -120,6 +120,11 @@ namespace TDEngine2
 
 		while ((ch = _getNextChar()) != EOF)
 		{
+			if (_skipComments())
+			{
+				continue;
+			}
+
 			while (std::isspace(ch = _getCurrChar()))
 			{
 				if (ch == '\n' || ch == '\r')
@@ -131,7 +136,7 @@ namespace TDEngine2
 				_getNextChar();
 			}
 
-			if (_skipComments())
+			if (_skipMacroDefinitions())
 			{
 				continue;
 			}
@@ -158,6 +163,33 @@ namespace TDEngine2
 		}*/
 
 		return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF);
+	}
+
+	bool Lexer::_skipMacroDefinitions()
+	{
+		if (_getCurrChar() != '#')
+		{
+			return false;
+		}
+		
+		int depth = 1;
+
+		while (depth > 0)
+		{
+			char ch = _getNextChar();
+
+			if (ch == '\\')
+			{
+				++depth;
+			}
+
+			if ((ch == '\n') || (ch == '\r') || (ch == -1))
+			{
+				--depth;
+			}
+		}
+
+		return true;
 	}
 
 	char Lexer::_getCurrChar() const

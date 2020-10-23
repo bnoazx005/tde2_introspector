@@ -246,4 +246,34 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(7, 1));
 		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
 	}
+
+	SECTION("TestGetNextToken_PassMacroDefinition_EatsMacroDefinitionAndReturnsEOFToken")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"#define FOO(x) x ## x",
+				""
+			} } };
+
+		Lexer lexer(*stream);
+
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
+	}
+
+	SECTION("TestGetNextToken_PassFewLinesMacroDefinitions_EatsMacroDefinitionAndReturnsEOFToken")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"#define FOO(x) \\\n",
+				"{\\\n",
+				" blah blah blah\\\n",
+				"}\n",
+				"test",
+			} } };
+
+		Lexer lexer(*stream);
+
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_IDENTIFIER);
+		REQUIRE(lexer.GetNextToken().mpType == E_TOKEN_TYPE::TT_EOF);
+	}
 }

@@ -68,6 +68,8 @@ namespace TDEngine2
 			std::unique_ptr<TToken> _parseReservedKeywordsAndIdentifiers();
 
 			bool _skipComments();
+			bool _skipMacroDefinitions();
+
 			void _skipSingleLineComment();
 			void _skipMultiLineComment();
 		private:
