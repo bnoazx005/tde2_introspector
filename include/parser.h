@@ -88,6 +88,8 @@ namespace TDEngine2
 			std::string _parseClassIdentifier();
 			std::string _parseSimpleTemplateIdentifier();
 
+			bool _parseCompoundStatement();
+
 			bool _eatUnknownTokens();
 		private:
 			Lexer*           mpLexer;

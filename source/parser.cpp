@@ -80,6 +80,9 @@ namespace TDEngine2
 				case E_TOKEN_TYPE::TT_STRUCT:
 					_parseClassDeclaration();
 					break;
+				case E_TOKEN_TYPE::TT_OPEN_BRACE:
+					_parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
+					break;
 				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
 					return true;
 				default:
@@ -559,6 +562,35 @@ namespace TDEngine2
 	bool Parser::_parseClassMemberDeclaration(const std::string& className)
 	{
 
+
+		return true;
+	}
+
+	bool Parser::_parseCompoundStatement()
+	{
+		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken().mpType))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		const TToken* pCurrToken = nullptr;
+
+		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != (pCurrToken = &mpLexer->GetCurrToken())->mpType && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mpType))
+		{
+			if (E_TOKEN_TYPE::TT_OPEN_BRACE == mpLexer->GetCurrToken().mpType)
+			{
+				if (!_parseCompoundStatement())
+				{
+					return false;
+				}
+			}
+
+			mpLexer->GetNextToken();
+		}
+
+		mpLexer->GetNextToken(); // eat } token
 
 		return true;
 	}
