@@ -216,10 +216,10 @@ TEST_CASE("Lexer tests")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
 			{
-				"a\n",
-				"b\n",
-				"c\n",
-				"d\n",
+				"a",
+				"b",
+				"c",
+				"d",
 			} } };
 
 		Lexer lexer(*stream);
@@ -264,10 +264,10 @@ TEST_CASE("Lexer tests")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
 			{
-				"#define FOO(x) \\\n",
-				"{\\\n",
-				" blah blah blah\\\n",
-				"}\n",
+				"#define FOO(x) \\",
+				"{\\",
+				" blah blah blah\\",
+				"}",
 				"test",
 			} } };
 

@@ -364,6 +364,8 @@ namespace TDEngine2
 		{
 			_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken());
 			mpSymTable->ExitScope();
+
+			mpLexer->GetNextToken();
 		});
 
 		if (!_parseClassHeader(className, isStruct) ||

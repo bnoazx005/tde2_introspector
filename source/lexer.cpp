@@ -125,16 +125,7 @@ namespace TDEngine2
 				continue;
 			}
 
-			while (std::isspace(ch = _getCurrChar()))
-			{
-				if (ch == '\n' || ch == '\r')
-				{
-					mCurrHorPosIndex = 0;
-					++mCurrLineIndex;
-				}
-				
-				_getNextChar();
-			}
+			_skipWhitespaces();
 
 			if (_skipMacroDefinitions())
 			{
@@ -163,6 +154,32 @@ namespace TDEngine2
 		}*/
 
 		return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF);
+	}
+
+	void Lexer::_skipWhitespaces()
+	{
+		char ch = '\0';
+
+		bool skipped = false;
+
+		while (std::isspace(ch = _getCurrChar()))
+		{
+			while (std::isspace(ch = _getCurrChar()))
+			{
+				if (ch == '\n' || ch == '\r')
+				{
+					mCurrHorPosIndex = 0;
+					++mCurrLineIndex;
+				}
+
+				_getNextChar();
+			}
+
+			if (_skipComments())
+			{
+				_getNextChar();
+			}
+		}		
 	}
 
 	bool Lexer::_skipMacroDefinitions()

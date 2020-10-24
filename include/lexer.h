@@ -64,6 +64,8 @@ namespace TDEngine2
 			char _getNextChar();
 			char _peekNextChar(uint32_t offset);
 
+			void _skipWhitespaces();
+
 			std::unique_ptr<TToken> _parseNumbers();
 			std::unique_ptr<TToken> _parseReservedKeywordsAndIdentifiers();
 

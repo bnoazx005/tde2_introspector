@@ -30,7 +30,7 @@ class MockInputStream : public TDEngine2::IInputStream
 				return "";
 			}
 
-			std::string line = std::move(mStreamData.front());
+			std::string line = std::move(mStreamData.front()).append("\n");
 			mStreamData.erase(mStreamData.begin());
 
 			return std::move(line);
