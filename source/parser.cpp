@@ -510,8 +510,12 @@ namespace TDEngine2
 		TClassType::E_ACCESS_SPECIFIER_TYPE currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
 
 		// \note Implement body's parsing
-		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != pCurrToken->mpType)
+		uint32_t depth = 1; // \fixme Temporary fix with indentation counter to implement correct recognition without actual parsing
+
+		while (depth > 0)
 		{
+			depth = (pCurrToken->mpType == E_TOKEN_TYPE::TT_OPEN_BRACE) ? (depth + 1) : ((pCurrToken->mpType == E_TOKEN_TYPE::TT_CLOSE_BRACE) ? (depth - 1) : depth);
+
 #if 0
 			if (E_TOKEN_TYPE::TT_PUBLIC == pCurrToken->mType ||
 				E_TOKEN_TYPE::TT_PROTECTED == pCurrToken->mType ||
@@ -539,7 +543,6 @@ namespace TDEngine2
 				}
 			}
 #endif
-
 			pCurrToken = &mpLexer->GetNextToken(); 
 		}
 
