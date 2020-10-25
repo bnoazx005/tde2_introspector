@@ -43,7 +43,7 @@ namespace TDEngine2
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
-		const char* pEmitType = nullptr;
+		const char* pExcludedPathsStr = nullptr;
 
 		const char* pCacheOutputDirectory = nullptr;
 
@@ -61,6 +61,7 @@ namespace TDEngine2
 			OPT_BIT(0, "emit-enums", &emitFlags, "Enables code generation for enumerations", NULL, static_cast<int>(E_EMIT_FLAGS::ENUMS), OPT_NONEG),
 			OPT_BIT(0, "emit-classes", &emitFlags, "Enables code generation for classes", NULL, static_cast<int>(E_EMIT_FLAGS::CLASSES), OPT_NONEG),
 			OPT_BIT(0, "emit-structs", &emitFlags, "Enables code generation for structures", NULL, static_cast<int>(E_EMIT_FLAGS::STRUCTS), OPT_NONEG),
+			OPT_STRING(0, "exclude-paths", &pExcludedPathsStr, "Paths that should be excluded from introspection in the following format \"<path1>;<path2>;...\""),
 			OPT_END(),
 		};
 
@@ -123,12 +124,19 @@ namespace TDEngine2
 
 		utilityOptions.mCurrNumOfThreads = static_cast<uint16_t>(numOfThreads);
 		utilityOptions.mEmitFlags = static_cast<E_EMIT_FLAGS>(emitFlags);
+
+		if (pExcludedPathsStr)
+		{
+			utilityOptions.mPathsToExclude = Wrench::StringUtils::Split(std::string(pExcludedPathsStr), ";");
+		}
+
+		utilityOptions.mPathsToExclude.push_back(utilityOptions.mOutputFilename);
 		
 		return std::move(utilityOptions);
 	}
 
 
-	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories) TDE2_NOEXCEPT
+	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories, const std::vector<std::string>& excludedPaths) TDE2_NOEXCEPT
 	{
 		if (directories.empty())
 		{
@@ -179,14 +187,17 @@ namespace TDEngine2
 			}
 		}
 
-		// \note exclude 'metadata.h' file from the list
+		// \note exclude some paths from the list
+		for (auto&& currPathToExclude : excludedPaths)
 		{
-			auto iter = std::find_if(headersPaths.cbegin(), headersPaths.cend(), [](const std::string& filename)
-			{
-				return filename.find("metadata") != std::string::npos;
-			});
+			std::string canonicalPath = std::filesystem::canonical({ currPathToExclude }).string();
 
-			if (iter != headersPaths.cend()) 
+			auto iter = headersPaths.cend();
+
+			while ((iter = std::find_if(headersPaths.cbegin(), headersPaths.cend(), [&canonicalPath](auto&& headerPath)
+					{
+						return std::filesystem::canonical({ headerPath }).string().find(canonicalPath) != std::string::npos; // \todo refactor this later
+					})) != headersPaths.cend())
 			{
 				headersPaths.erase(iter);
 			}

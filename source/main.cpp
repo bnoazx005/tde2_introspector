@@ -33,7 +33,7 @@ int main(int argc, const char** argv)
 	});
 
 	// \note Scan given directory for cpp header files
-	const std::vector<std::string>& filesToProcess = GetHeaderFiles(options.mInputSources);
+	const std::vector<std::string>& filesToProcess = GetHeaderFiles(options.mInputSources, options.mPathsToExclude);
 	if (filesToProcess.empty())
 	{
 		WriteOutput("Nothing to process... Exit\n");

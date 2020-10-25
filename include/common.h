@@ -54,6 +54,7 @@ namespace TDEngine2
 		bool                      mIsForceModeEnabled = false;
 
 		std::vector<std::string>  mInputSources { "." };
+		std::vector<std::string>  mPathsToExclude;
 
 		std::string               mCacheDirname = "./cache/";
 		std::string               mCacheIndexFilename = "index.cache";
@@ -70,7 +71,7 @@ namespace TDEngine2
 
 	TIntrospectorOptions ParseOptions(int argc, const char** argv) TDE2_NOEXCEPT;
 
-	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories) TDE2_NOEXCEPT;
+	std::vector<std::string> GetHeaderFiles(const std::vector<std::string>& directories, const std::vector<std::string>& excludedPaths) TDE2_NOEXCEPT;
 	
 	void WriteOutput(const std::string& text) TDE2_NOEXCEPT;
 
