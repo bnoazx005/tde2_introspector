@@ -196,7 +196,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
-		if (type.mIsForwardDeclaration) // \note skip forward declarations to prevent duplicates of traits of the same type
+		if (type.mIsForwardDeclaration || type.mIsTemplate) // \note skip forward declarations to prevent duplicates of traits of the same type
 		{
 			return;
 		}

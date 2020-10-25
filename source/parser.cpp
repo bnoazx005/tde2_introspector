@@ -62,26 +62,31 @@ namespace TDEngine2
 		_parseDeclarationSequence();
 	}
 
-	bool Parser::_parseDeclarationSequence()
+	bool Parser::_parseDeclarationSequence(bool isInvokedFromTemplateDecl)
 	{
 		const TToken* pCurrToken = nullptr;
+
+		bool result = true;
 
 		while ((pCurrToken = &mpLexer->GetCurrToken())->mpType != E_TOKEN_TYPE::TT_EOF)
 		{
 			switch (pCurrToken->mpType)
 			{
 				case E_TOKEN_TYPE::TT_NAMESPACE:
-					_parseNamespaceDefinition();
+					result = _parseNamespaceDefinition();
+					break;
+				case E_TOKEN_TYPE::TT_TEMPLATE:
+					result = _parseTemplateDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_ENUM:
-					_parseEnumDeclaration();
+					result = _parseEnumDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
-					_parseClassDeclaration();
+					result = _parseClassDeclaration(isInvokedFromTemplateDecl);
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
-					_parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
+					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
 					break;
 				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
 					return true;
@@ -89,9 +94,14 @@ namespace TDEngine2
 					mpLexer->GetNextToken(); // just skip unknown tokens
 					break;
 			}
+
+			if (isInvokedFromTemplateDecl)
+			{
+				return result;
+			}
 		}
 
-		return true;
+		return result;
 	}
 
 	bool Parser::_parseNamespaceDefinition()
@@ -185,6 +195,40 @@ namespace TDEngine2
 	bool Parser::_parseBlockDeclaration()
 	{
 		return _parseEnumDeclaration();
+	}
+
+	bool Parser::_parseTemplateDeclaration()
+	{
+		auto checkAndEat = [this](E_TOKEN_TYPE type)
+		{
+			if (!_expect(type, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			mpLexer->GetNextToken();
+			return true;
+		};
+
+		if (!checkAndEat(E_TOKEN_TYPE::TT_TEMPLATE) ||
+			!checkAndEat(E_TOKEN_TYPE::TT_LESS))
+		{
+			return false;
+		}
+
+		const TToken* pCurrToken = nullptr;
+
+		while ((E_TOKEN_TYPE::TT_GREAT != (pCurrToken = &mpLexer->GetCurrToken())->mpType) && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mpType))
+		{
+			mpLexer->GetNextToken();
+		}
+
+		if (!checkAndEat(E_TOKEN_TYPE::TT_GREAT))
+		{
+			return false;
+		}
+
+		return _parseDeclarationSequence(true);
 	}
 
 	bool Parser::_parseEnumDeclaration()
@@ -335,7 +379,7 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	bool Parser::_parseClassDeclaration()
+	bool Parser::_parseClassDeclaration(bool isTemplateDeclaration)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mpType);
 
@@ -371,7 +415,7 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		});
 
-		if (!_parseClassHeader(className, isStruct) ||
+		if (!_parseClassHeader(className, isStruct, isTemplateDeclaration) ||
 			!_parseClassBody(className))
 		{
 			return false;
@@ -380,7 +424,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, bool isStruct)
+	bool Parser::_parseClassHeader(const std::string& className, bool isStruct, bool isTemplate)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -390,10 +434,11 @@ namespace TDEngine2
 
 		auto pClassTypeDesc = std::make_unique<TClassType>();
 
-		pClassTypeDesc->mId        = className;
-		pClassTypeDesc->mMangledId = mpSymTable->GetMangledNameForNamedScope(className);
-		pClassTypeDesc->mpOwner    = mpSymTable;
-		pClassTypeDesc->mIsStruct  = isStruct;
+		pClassTypeDesc->mId         = className;
+		pClassTypeDesc->mMangledId  = mpSymTable->GetMangledNameForNamedScope(className);
+		pClassTypeDesc->mpOwner     = mpSymTable;
+		pClassTypeDesc->mIsStruct   = isStruct;
+		pClassTypeDesc->mIsTemplate = isTemplate;
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mpType);
@@ -546,7 +591,10 @@ namespace TDEngine2
 				}
 			}
 #endif
-			pCurrToken = &mpLexer->GetNextToken(); 
+			if (depth > 0)
+			{
+				pCurrToken = &mpLexer->GetNextToken();
+			}
 		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))

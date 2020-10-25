@@ -124,7 +124,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Load(archive);
 
-		archive >> mIsFinal >> mIsForwardDeclaration >> mIsStruct;
+		archive >> mIsFinal >> mIsForwardDeclaration >> mIsStruct >> mIsTemplate;
 
 		size_t baseClassesCount = 0;
 		archive >> baseClassesCount;
@@ -149,7 +149,7 @@ namespace TDEngine2
 	{
 		bool result = TType::Save(archive);
 
-		archive << mIsFinal << mIsForwardDeclaration << mIsStruct;
+		archive << mIsFinal << mIsForwardDeclaration << mIsStruct << mIsTemplate;
 
 		archive << mBaseClasses.size();
 

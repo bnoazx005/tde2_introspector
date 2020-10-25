@@ -24,6 +24,7 @@ namespace TDEngine2
 		TT_VIRTUAL,
 		TT_OVERRIDE,
 		TT_FINAL,
+		TT_TEMPLATE,
 
 		// symbols
 		TT_COLON,

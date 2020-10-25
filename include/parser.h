@@ -66,13 +66,14 @@ namespace TDEngine2
 
 			bool _expect(E_TOKEN_TYPE expectedType, const TToken& token);
 
-			bool _parseDeclarationSequence();
+			bool _parseDeclarationSequence(bool isInvokedFromTemplateDecl = false);
 
 			bool _parseNamespaceDefinition();
 			bool _parseNamedNamespaceDefinition();
 			bool _parseAnonymusNamespaceDefinition();
 
 			bool _parseBlockDeclaration();
+			bool _parseTemplateDeclaration();
 
 			bool _parseEnumDeclaration();
 			bool _parseEnumBody(TEnumType* pEnumType);
@@ -80,8 +81,8 @@ namespace TDEngine2
 
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			bool _parseClassDeclaration();
-			bool _parseClassHeader(const std::string& className, bool isStruct = false);
+			bool _parseClassDeclaration(bool isTemplateDeclaration = false);
+			bool _parseClassHeader(const std::string& className, bool isStruct = false, bool isTemplate = false);
 			bool _parseClassBody(const std::string& className);
 			bool _parseClassMemberDeclaration(const std::string& className);
 
