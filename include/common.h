@@ -127,7 +127,15 @@ enum class TypeID : uint32_t
 };
 
 
-#define TYPEID(TypeName) static_cast<TypeID>(ComputeHash(#TypeName))
+#if defined (_MSC_VER)
+#define TYPEID(TypeName)									\
+		__pragma(warning(push))								\
+		__pragma(warning(disable:4307))						\
+		(static_cast<TypeID>(ComputeHash(#TypeName)))		\
+		__pragma(warning(pop))
+#else
+	#define TYPEID(TypeName) static_cast<TypeID>(ComputeHash(#TypeName))
+#endif
 
 
 /*!
