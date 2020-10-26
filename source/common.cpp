@@ -190,13 +190,13 @@ namespace TDEngine2
 		// \note exclude some paths from the list
 		for (auto&& currPathToExclude : excludedPaths)
 		{
-			std::string canonicalPath = std::filesystem::canonical({ currPathToExclude }).string();
+			std::string canonicalExcludingPath = StringUtils::ReplaceAll(currPathToExclude, "\\", "/");
 
 			auto iter = headersPaths.cend();
 
-			while ((iter = std::find_if(headersPaths.cbegin(), headersPaths.cend(), [&canonicalPath](auto&& headerPath)
+			while ((iter = std::find_if(headersPaths.cbegin(), headersPaths.cend(), [&canonicalExcludingPath](auto&& headerPath)
 					{
-						return std::filesystem::canonical({ headerPath }).string().find(canonicalPath) != std::string::npos; // \todo refactor this later
+						return StringUtils::ReplaceAll(headerPath, "\\", "/").find(canonicalExcludingPath) != std::string::npos; // \todo refactor this later
 					})) != headersPaths.cend())
 			{
 				headersPaths.erase(iter);
