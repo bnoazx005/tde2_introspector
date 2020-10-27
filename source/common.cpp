@@ -44,6 +44,7 @@ namespace TDEngine2
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
 		const char* pExcludedPathsStr = nullptr;
+		const char* pExcludedTypenamesStr = nullptr;
 
 		const char* pCacheOutputDirectory = nullptr;
 
@@ -58,10 +59,12 @@ namespace TDEngine2
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_BOOLEAN('q', "quiet", &suppressLogOutput, "Enables suppresion of program's output"),
 			OPT_BOOLEAN('F', "force", &forceMode, "Enables force mode for the utility, all cached data will be ignored"),
+			OPT_GROUP("Code generation options"),
 			OPT_BIT(0, "emit-enums", &emitFlags, "Enables code generation for enumerations", NULL, static_cast<int>(E_EMIT_FLAGS::ENUMS), OPT_NONEG),
 			OPT_BIT(0, "emit-classes", &emitFlags, "Enables code generation for classes", NULL, static_cast<int>(E_EMIT_FLAGS::CLASSES), OPT_NONEG),
 			OPT_BIT(0, "emit-structs", &emitFlags, "Enables code generation for structures", NULL, static_cast<int>(E_EMIT_FLAGS::STRUCTS), OPT_NONEG),
 			OPT_STRING(0, "exclude-paths", &pExcludedPathsStr, "Paths that should be excluded from introspection in the following format \"<path1>;<path2>;...\""),
+			OPT_STRING(0, "exclude-typenames", &pExcludedTypenamesStr, "All types with id that corresponds to given regular expressions will be discarded \"<regex1>;<regex2>;...\""),
 			OPT_END(),
 		};
 
@@ -132,6 +135,16 @@ namespace TDEngine2
 
 		utilityOptions.mPathsToExclude.push_back(utilityOptions.mOutputFilename);
 		
+		if (pExcludedTypenamesStr)
+		{
+			auto&& patterns = Wrench::StringUtils::Split(std::string(pExcludedTypenamesStr), ";");
+
+			for (auto&& currPatternStr : patterns)
+			{
+				utilityOptions.mTypenamesPatternsToExclude.emplace_back(currPatternStr);
+			}
+		}
+
 		return std::move(utilityOptions);
 	}
 

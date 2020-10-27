@@ -99,7 +99,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		}
 	}
 
-	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags)
+	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags,
+							const std::vector<std::regex>& excludeTypenamePatterns)
 	{
 		if (!outputStreamsFactory)
 		{
@@ -112,6 +113,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		mpHeaderOutputStream = outputStreamsFactory(outputFilename);
 
 		mEmitFlags = flags;
+
+		mTypenamesToHidePatterns = excludeTypenamePatterns;
 
 		if (!mpHeaderOutputStream)
 		{
@@ -161,7 +164,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitEnumType(const TEnumType& type)
 	{
-		if (type.mIsForwardDeclaration) // \note skip forward declarations to prevent duplicates of traits of the same type
+		if (type.mIsForwardDeclaration || _shouldSkipGeneration(type.mId)) // \note skip forward declarations to prevent duplicates of traits of the same type
 		{
 			return;
 		}
@@ -196,7 +199,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
-		if (type.mIsForwardDeclaration || type.mIsTemplate) // \note skip forward declarations to prevent duplicates of traits of the same type
+		if (type.mIsForwardDeclaration || type.mIsTemplate || _shouldSkipGeneration(type.mId)) // \note skip forward declarations to prevent duplicates of traits of the same type
 		{
 			return;
 		}
@@ -255,5 +258,18 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		outputString.append(" }");
 
 		return outputString;
+	}
+
+	bool CodeGenerator::_shouldSkipGeneration(const std::string& id) const
+	{
+		for (auto&& currPattern : mTypenamesToHidePatterns)
+		{
+			if (std::regex_match(id, currPattern))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

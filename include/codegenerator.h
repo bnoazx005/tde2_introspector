@@ -6,6 +6,7 @@
 #include "../deps/Wrench/source/stringUtils.hpp"
 #include <functional>
 #include <set>
+#include <regex>
 
 
 namespace TDEngine2
@@ -23,7 +24,8 @@ namespace TDEngine2
 			CodeGenerator();
 			~CodeGenerator();
 
-			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags);
+			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags, 
+						const std::vector<std::regex>& excludeTypenamePatterns);
 
 			bool Generate(TSymbolTablesArray&& symbolTablesPerFile);
 
@@ -79,6 +81,8 @@ namespace TDEngine2
 			static std::vector<std::string> _getParentClasses(const TClassType& classType);
 			static std::string _vectorToString(const std::vector<std::string>& types);
 
+			bool _shouldSkipGeneration(const std::string& id) const;
+
 		private:
 			std::unique_ptr<IOutputStream> mpHeaderOutputStream;
 			//std::unique_ptr<IOutputStream> mpSourceOutputStream;
@@ -98,5 +102,7 @@ namespace TDEngine2
 			static const std::string       mFalseConstant;
 
 			E_EMIT_FLAGS                   mEmitFlags;
+
+			std::vector<std::regex>        mTypenamesToHidePatterns;
 	};
 }

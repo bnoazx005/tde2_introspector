@@ -120,7 +120,8 @@ int main(int argc, const char** argv)
 
 	const std::string outputFilename = std::filesystem::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
 
-	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, outputFilename, options.mEmitFlags))
+	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, 
+							outputFilename, options.mEmitFlags, options.mTypenamesPatternsToExclude))
 	{
 		return -1;
 	}

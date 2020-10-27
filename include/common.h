@@ -11,6 +11,7 @@
 #include <functional>
 #include <unordered_map>
 #include <mutex>
+#include <regex>
 
 
 namespace TDEngine2
@@ -55,6 +56,7 @@ namespace TDEngine2
 
 		std::vector<std::string>  mInputSources { "." };
 		std::vector<std::string>  mPathsToExclude;
+		std::vector<std::regex>   mTypenamesPatternsToExclude;
 
 		std::string               mCacheDirname = "./cache/";
 		std::string               mCacheIndexFilename = "index.cache";
