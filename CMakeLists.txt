@@ -80,6 +80,12 @@ add_executable(${EXECUTABLE_NAME} ${SOURCES} ${HEADERS})
 
 if (UNIX)
 	target_link_libraries(${EXECUTABLE_NAME} pthread stdc++fs)
+
+	if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES COMPILE_FLAGS "-stdlib=libc++")
+        target_link_libraries(${EXECUTABLE_NAME} c++experimental)
+    endif()
+
 endif()
 
 
