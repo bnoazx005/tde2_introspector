@@ -4,6 +4,13 @@ sudo: required
 language: cpp
 
 os: linux
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-stretch-10
+        packages:
+            - clang++-10
 
 compiler: 
     - gcc
