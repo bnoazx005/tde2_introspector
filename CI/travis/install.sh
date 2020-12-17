@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+sudo add-apt-repository -y "deb http://apt.llvm.org/buster/ llvm-toolchain-buster main"
 sudo apt-get update -qq
 
 sudo apt-get install -qq g++-9
@@ -10,9 +11,9 @@ sudo apt-get install -qq unzip
 
 sudo apt-get install -qq build-essential xorg-dev libc++-dev
 
-sudo apt-get install -qq clang-9 
-sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-9 900
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-9 900
+sudo apt-get install -qq clang-10 lld-10 libclang-common-10-dev libclang-10-dev libclang1-10 
+sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 1000
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-10 1000
 
 CMAKE_VERSION=3.10.1
 CMAKE_VERSION_DIR=v3.10
