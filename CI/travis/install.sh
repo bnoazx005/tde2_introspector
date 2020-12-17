@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-sudo add-apt-repository -y "deb http://apt.llvm.org/buster/ llvm-toolchain-buster main"
+sudo add-apt-repository -y "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
 sudo apt-get update -qq
 
 sudo apt-get install -qq g++-9

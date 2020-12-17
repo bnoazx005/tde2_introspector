@@ -4,13 +4,6 @@ sudo: required
 language: cpp
 
 os: linux
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-stretch-10
-        packages:
-            - clang++-10
 
 compiler: 
     - gcc
@@ -20,7 +13,7 @@ env:
     - TARGET_CPU=x86 BUILD_CONFIGURATION=Debug
     - TARGET_CPU=x86 BUILD_CONFIGURATION=Release
 
-install:
+before_install:
     - source CI/travis/install.sh
 
 script:
