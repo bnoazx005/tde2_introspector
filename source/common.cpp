@@ -467,7 +467,7 @@ namespace TDEngine2
 		hashGenerator.init();
 		hashGenerator.process(value.cbegin(), value.cend());
 
-		std::string timestampStr = std::to_string(std::filesystem::last_write_time(value).time_since_epoch().count());
+		std::string timestampStr = std::to_string(static_cast<long long>(std::filesystem::last_write_time(value).time_since_epoch().count()));
 		hashGenerator.process(timestampStr.cbegin(), timestampStr.cend());
 
 		hashGenerator.finish();
