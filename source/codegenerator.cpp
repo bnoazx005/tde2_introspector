@@ -70,6 +70,8 @@ struct ClassTrait<{0}>
 	static const std::array<TypeID, {4}> parentClasses;
 };
 
+#if defined(META_IMPLEMENTATION)
+
 const std::string ClassTrait<{0}>::name = "{0}";
 
 const std::array<TypeID, {3}> ClassTrait<{0}>::interfaces {5};
@@ -77,6 +79,8 @@ const std::array<TypeID, {3}> ClassTrait<{0}>::interfaces {5};
 const std::array<TypeID, {4}> ClassTrait<{0}>::parentClasses {6};
 
 template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
+
+#endif
 
 
 )";
