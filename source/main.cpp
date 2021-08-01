@@ -1,6 +1,5 @@
 #include <iostream>
 #include <array>
-#include <filesystem>
 #include "../include/common.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
@@ -9,6 +8,15 @@
 #include "../include/jobmanager.h"
 #include "../deps/archive/archive.h"
 #include "../deps/Wrench/source/stringUtils.hpp"
+
+
+#if defined(__clang__)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 
 
 using namespace TDEngine2;
@@ -42,10 +50,10 @@ int main(int argc, const char** argv)
 
 	auto createDirectoryIfDoesntExist = [](const std::string& path)
 	{
-		auto&& cacheDirectory = std::filesystem::path(path);
-		if (!std::filesystem::exists(cacheDirectory))
+		auto&& cacheDirectory = fs::path(path);
+		if (!fs::exists(cacheDirectory))
 		{
-			std::filesystem::create_directory(cacheDirectory);
+			fs::create_directory(cacheDirectory);
 		}
 	};
 
@@ -76,7 +84,7 @@ int main(int argc, const char** argv)
 				const std::string& filename = filesToProcess[i];
 				const std::string hash = GetHashFromFilePath(filename);
 
-				const auto& cachePath = std::filesystem::path(cacheDirectory).concat(hash).string();
+				const auto& cachePath = fs::path(cacheDirectory).concat(hash).string();
 
 				if (cachedData.Contains(filename, hash) && !isForceModeEnabled)
 				{
@@ -118,7 +126,7 @@ int main(int argc, const char** argv)
 	// \note Generate meta-information as cpp files
 	CodeGenerator codeGenerator;
 
-	const std::string outputFilename = std::filesystem::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
+	const std::string outputFilename = fs::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
 
 	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, 
 							outputFilename, options.mEmitFlags, options.mTypenamesPatternsToExclude))

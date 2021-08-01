@@ -8,14 +8,19 @@
 #include "../deps/Wrench/source/stringUtils.hpp"
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <array>
 #include <mutex>
 #include <unordered_set>
 #include <cstring>
 
 
+#if defined(__clang__)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif
 
 
 namespace TDEngine2
@@ -106,7 +111,7 @@ namespace TDEngine2
 
 		if (pOutputDirectory)
 		{
-			utilityOptions.mOutputDirname = std::filesystem::path(pOutputDirectory).string();
+			utilityOptions.mOutputDirname = fs::path(pOutputDirectory).string();
 		}		
 
 		if (pOutputFilename)
@@ -333,7 +338,7 @@ namespace TDEngine2
 
 	bool TCacheData::Load(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
 	{
-		std::ifstream inputFile(std::filesystem::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
+		std::ifstream inputFile(fs::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
 
 		DEFER([&inputFile]
 		{
@@ -367,7 +372,7 @@ namespace TDEngine2
 
 	bool TCacheData::Save(const std::string& cacheSourceDirectory, const std::string& cacheFilename)
 	{
-		std::ofstream cacheFile(std::filesystem::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
+		std::ofstream cacheFile(fs::path(cacheSourceDirectory).concat(cacheFilename), std::ios::binary);
 
 		DEFER([&cacheFile]
 		{
@@ -467,7 +472,7 @@ namespace TDEngine2
 		hashGenerator.init();
 		hashGenerator.process(value.cbegin(), value.cend());
 
-		std::string timestampStr = std::to_string(static_cast<long long>(std::filesystem::last_write_time(value).time_since_epoch().count()));
+		std::string timestampStr = std::to_string(static_cast<long long>(fs::last_write_time(value).time_since_epoch().count()));
 		hashGenerator.process(timestampStr.cbegin(), timestampStr.cend());
 
 		hashGenerator.finish();
