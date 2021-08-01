@@ -58,19 +58,24 @@ endif(MSVC)
 
 if (UNIX)
 	message(STATUS "UNIX system has detected...")
-
+	
 	include(CheckCXXCompilerFlag)
 
-	CHECK_CXX_COMPILER_FLAG("-std=c++1z" COMPILER_SUPPORTS_CXX17)
+	CHECK_CXX_COMPILER_FLAG("-std=c++1y" COMPILER_SUPPORTS_CXX14)
 
-	if(COMPILER_SUPPORTS_CXX17)
-		message(STATUS "C++17 is enabled")
+	if(COMPILER_SUPPORTS_CXX14)
+		message(STATUS "C++14 is enabled")
 
-		set(CMAKE_CXX_STANDARD 17)
+		set(CMAKE_CXX_STANDARD 14)
 		set(CMAKE_CXX_STANDARD_REQUIRED ON)
 	else()
 		message(ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 	endif()
+
+	if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+    endif()
 endif (UNIX)
 
 add_executable(${TDE2_INTROSPECTOR_TESTS_NAME} ${SOURCES} ${HEADERS})
@@ -80,3 +85,12 @@ include(CTest)
 include(Catch)
 
 catch_discover_tests(${TDE2_INTROSPECTOR_TESTS_NAME})
+
+if (UNIX)
+	target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} pthread stdc++fs)
+
+	if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set_target_properties(${TDE2_INTROSPECTOR_TESTS_NAME} PROPERTIES COMPILE_FLAGS "-stdlib=libc++")
+        target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} c++experimental)
+    endif()
+endif()

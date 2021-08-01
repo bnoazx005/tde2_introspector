@@ -9,14 +9,8 @@
 #include "../deps/archive/archive.h"
 #include "../deps/Wrench/source/stringUtils.hpp"
 
-
-#if defined(__clang__)
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
 
 
 using namespace TDEngine2;
