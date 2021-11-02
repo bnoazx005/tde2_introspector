@@ -4,7 +4,7 @@
 namespace TDEngine2
 {
 	TToken::TToken(E_TOKEN_TYPE type, const TCursorPos& pos):
-		mpType(type), mPos(pos)
+		mType(type), mPos(pos)
 	{
 	}
 

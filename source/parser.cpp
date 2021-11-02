@@ -68,9 +68,9 @@ namespace TDEngine2
 
 		bool result = true;
 
-		while ((pCurrToken = &mpLexer->GetCurrToken())->mpType != E_TOKEN_TYPE::TT_EOF)
+		while ((pCurrToken = &mpLexer->GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
 		{
-			switch (pCurrToken->mpType)
+			switch (pCurrToken->mType)
 			{
 				case E_TOKEN_TYPE::TT_NAMESPACE:
 					result = _parseNamespaceDefinition();
@@ -79,7 +79,7 @@ namespace TDEngine2
 					result = _parseTemplateDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_ENUM:
-					result = _parseEnumDeclaration();
+					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC);
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
@@ -106,7 +106,7 @@ namespace TDEngine2
 
 	bool Parser::_parseNamespaceDefinition()
 	{
-		if (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_NAMESPACE)
+		if (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_NAMESPACE)
 		{
 			return false;
 		}
@@ -169,7 +169,7 @@ namespace TDEngine2
 
 	bool Parser::_parseAnonymusNamespaceDefinition()
 	{
-		if (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+		if (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
 		{
 			return false;
 		}
@@ -194,7 +194,7 @@ namespace TDEngine2
 
 	bool Parser::_parseBlockDeclaration()
 	{
-		return _parseEnumDeclaration();
+		return _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC);
 	}
 
 	bool Parser::_parseTemplateDeclaration()
@@ -218,7 +218,7 @@ namespace TDEngine2
 
 		const TToken* pCurrToken = nullptr;
 
-		while ((E_TOKEN_TYPE::TT_GREAT != (pCurrToken = &mpLexer->GetCurrToken())->mpType) && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mpType))
+		while ((E_TOKEN_TYPE::TT_GREAT != (pCurrToken = &mpLexer->GetCurrToken())->mType) && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType))
 		{
 			mpLexer->GetNextToken();
 		}
@@ -231,9 +231,9 @@ namespace TDEngine2
 		return _parseDeclarationSequence(true);
 	}
 
-	bool Parser::_parseEnumDeclaration()
+	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier)
 	{
-		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mpType)
+		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mType)
 		{
 			return false;
 		}
@@ -243,7 +243,7 @@ namespace TDEngine2
 		bool isStronglyTypedEnum = false;
 
 		// \note enum class case
-		if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_CLASS || mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_STRUCT)
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_CLASS || mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_STRUCT)
 		{
 			isStronglyTypedEnum = true;
 			mpLexer->GetNextToken();
@@ -264,7 +264,7 @@ namespace TDEngine2
 		std::string underlyingTypeStr;
 
 		// \note parse enumeration's underlying type
-		if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_COLON)
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COLON)
 		{
 			mpLexer->GetNextToken();
 
@@ -274,7 +274,7 @@ namespace TDEngine2
 				return false;
 			}*/
 			// \todo replace it
-			while (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
 				mpLexer->GetNextToken();
 			}
@@ -287,10 +287,11 @@ namespace TDEngine2
 			pEnumTypeDesc->mId = enumName;
 			pEnumTypeDesc->mMangledId = mpSymTable->GetMangledNameForNamedScope(enumName);
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
-			pEnumTypeDesc->mIsForwardDeclaration = (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_SEMICOLON);
+			pEnumTypeDesc->mIsForwardDeclaration = (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON);
 			pEnumTypeDesc->mpOwner = mpSymTable;
+			pEnumTypeDesc->mAccessModifier = accessModifier;
 
-			if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_OPEN_BRACE)
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
 				mpLexer->GetNextToken(); // eat {
 
@@ -321,7 +322,7 @@ namespace TDEngine2
 
 	bool Parser::_parseEnumBody(TEnumType* pEnumType)
 	{
-		while (_parseEnumeratorDefinition(pEnumType) && mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_COMMA) 
+		while (_parseEnumeratorDefinition(pEnumType) && mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COMMA) 
 		{
 			mpLexer->GetNextToken(); // eat ',' token
 		}
@@ -331,7 +332,7 @@ namespace TDEngine2
 
 	bool Parser::_parseEnumeratorDefinition(TEnumType* pEnumType)
 	{
-		if (E_TOKEN_TYPE::TT_IDENTIFIER != mpLexer->GetCurrToken().mpType)
+		if (E_TOKEN_TYPE::TT_IDENTIFIER != mpLexer->GetCurrToken().mType)
 		{
 			return false;
 		}
@@ -343,22 +344,22 @@ namespace TDEngine2
 
 		mpLexer->GetNextToken();
 
-		if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_ASSIGN_OP) /// \note try to parse value of the enumerator
+		if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_ASSIGN_OP) /// \note try to parse value of the enumerator
 		{
 			mpLexer->GetNextToken();
 
 			// \todo for now we just skip this part
-			while (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_COMMA &&
-				   mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_CLOSE_BRACE &&
-				   mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_EOF)
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_COMMA &&
+				   mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_CLOSE_BRACE &&
+				   mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
 			{
-				if (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_CLOSE_BRACE) // \note the close brase will be eaten in caller method
+				if (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_CLOSE_BRACE) // \note the close brase will be eaten in caller method
 				{
 					mpLexer->GetNextToken();
 				}
 			}
 
-			if (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_EOF)
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF)
 			{
 				mOnErrorCallback({}); // \todo add correct error handling here
 				return false;
@@ -371,7 +372,7 @@ namespace TDEngine2
 	std::unique_ptr<TType> Parser::_parseTypeSpecifiers()
 	{
 		// \todo replace it
-		while (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+		while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
 		{
 			mpLexer->GetNextToken();
 		}
@@ -381,9 +382,9 @@ namespace TDEngine2
 
 	bool Parser::_parseClassDeclaration(bool isTemplateDeclaration)
 	{
-		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mpType);
+		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
 
-		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mpType && !isStruct)
+		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mType && !isStruct)
 		{
 			return false;
 		}
@@ -441,7 +442,7 @@ namespace TDEngine2
 		pClassTypeDesc->mIsTemplate = isTemplate;
 
 		// \note 'final' specifier parsing
-		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mpType);
+		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mType);
 		if (pClassTypeDesc->mIsFinal)
 		{
 			mpLexer->GetNextToken();
@@ -452,7 +453,7 @@ namespace TDEngine2
 			pClassScopeEntity->mpType = std::move(pClassTypeDesc);
 		});
 
-		if (E_TOKEN_TYPE::TT_COLON != mpLexer->GetCurrToken().mpType)
+		if (E_TOKEN_TYPE::TT_COLON != mpLexer->GetCurrToken().mType)
 		{
 			return true;
 		}
@@ -472,16 +473,16 @@ namespace TDEngine2
 			{
 				changed = true;
 
-				switch (mpLexer->GetCurrToken().mpType)
+				switch (mpLexer->GetCurrToken().mType)
 				{
 					case E_TOKEN_TYPE::TT_PUBLIC:
-						info.mAccessSpecifier = TClassType::E_ACCESS_SPECIFIER_TYPE::PUBLIC;
+						info.mAccessSpecifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
 						break;
 					case E_TOKEN_TYPE::TT_PROTECTED:
-						info.mAccessSpecifier = TClassType::E_ACCESS_SPECIFIER_TYPE::PROTECTED;
+						info.mAccessSpecifier = E_ACCESS_SPECIFIER_TYPE::PROTECTED;
 						break;
 					case E_TOKEN_TYPE::TT_PRIVATE:
-						info.mAccessSpecifier = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+						info.mAccessSpecifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE;
 						break;
 					case E_TOKEN_TYPE::TT_VIRTUAL:
 						info.mIsVirtualInherited = true;
@@ -509,13 +510,13 @@ namespace TDEngine2
 
 		do
 		{
-			if (!pClassTypeDesc->mBaseClasses.empty() && (E_TOKEN_TYPE::TT_COMMA == mpLexer->GetCurrToken().mpType))
+			if (!pClassTypeDesc->mBaseClasses.empty() && (E_TOKEN_TYPE::TT_COMMA == mpLexer->GetCurrToken().mType))
 			{
 				mpLexer->GetNextToken(); // eat ,
 			}
 
 			_parseSingleBaseSpecifierClause();
-		} while (E_TOKEN_TYPE::TT_COMMA == mpLexer->GetCurrToken().mpType);
+		} while (E_TOKEN_TYPE::TT_COMMA == mpLexer->GetCurrToken().mType);
 
 		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken()))
 		{
@@ -536,7 +537,7 @@ namespace TDEngine2
 		auto pClassTypeDesc = pClassScopeEntity->mpType ? std::move(pClassScopeEntity->mpType) : std::make_unique<TClassType>();
 
 		// \note Try to parse body, it starts from {
-		if (E_TOKEN_TYPE::TT_OPEN_BRACE != mpLexer->GetCurrToken().mpType)
+		if (E_TOKEN_TYPE::TT_OPEN_BRACE != mpLexer->GetCurrToken().mType)
 		{
 			if (auto pClassTypeInfo = dynamic_cast<TClassType*>(pClassTypeDesc.get()))
 			{
@@ -555,6 +556,7 @@ namespace TDEngine2
 
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
+#if 0
 		TClassType::E_ACCESS_SPECIFIER_TYPE currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
 
 		// \note Implement body's parsing
@@ -596,6 +598,57 @@ namespace TDEngine2
 				pCurrToken = &mpLexer->GetNextToken();
 			}
 		}
+#endif
+
+		E_ACCESS_SPECIFIER_TYPE accessModifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+		uint32_t depth = 1; // \fixme Temporary fix with indentation counter to implement correct recognition without actual parsing
+
+		while (depth > 0)
+		{
+			pCurrToken = &mpLexer->GetCurrToken();
+			depth = (pCurrToken->mType == E_TOKEN_TYPE::TT_OPEN_BRACE) ? (depth + 1) : ((pCurrToken->mType == E_TOKEN_TYPE::TT_CLOSE_BRACE) ? (depth - 1) : depth);
+
+			if (E_TOKEN_TYPE::TT_PUBLIC == pCurrToken->mType ||
+				E_TOKEN_TYPE::TT_PROTECTED == pCurrToken->mType ||
+				E_TOKEN_TYPE::TT_PRIVATE == pCurrToken->mType)
+			{
+				switch (pCurrToken->mType)
+				{
+					case E_TOKEN_TYPE::TT_PUBLIC:
+						accessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
+						break;
+					case E_TOKEN_TYPE::TT_PROTECTED:
+						accessModifier = E_ACCESS_SPECIFIER_TYPE::PROTECTED;
+						break;
+					case E_TOKEN_TYPE::TT_PRIVATE:
+						accessModifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+						break;
+					}
+
+				mpLexer->GetNextToken();
+
+				if (!_expect(E_TOKEN_TYPE::TT_COLON, mpLexer->GetCurrToken()))
+				{
+					return false;
+				}
+
+				mpLexer->GetNextToken();
+				continue;
+			}
+
+			if (depth <= 0)
+			{
+				continue;
+			}
+
+			if (E_TOKEN_TYPE::TT_ENUM == pCurrToken->mType)
+			{
+				_parseEnumDeclaration(accessModifier);
+				continue;
+			}
+
+			pCurrToken = &mpLexer->GetNextToken();
+		}
 
 		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_BRACE, mpLexer->GetCurrToken()))
 		{
@@ -607,8 +660,38 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassMemberDeclaration(const std::string& className)
+	bool Parser::_parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier)
 	{
+		const TToken* pCurrToken = &mpLexer->GetCurrToken();
+
+		E_ACCESS_SPECIFIER_TYPE nextAccessModifier;
+
+		if (E_TOKEN_TYPE::TT_PUBLIC == pCurrToken->mType ||
+			E_TOKEN_TYPE::TT_PROTECTED == pCurrToken->mType ||
+			E_TOKEN_TYPE::TT_PRIVATE == pCurrToken->mType)
+		{
+			switch (pCurrToken->mType)
+			{
+				case E_TOKEN_TYPE::TT_PUBLIC:
+					nextAccessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
+					break;
+				case E_TOKEN_TYPE::TT_PROTECTED:
+					nextAccessModifier = E_ACCESS_SPECIFIER_TYPE::PROTECTED;
+					break;
+				case E_TOKEN_TYPE::TT_PRIVATE:
+					nextAccessModifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+					break;
+			}
+
+			mpLexer->GetNextToken();
+		}
+
+		return _parseClassMemberDeclaration(className, accessModifier) && _parseClassMemberSpecification(className, accessModifier);
+	}
+
+	bool Parser::_parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier)
+	{
+		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
 
 		return true;
@@ -616,7 +699,7 @@ namespace TDEngine2
 
 	bool Parser::_parseCompoundStatement()
 	{
-		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken().mpType))
+		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken().mType))
 		{
 			return false;
 		}
@@ -625,9 +708,9 @@ namespace TDEngine2
 
 		const TToken* pCurrToken = nullptr;
 
-		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != (pCurrToken = &mpLexer->GetCurrToken())->mpType && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mpType))
+		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != (pCurrToken = &mpLexer->GetCurrToken())->mType && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType))
 		{
-			if (E_TOKEN_TYPE::TT_OPEN_BRACE == mpLexer->GetCurrToken().mpType)
+			if (E_TOKEN_TYPE::TT_OPEN_BRACE == mpLexer->GetCurrToken().mType)
 			{
 				if (!_parseCompoundStatement())
 				{
@@ -654,7 +737,7 @@ namespace TDEngine2
 
 		const TToken& currToken = mpLexer->GetCurrToken();
 
-		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mpType) // a simple identifier
+		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType) // a simple identifier
 		{
 			DEFER([this] { mpLexer->GetNextToken(); });
 
@@ -669,25 +752,25 @@ namespace TDEngine2
 		const TToken& currToken = mpLexer->GetCurrToken();
 
 		// could be simple identifier or simple template one
-		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mpType)
+		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType)
 		{
 			const TIdentifierToken& idToken = dynamic_cast<const TIdentifierToken&>(currToken);
 
 			std::string templateIdentifier = idToken.mId;
 
-			if (E_TOKEN_TYPE::TT_LESS == mpLexer->PeekToken().mpType) // a template identifier
+			if (E_TOKEN_TYPE::TT_LESS == mpLexer->PeekToken().mType) // a template identifier
 			{
 				mpLexer->GetNextToken(); // eat <
 
 				templateIdentifier.push_back('<');
 
 				// \note \todo Parse template's arguments list
-				while (mpLexer->GetCurrToken().mpType != E_TOKEN_TYPE::TT_GREAT)
+				while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_GREAT)
 				{
 					mpLexer->GetNextToken();
 				}
 
-				if (!_expect(E_TOKEN_TYPE::TT_GREAT, mpLexer->GetCurrToken().mpType))
+				if (!_expect(E_TOKEN_TYPE::TT_GREAT, mpLexer->GetCurrToken().mType))
 				{
 					return Wrench::StringUtils::GetEmptyStr();
 				}
@@ -705,17 +788,17 @@ namespace TDEngine2
 
 	bool Parser::_eatUnknownTokens()
 	{
-		while (mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_UNKNOWN)
+		while (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_UNKNOWN)
 		{
 			mpLexer->GetNextToken();
 		}
 
-		return mpLexer->GetCurrToken().mpType == E_TOKEN_TYPE::TT_EOF;
+		return mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF;
 	}
 
 	bool Parser::_expect(E_TOKEN_TYPE expectedType, const TToken& token)
 	{
-		if (expectedType == token.mpType)
+		if (expectedType == token.mType)
 		{
 			return true;
 		}
@@ -725,7 +808,7 @@ namespace TDEngine2
 			TParserError error;
 			error.mCode = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
 			error.mPos  = token.mPos;
-			error.mData.mUnexpectedTokenErrData = { token.mpType, expectedType };
+			error.mData.mUnexpectedTokenErrData = { token.mType, expectedType };
 
 			mOnErrorCallback(error);
 		}

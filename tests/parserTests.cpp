@@ -200,4 +200,49 @@ TEST_CASE("Parser tests")
 			REQUIRE(false);
 		}).Parse();
 	}
+
+	SECTION("TestParse_PassNestedEnum_CorrectlyProcessThisEnum")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"class A {",
+				"public:",
+				" enum class NestedEnum { First, Second, Third = 0x42 };",
+				"private:",
+				" enum class Test {};",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+
+
+		symTable.EnterScope("A");
+		{
+			auto pNestedEnumScope = symTable.LookUpNamedScope("NestedEnum");
+			REQUIRE(pNestedEnumScope);
+
+			TEnumType* pTypeDesc = dynamic_cast<TEnumType*>(pNestedEnumScope->mpType.get());
+			REQUIRE((pTypeDesc && E_ACCESS_SPECIFIER_TYPE::PUBLIC == pTypeDesc->mAccessModifier));
+
+			auto&& enumerators = pTypeDesc->mEnumerators;
+
+			REQUIRE((enumerators.size() == 3 &&
+				enumerators[0] == "First" &&
+				enumerators[1] == "Second" &&
+				enumerators[2] == "Third"));
+
+			auto pPrivateNestedEnum = symTable.LookUpNamedScope("Test"); 
+			REQUIRE(pPrivateNestedEnum);
+
+			pTypeDesc = dynamic_cast<TEnumType*>(pPrivateNestedEnum->mpType.get());
+			REQUIRE((pTypeDesc && E_ACCESS_SPECIFIER_TYPE::PRIVATE == pTypeDesc->mAccessModifier));
+		}
+		symTable.ExitScope();
+	}
 }

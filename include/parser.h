@@ -18,6 +18,7 @@ namespace TDEngine2
 	struct TEnumType;
 
 	enum class E_TOKEN_TYPE : uint16_t;
+	enum class E_ACCESS_SPECIFIER_TYPE : uint8_t;
 
 
 	struct TParserError
@@ -75,7 +76,7 @@ namespace TDEngine2
 			bool _parseBlockDeclaration();
 			bool _parseTemplateDeclaration();
 
-			bool _parseEnumDeclaration();
+			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseEnumBody(TEnumType* pEnumType);
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
@@ -84,7 +85,8 @@ namespace TDEngine2
 			bool _parseClassDeclaration(bool isTemplateDeclaration = false);
 			bool _parseClassHeader(const std::string& className, bool isStruct = false, bool isTemplate = false);
 			bool _parseClassBody(const std::string& className);
-			bool _parseClassMemberDeclaration(const std::string& className);
+			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
+			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 
 			std::string _parseClassIdentifier();
 			std::string _parseSimpleTemplateIdentifier();

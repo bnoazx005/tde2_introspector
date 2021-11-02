@@ -54,7 +54,7 @@ namespace TDEngine2
 
 		TToken(E_TOKEN_TYPE type, const TCursorPos& pos = { 0, 0 });
 
-		E_TOKEN_TYPE mpType = E_TOKEN_TYPE::TT_EOF;
+		E_TOKEN_TYPE mType = E_TOKEN_TYPE::TT_EOF;
 
 		TCursorPos   mPos = { 0, 0 };
 	};

@@ -20,6 +20,14 @@ namespace TDEngine2
 	using FileWriterArchive = Archive<std::ofstream>;
 
 
+	enum class E_ACCESS_SPECIFIER_TYPE : uint8_t
+	{
+		PUBLIC,
+		PROTECTED,
+		PRIVATE
+	};
+
+
 	struct TType
 	{
 		enum class E_SUBTYPE: uint32_t
@@ -49,6 +57,8 @@ namespace TDEngine2
 		std::string mMangledId; // \note contains full path to type Namespace..ClassName@Type
 
 		SymTable* mpOwner = nullptr;
+
+		E_ACCESS_SPECIFIER_TYPE mAccessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
 	};
 
 	
@@ -85,13 +95,6 @@ namespace TDEngine2
 
 	struct TClassType : TType
 	{
-		enum class E_ACCESS_SPECIFIER_TYPE : uint8_t
-		{
-			PUBLIC,
-			PROTECTED,
-			PRIVATE
-		};
-
 		struct TBaseClassInfo
 		{
 			std::string mFullName; /// Includes full path with namespaces 
