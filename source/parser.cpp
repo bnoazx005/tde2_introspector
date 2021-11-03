@@ -534,12 +534,18 @@ namespace TDEngine2
 			return false;
 		}
 
-		auto pClassTypeDesc = pClassScopeEntity->mpType ? std::move(pClassScopeEntity->mpType) : std::make_unique<TClassType>();
+		if (!pClassScopeEntity->mpType)
+		{
+			pClassScopeEntity->mpType = std::make_unique<TClassType>();
+		}
+
+		TType* pClassTypeDesc =  pClassScopeEntity->mpType.get();
+		
 
 		// \note Try to parse body, it starts from {
 		if (E_TOKEN_TYPE::TT_OPEN_BRACE != mpLexer->GetCurrToken().mType)
 		{
-			if (auto pClassTypeInfo = dynamic_cast<TClassType*>(pClassTypeDesc.get()))
+			if (auto pClassTypeInfo = dynamic_cast<TClassType*>(pClassTypeDesc))
 			{
 				pClassTypeInfo->mIsForwardDeclaration = true;
 			}
@@ -548,11 +554,6 @@ namespace TDEngine2
 		}
 
 		mpLexer->GetNextToken();
-
-		DEFER([this, pClassScopeEntity, &pClassTypeDesc] 
-		{
-			pClassScopeEntity->mpType = std::move(pClassTypeDesc);
-		});
 
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
