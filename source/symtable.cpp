@@ -587,7 +587,7 @@ namespace TDEngine2
 
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
-		if ((mEmitFlags & E_EMIT_FLAGS::ENUMS) != E_EMIT_FLAGS::ENUMS)
+		if ((mEmitFlags & E_EMIT_FLAGS::ENUMS) != E_EMIT_FLAGS::ENUMS || E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mAccessModifier)
 		{
 			return;
 		}
