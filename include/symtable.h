@@ -58,6 +58,8 @@ namespace TDEngine2
 
 		SymTable* mpOwner = nullptr;
 
+		TType* mpParentType = nullptr;
+
 		E_ACCESS_SPECIFIER_TYPE mAccessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
 	};
 
@@ -185,6 +187,8 @@ namespace TDEngine2
 			std::string GetMangledNameForNamedScope(const std::string& id);
 
 			const std::string& GetSourceFilename() const;
+
+			TType* GetCurrScopeType() const;
 		private:
 			void _reset();
 

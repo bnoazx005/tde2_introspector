@@ -456,6 +456,11 @@ namespace TDEngine2
 		return mSourceFilename;
 	}
 
+	TType* SymTable::GetCurrScopeType() const
+	{
+		return mpCurrScope->mpType.get();
+	}
+
 	void SymTable::_reset()
 	{
 		mpGlobalScope = nullptr;
@@ -587,9 +592,18 @@ namespace TDEngine2
 
 	void EnumsMetaExtractor::VisitEnumType(const TEnumType& type)
 	{
-		if ((mEmitFlags & E_EMIT_FLAGS::ENUMS) != E_EMIT_FLAGS::ENUMS || E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mAccessModifier)
+		if ((mEmitFlags & E_EMIT_FLAGS::ENUMS) != E_EMIT_FLAGS::ENUMS || 
+			E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mAccessModifier)
 		{
 			return;
+		}
+
+		if (auto pParentType = dynamic_cast<TClassType*>(type.mpParentType))
+		{
+			if (pParentType->mIsTemplate)
+			{
+				return;
+			}
 		}
 
 		auto iter = mTypesHashTable.find(type.mMangledId);
@@ -624,7 +638,8 @@ namespace TDEngine2
 	void ClassMetaExtractor::VisitClassType(const TClassType& type)
 	{
 		if ((!type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::CLASSES) != E_EMIT_FLAGS::CLASSES)) || 
-			(type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::STRUCTS) != E_EMIT_FLAGS::STRUCTS)))
+			(type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::STRUCTS) != E_EMIT_FLAGS::STRUCTS)) ||
+			type.mIsTemplate)
 		{
 			return;
 		}

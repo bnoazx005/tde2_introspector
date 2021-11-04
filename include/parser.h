@@ -57,6 +57,16 @@ namespace TDEngine2
 	{
 		public:
 			using TOnErrorCallback = std::function<void(const TParserError&)>;
+
+			enum class E_DECL_TYPE
+			{
+				ENUM_TYPE,
+				TYPE, 
+				NAMESPACE, 
+				TEMPLATE,
+				ALL = ENUM_TYPE | TYPE | NAMESPACE | TEMPLATE
+			};
+
 		public:
 			Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback);
 			~Parser() = default;
@@ -67,7 +77,7 @@ namespace TDEngine2
 
 			bool _expect(E_TOKEN_TYPE expectedType, const TToken& token);
 
-			bool _parseDeclarationSequence(bool isInvokedFromTemplateDecl = false);
+			bool _parseDeclarationSequence(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 
 			bool _parseNamespaceDefinition();
 			bool _parseNamedNamespaceDefinition();

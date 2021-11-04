@@ -62,7 +62,19 @@ namespace TDEngine2
 		_parseDeclarationSequence();
 	}
 
-	bool Parser::_parseDeclarationSequence(bool isInvokedFromTemplateDecl)
+
+	inline Parser::E_DECL_TYPE operator& (Parser::E_DECL_TYPE left, Parser::E_DECL_TYPE right)
+	{
+		return static_cast<Parser::E_DECL_TYPE>(static_cast<uint32_t>(left) & static_cast<uint32_t>(right));
+	}
+
+	inline Parser::E_DECL_TYPE operator| (Parser::E_DECL_TYPE left, Parser::E_DECL_TYPE right)
+	{
+		return static_cast<Parser::E_DECL_TYPE>(static_cast<uint32_t>(left) | static_cast<uint32_t>(right));
+	}
+
+
+	bool Parser::_parseDeclarationSequence(bool isInvokedFromTemplateDecl, E_DECL_TYPE allowedDeclTypes)
 	{
 		const TToken* pCurrToken = nullptr;
 
@@ -73,12 +85,27 @@ namespace TDEngine2
 			switch (pCurrToken->mType)
 			{
 				case E_TOKEN_TYPE::TT_NAMESPACE:
+					if ((E_DECL_TYPE::NAMESPACE & allowedDeclTypes) != E_DECL_TYPE::NAMESPACE)
+					{
+						return false;
+					}
+
 					result = _parseNamespaceDefinition();
 					break;
 				case E_TOKEN_TYPE::TT_TEMPLATE:
+					if ((E_DECL_TYPE::TEMPLATE & allowedDeclTypes) != E_DECL_TYPE::TEMPLATE)
+					{
+						return false;
+					}
+
 					result = _parseTemplateDeclaration();
 					break;
 				case E_TOKEN_TYPE::TT_ENUM:
+					if ((E_DECL_TYPE::ENUM_TYPE & allowedDeclTypes) != E_DECL_TYPE::ENUM_TYPE)
+					{
+						return false;
+					}
+
 					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC);
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
@@ -228,7 +255,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		return _parseDeclarationSequence(true);
+		return _parseDeclarationSequence(true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
 	}
 
 	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier)
@@ -289,6 +316,7 @@ namespace TDEngine2
 			pEnumTypeDesc->mIsStronglyTyped = isStronglyTypedEnum;
 			pEnumTypeDesc->mIsForwardDeclaration = (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON);
 			pEnumTypeDesc->mpOwner = mpSymTable;
+			pEnumTypeDesc->mpParentType = mpSymTable->GetCurrScopeType();
 			pEnumTypeDesc->mAccessModifier = accessModifier;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
