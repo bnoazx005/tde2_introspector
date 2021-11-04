@@ -539,15 +539,14 @@ namespace TDEngine2
 			pClassScopeEntity->mpType = std::make_unique<TClassType>();
 		}
 
-		TType* pClassTypeDesc =  pClassScopeEntity->mpType.get();
+		TClassType* pClassTypeDesc =  dynamic_cast<TClassType*>(pClassScopeEntity->mpType.get());
 		
-
 		// \note Try to parse body, it starts from {
 		if (E_TOKEN_TYPE::TT_OPEN_BRACE != mpLexer->GetCurrToken().mType)
 		{
-			if (auto pClassTypeInfo = dynamic_cast<TClassType*>(pClassTypeDesc))
+			if (pClassTypeDesc)
 			{
-				pClassTypeInfo->mIsForwardDeclaration = true;
+				pClassTypeDesc->mIsForwardDeclaration = true;
 			}
 
 			return true;
@@ -557,51 +556,7 @@ namespace TDEngine2
 
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
-#if 0
-		TClassType::E_ACCESS_SPECIFIER_TYPE currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
-
-		// \note Implement body's parsing
-		uint32_t depth = 1; // \fixme Temporary fix with indentation counter to implement correct recognition without actual parsing
-
-		while (depth > 0)
-		{
-			depth = (pCurrToken->mpType == E_TOKEN_TYPE::TT_OPEN_BRACE) ? (depth + 1) : ((pCurrToken->mpType == E_TOKEN_TYPE::TT_CLOSE_BRACE) ? (depth - 1) : depth);
-
-#if 0
-			if (E_TOKEN_TYPE::TT_PUBLIC == pCurrToken->mType ||
-				E_TOKEN_TYPE::TT_PROTECTED == pCurrToken->mType ||
-				E_TOKEN_TYPE::TT_PRIVATE == pCurrToken->mType)
-			{
-				switch (pCurrToken->mType)
-				{
-					case E_TOKEN_TYPE::TT_PUBLIC:
-						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PUBLIC;
-						break;
-					case E_TOKEN_TYPE::TT_PROTECTED:
-						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PROTECTED;
-						break;
-					case E_TOKEN_TYPE::TT_PRIVATE:
-						currAccessType = TClassType::E_ACCESS_SPECIFIER_TYPE::PRIVATE;
-						break;
-				}
-
-				mpLexer->GetNextToken();
-
-				if (!_expect(E_TOKEN_TYPE::TT_COLON, mpLexer->GetCurrToken()) ||
-					!_parseClassMemberDeclaration(className))
-				{
-					return false;
-				}
-			}
-#endif
-			if (depth > 0)
-			{
-				pCurrToken = &mpLexer->GetNextToken();
-			}
-		}
-#endif
-
-		E_ACCESS_SPECIFIER_TYPE accessModifier = E_ACCESS_SPECIFIER_TYPE::PRIVATE;
+		E_ACCESS_SPECIFIER_TYPE accessModifier = (pClassTypeDesc && pClassTypeDesc->mIsStruct) ? E_ACCESS_SPECIFIER_TYPE::PUBLIC : E_ACCESS_SPECIFIER_TYPE::PRIVATE;
 		uint32_t depth = 1; // \fixme Temporary fix with indentation counter to implement correct recognition without actual parsing
 
 		while (depth > 0)
@@ -645,6 +600,12 @@ namespace TDEngine2
 			if (E_TOKEN_TYPE::TT_ENUM == pCurrToken->mType)
 			{
 				_parseEnumDeclaration(accessModifier);
+				continue;
+			}
+
+			if (E_TOKEN_TYPE::TT_STRUCT == pCurrToken->mType || E_TOKEN_TYPE::TT_CLASS == pCurrToken->mType)
+			{
+				_parseClassDeclaration();
 				continue;
 			}
 

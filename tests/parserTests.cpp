@@ -245,4 +245,49 @@ TEST_CASE("Parser tests")
 		}
 		symTable.ExitScope();
 	}
+
+	SECTION("TestParse_PassNestedEnumWithinNestedStruct_CorrectlyProcessThisEnum")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"struct A {",
+				" struct B { enum class NestedEnum { First, Second, Third = 0x42 }; };",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+
+
+		symTable.EnterScope("A");
+		{
+			symTable.EnterScope("B");
+			{
+				auto pNestedEnumScope = symTable.LookUpNamedScope("NestedEnum");
+				REQUIRE(pNestedEnumScope);
+
+				TEnumType* pTypeDesc = dynamic_cast<TEnumType*>(pNestedEnumScope->mpType.get());
+				REQUIRE((pTypeDesc && E_ACCESS_SPECIFIER_TYPE::PUBLIC == pTypeDesc->mAccessModifier));
+
+				auto&& enumerators = pTypeDesc->mEnumerators;
+
+				REQUIRE((enumerators.size() == 3 &&
+					enumerators[0] == "First" &&
+					enumerators[1] == "Second" &&
+					enumerators[2] == "Third"));
+
+				REQUIRE(pNestedEnumScope->mpParentScope);
+
+				TClassType* pParentType = dynamic_cast<TClassType*>(pNestedEnumScope->mpParentScope->mpType.get());
+				REQUIRE((pParentType && pParentType->mId == "B"));
+			}
+			symTable.ExitScope();
+		}
+		symTable.ExitScope();
+	}
 }
