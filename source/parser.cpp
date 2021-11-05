@@ -631,6 +631,12 @@ namespace TDEngine2
 				continue;
 			}
 
+			if (E_TOKEN_TYPE::TT_TEMPLATE == pCurrToken->mType)
+			{
+				_parseTemplateDeclaration();
+				continue;
+			}
+
 			if (E_TOKEN_TYPE::TT_STRUCT == pCurrToken->mType || E_TOKEN_TYPE::TT_CLASS == pCurrToken->mType)
 			{
 				_parseClassDeclaration();

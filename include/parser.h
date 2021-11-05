@@ -60,10 +60,10 @@ namespace TDEngine2
 
 			enum class E_DECL_TYPE
 			{
-				ENUM_TYPE,
-				TYPE, 
-				NAMESPACE, 
-				TEMPLATE,
+				ENUM_TYPE = 0x1,
+				TYPE      = 0x2, 
+				NAMESPACE = 0x4, 
+				TEMPLATE  = 0x8,
 				ALL = ENUM_TYPE | TYPE | NAMESPACE | TEMPLATE
 			};
 

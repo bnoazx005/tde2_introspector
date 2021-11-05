@@ -290,4 +290,42 @@ TEST_CASE("Parser tests")
 		}
 		symTable.ExitScope();
 	}
+
+	SECTION("TestParse_PassTemplateClasses_CorrectlyParsesTheirDeclarations")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"class A {",
+				" template <typename T> class B { };"
+				"};",
+				"template <typename T> class C;"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+
+		/// \note Check B type
+
+		symTable.EnterScope("A");
+		{
+			auto pNestedEnumScope = symTable.LookUpNamedScope("B");
+			REQUIRE(pNestedEnumScope);
+
+			auto pType = dynamic_cast<TClassType*>(pNestedEnumScope->mpType.get());
+			REQUIRE((pType && pType->mIsTemplate));
+		}
+		symTable.ExitScope();
+
+		/// \note Check C type
+		auto pNestedEnumScope = symTable.LookUpNamedScope("C");
+		REQUIRE(pNestedEnumScope);
+
+		auto pType = dynamic_cast<TClassType*>(pNestedEnumScope->mpType.get());
+		REQUIRE((pType && pType->mIsTemplate));
+	}
 }
