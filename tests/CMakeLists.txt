@@ -37,6 +37,7 @@ set(SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/parserTests.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/symTableTests.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/enumsExtractorTests.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/classesExtractorTests.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/serializationTests.cpp")
 
 source_group("includes" FILES ${HEADERS})

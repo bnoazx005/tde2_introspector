@@ -110,7 +110,7 @@ namespace TDEngine2
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
-					result = _parseClassDeclaration(isInvokedFromTemplateDecl);
+					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl);
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
 					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
@@ -408,7 +408,7 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	bool Parser::_parseClassDeclaration(bool isTemplateDeclaration)
+	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
 
@@ -444,7 +444,7 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		});
 
-		if (!_parseClassHeader(className, isStruct, isTemplateDeclaration) ||
+		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration) ||
 			!_parseClassBody(className))
 		{
 			return false;
@@ -453,7 +453,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, bool isStruct, bool isTemplate)
+	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -463,11 +463,13 @@ namespace TDEngine2
 
 		auto pClassTypeDesc = std::make_unique<TClassType>();
 
-		pClassTypeDesc->mId         = className;
-		pClassTypeDesc->mMangledId  = mpSymTable->GetMangledNameForNamedScope(className);
-		pClassTypeDesc->mpOwner     = mpSymTable;
-		pClassTypeDesc->mIsStruct   = isStruct;
-		pClassTypeDesc->mIsTemplate = isTemplate;
+		pClassTypeDesc->mId             = className;
+		pClassTypeDesc->mMangledId      = mpSymTable->GetMangledNameForNamedScope(className);
+		pClassTypeDesc->mpOwner         = mpSymTable;
+		pClassTypeDesc->mIsStruct       = isStruct;
+		pClassTypeDesc->mIsTemplate     = isTemplate;
+		pClassTypeDesc->mAccessModifier = accessModifier;
+		pClassTypeDesc->mpParentType    = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mType);
@@ -639,7 +641,7 @@ namespace TDEngine2
 
 			if (E_TOKEN_TYPE::TT_STRUCT == pCurrToken->mType || E_TOKEN_TYPE::TT_CLASS == pCurrToken->mType)
 			{
-				_parseClassDeclaration();
+				_parseClassDeclaration(accessModifier, false);
 				continue;
 			}
 

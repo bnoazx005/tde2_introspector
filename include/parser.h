@@ -92,8 +92,8 @@ namespace TDEngine2
 
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			bool _parseClassDeclaration(bool isTemplateDeclaration = false);
-			bool _parseClassHeader(const std::string& className, bool isStruct = false, bool isTemplate = false);
+			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false);
+			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false);
 			bool _parseClassBody(const std::string& className);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);

@@ -189,6 +189,7 @@ namespace TDEngine2
 			const std::string& GetSourceFilename() const;
 
 			TType* GetCurrScopeType() const;
+			TType* GetParentScopeType() const;
 		private:
 			void _reset();
 

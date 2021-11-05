@@ -461,6 +461,13 @@ namespace TDEngine2
 		return mpCurrScope->mpType.get();
 	}
 
+	TType* SymTable::GetParentScopeType() const
+	{
+		auto pParentScope = mpCurrScope->mpParentScope;
+
+		return pParentScope ? pParentScope->mpType.get() : nullptr;
+	}
+
 	void SymTable::_reset()
 	{
 		mpGlobalScope = nullptr;
@@ -639,6 +646,8 @@ namespace TDEngine2
 	{
 		if ((!type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::CLASSES) != E_EMIT_FLAGS::CLASSES)) || 
 			(type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::STRUCTS) != E_EMIT_FLAGS::STRUCTS)) ||
+			(E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mAccessModifier) ||									/// skip either protected type
+			(type.mpParentType && E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mpParentType->mAccessModifier) || /// or a type that is part of another hidden type
 			type.mIsTemplate)
 		{
 			return;
