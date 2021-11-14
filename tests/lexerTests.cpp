@@ -276,4 +276,96 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER);
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
 	}
+
+	SECTION("TestGetNextToken_PassOperatorsWithIgnoreBlock_ReturnsSequenceOfTokensWithoutThatExistInbetween")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"id",
+				"BEGIN_IGNORE_META_SECTION",
+				"id2",
+				"END_IGNORE_META_SECTION",
+				"id3",
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_IDENTIFIER,
+			E_TOKEN_TYPE::TT_IDENTIFIER,
+		};
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
+
+	SECTION("TestGetNextToken_PassIgnoreBlockWithoutBeginMark_ReturnsAllTokensWithEndMarker")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"id",
+				"END_IGNORE_META_SECTION",
+				"id2",
+				"id3",
+			} } };
+
+		Lexer lexer(*stream);
+
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_IDENTIFIER,
+			E_TOKEN_TYPE::TT_END_IGNORE_SECTION,
+			E_TOKEN_TYPE::TT_IDENTIFIER,
+			E_TOKEN_TYPE::TT_IDENTIFIER,
+		};
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
+
+	SECTION("TestGetNextToken_PassIgnoreBlockWithoutEndMark_ReturnsNothingAfterBeginningMarker")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"id",
+				"BEGIN_IGNORE_META_SECTION",
+				"id2",
+				"id3",
+			} } };
+
+		Lexer lexer(*stream);
+		
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER);
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
 }

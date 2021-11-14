@@ -71,6 +71,8 @@ namespace TDEngine2
 		{ "ENUM_META", E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE },
 		{ "CLASS_META", E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE },
 		{ "INTERFACE_META", E_TOKEN_TYPE::TT_INTERFACE_META_ATTRIBUTE },
+		{ "BEGIN_IGNORE_META_SECTION", E_TOKEN_TYPE::TT_BEGIN_IGNORE_SECTION },
+		{ "END_IGNORE_META_SECTION", E_TOKEN_TYPE::TT_END_IGNORE_SECTION },
 		{ "{", E_TOKEN_TYPE::TT_OPEN_BRACE },
 		{ "}", E_TOKEN_TYPE::TT_CLOSE_BRACE },
 		{ "(", E_TOKEN_TYPE::TT_OPEN_PARENTHES },
@@ -98,6 +100,20 @@ namespace TDEngine2
 		return *mTokensQueue.front();
 	}
 
+
+	std::unique_ptr<TToken> Lexer::_skipIgnoredTokensSection()
+	{
+		std::unique_ptr<TToken> pCurrToken = _scanToken();
+
+		while (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType && E_TOKEN_TYPE::TT_END_IGNORE_SECTION != pCurrToken->mType)
+		{
+			pCurrToken = _scanToken();
+		}
+
+		return _scanToken(); // \note Scan next token right after END_IGNORE_META_SECTION keyword
+	}
+
+
 	const TToken& Lexer::GetNextToken()
 	{
 		if (!mTokensQueue.empty())
@@ -105,7 +121,25 @@ namespace TDEngine2
 			mTokensQueue.erase(mTokensQueue.cbegin());
 		}
 
-		mTokensQueue.emplace_back(_scanToken());
+		auto pToken = _scanToken();
+
+		/*
+			There is a special construct that allows to skip range of tokens between
+			two keywords
+
+			BEGIN_IGNORE_META_SECTION
+			token_0 ... token_N
+			END_IGNORE_META_SECTION
+
+			That's pretty handy when some preprocessor magic's got into business and we can't
+			parse this without actual preprocessing (by default we assume that a code should be parseable without that stage)
+		*/
+		if (E_TOKEN_TYPE::TT_BEGIN_IGNORE_SECTION == pToken->mType)
+		{
+			pToken = std::move(_skipIgnoredTokensSection());
+		}
+
+		mTokensQueue.emplace_back(std::move(pToken));
 
 		return *mTokensQueue.front();
 	}

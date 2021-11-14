@@ -58,7 +58,9 @@ namespace TDEngine2
 		private:
 			Lexer() = default;
 
-			std::unique_ptr<TToken> _scanToken();
+			std::unique_ptr<TToken> _scanToken(); 
+			
+			std::unique_ptr<TToken> _skipIgnoredTokensSection();
 
 			char _getCurrChar() const;
 			char _getNextChar();

@@ -25,6 +25,8 @@ namespace TDEngine2
 		TT_OVERRIDE,
 		TT_FINAL,
 		TT_TEMPLATE,
+		TT_BEGIN_IGNORE_SECTION,
+		TT_END_IGNORE_SECTION,
 
 		// symbols
 		TT_COLON,
