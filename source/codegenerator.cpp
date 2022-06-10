@@ -104,7 +104,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 	}
 
 	bool CodeGenerator::Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags,
-							const std::vector<std::regex>& excludeTypenamePatterns)
+							const std::vector<std::regex>& excludeTypenamePatterns, bool isTaggedOnlyModeEnabled)
 	{
 		if (!outputStreamsFactory)
 		{
@@ -119,6 +119,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		mEmitFlags = flags;
 
 		mTypenamesToHidePatterns = excludeTypenamePatterns;
+
+		mIsTaggedOnlyMode = isTaggedOnlyModeEnabled;
 
 		if (!mpHeaderOutputStream)
 		{
@@ -168,7 +170,9 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitEnumType(const TEnumType& type)
 	{
-		if (type.mIsForwardDeclaration || _shouldSkipGeneration(type.mId)) // \note skip forward declarations to prevent duplicates of traits of the same type
+		if (type.mIsForwardDeclaration ||
+			_shouldSkipGeneration(type.mId) || 
+			(mIsTaggedOnlyMode && !type.mIsMarkedWithAttribute)) // \note skip forward declarations to prevent duplicates of traits of the same type
 		{
 			return;
 		}
@@ -203,7 +207,10 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 	void CodeGenerator::VisitClassType(const TClassType& type)
 	{
-		if (type.mIsForwardDeclaration || type.mIsTemplate || _shouldSkipGeneration(type.mId)) // \note skip forward declarations to prevent duplicates of traits of the same type
+		if (type.mIsForwardDeclaration ||
+			type.mIsTemplate ||
+			_shouldSkipGeneration(type.mId) ||
+			(mIsTaggedOnlyMode && !type.mIsMarkedWithAttribute)) // \note skip forward declarations to prevent duplicates of traits of the same type
 		{
 			return;
 		}

@@ -12,6 +12,8 @@ using namespace TDEngine2;
 
 TEST_CASE("Parser tests")
 {
+	const TIntrospectorOptions mockOptions = {};
+
 	SECTION("TestParse_PassEmptyProgram_ProcessWithoutErrors")
 	{		
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
@@ -22,7 +24,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -39,7 +41,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -56,7 +58,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -74,7 +76,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -91,10 +93,35 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
+	}
+
+	SECTION("TestParse_PassTaggedEnumDeclaration_ProcessWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"ENUM_META() enum TEST;",
+				"enum class TEST2;",
+				"enum class TEST3 : unsigned int;",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+		{
+			REQUIRE(false);
+		}).Parse();
+
+		auto pTestEnumScope = symTable.LookUpNamedScope("TEST");
+		REQUIRE(pTestEnumScope);
+
+		TEnumType* pTypeDesc = dynamic_cast<TEnumType*>(pTestEnumScope->mpType.get());
+		REQUIRE((pTypeDesc && pTypeDesc->mIsMarkedWithAttribute));
+
 	}
 
 	SECTION("TestParse_PassEnumDefinition_ProcessWithoutErrors")
@@ -108,7 +135,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -139,7 +166,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -160,7 +187,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -177,7 +204,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -195,7 +222,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -216,7 +243,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -258,7 +285,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();
@@ -304,7 +331,7 @@ TEST_CASE("Parser tests")
 		Lexer lexer(*stream);
 		SymTable symTable;
 
-		Parser(lexer, symTable, [](auto&&)
+		Parser(lexer, symTable, mockOptions, [](auto&&)
 		{
 			REQUIRE(false);
 		}).Parse();

@@ -77,7 +77,7 @@ namespace TDEngine2
 	
 	void WriteOutput(const std::string& text) TDE2_NOEXCEPT;
 
-	std::unique_ptr<SymTable> ProcessHeaderFile(const std::string& filename) TDE2_NOEXCEPT;
+	std::unique_ptr<SymTable> ProcessHeaderFile(const TIntrospectorOptions& options, const std::string& filename) TDE2_NOEXCEPT;
 
 
 	const std::string GeneratedHeaderPrelude = R"(

@@ -228,7 +228,7 @@ namespace TDEngine2
 		std::cout << text;
 	}
 
-	std::unique_ptr<SymTable> ProcessHeaderFile(const std::string& filename) TDE2_NOEXCEPT
+	std::unique_ptr<SymTable> ProcessHeaderFile(const TIntrospectorOptions& options, const std::string& filename) TDE2_NOEXCEPT
 	{
 		WriteOutput(std::string("\n").append("Process ").append(filename).append(" file... "));
 
@@ -247,7 +247,7 @@ namespace TDEngine2
 
 			bool hasErrors = false;
 
-			Parser{ lexer, *pSymTable, [&filename, &hasErrors](auto&& error)
+			Parser{ lexer, *pSymTable, options, [&filename, &hasErrors](auto&& error)
 			{
 				hasErrors = true;
 				WriteOutput(std::string("\nError (").append(filename).append(")").append(error.ToString()));

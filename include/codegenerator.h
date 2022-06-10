@@ -25,7 +25,7 @@ namespace TDEngine2
 			~CodeGenerator();
 
 			bool Init(const TOutputStreamFactoryFunctor& outputStreamsFactory, const std::string& outputFilename, const E_EMIT_FLAGS& flags, 
-						const std::vector<std::regex>& excludeTypenamePatterns);
+						const std::vector<std::regex>& excludeTypenamePatterns, bool isTaggedOnlyModeEnabled);
 
 			bool Generate(TSymbolTablesArray&& symbolTablesPerFile);
 
@@ -60,6 +60,11 @@ namespace TDEngine2
 
 				for (auto currMetaEntity : entities)
 				{
+					if (!currMetaEntity->mIsMarkedWithAttribute && mIsTaggedOnlyMode)
+					{
+						continue;
+					}
+
 					std::string path = Wrench::StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
 					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
@@ -104,5 +109,7 @@ namespace TDEngine2
 			E_EMIT_FLAGS                   mEmitFlags;
 
 			std::vector<std::regex>        mTypenamesToHidePatterns;
+
+			bool                           mIsTaggedOnlyMode = false;
 	};
 }

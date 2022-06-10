@@ -52,8 +52,8 @@ namespace TDEngine2
 	}
 
 
-	Parser::Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback):
-		mpLexer(&lexer), mpSymTable(&symTable), mOnErrorCallback(onErrorCallback)
+	Parser::Parser(Lexer& lexer, SymTable& symTable, const TIntrospectorOptions& options, const TOnErrorCallback& onErrorCallback):
+		mpLexer(&lexer), mpSymTable(&symTable), mOnErrorCallback(onErrorCallback), mOptions(options)
 	{
 	}
 
@@ -79,6 +79,9 @@ namespace TDEngine2
 		const TToken* pCurrToken = nullptr;
 
 		bool result = true;
+
+		bool enumerationTagFound = false; /// ENUM_META 
+		bool classTagFound = false;		  /// or CLASS_META was found
 
 		while ((pCurrToken = &mpLexer->GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
 		{
@@ -106,17 +109,59 @@ namespace TDEngine2
 						return false;
 					}
 
-					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC);
+					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound);
+					enumerationTagFound = false; // reset the flag
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
-					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl);
+					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound);
+					classTagFound = false; // reset the flag
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
 					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
 					break;
 				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
 					return true;
+				case E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE:
+					mpLexer->GetNextToken();
+
+					if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+					{
+						return false;
+					}
+
+					mpLexer->GetNextToken();
+
+					if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
+					{
+						return false;
+					}
+
+					mpLexer->GetNextToken();
+
+					enumerationTagFound = true;
+
+					break;
+				case E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE:
+					mpLexer->GetNextToken();
+
+					if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+					{
+						return false;
+					}
+
+					mpLexer->GetNextToken();
+
+					if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
+					{
+						return false;
+					}
+
+					mpLexer->GetNextToken();
+
+					classTagFound = true;
+
+					break;
 				default:
 					mpLexer->GetNextToken(); // just skip unknown tokens
 					break;
@@ -258,7 +303,7 @@ namespace TDEngine2
 		return _parseDeclarationSequence(true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
 	}
 
-	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier)
+	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged)
 	{
 		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mType)
 		{
@@ -318,6 +363,7 @@ namespace TDEngine2
 			pEnumTypeDesc->mpOwner = mpSymTable;
 			pEnumTypeDesc->mpParentType = mpSymTable->GetCurrScopeType();
 			pEnumTypeDesc->mAccessModifier = accessModifier;
+			pEnumTypeDesc->mIsMarkedWithAttribute = isTagged;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
@@ -408,7 +454,7 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration)
+	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
 
@@ -444,7 +490,7 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		});
 
-		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration) ||
+		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged) ||
 			!_parseClassBody(className))
 		{
 			return false;
@@ -453,7 +499,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate)
+	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate, bool isTagged)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -463,13 +509,14 @@ namespace TDEngine2
 
 		auto pClassTypeDesc = std::make_unique<TClassType>();
 
-		pClassTypeDesc->mId             = className;
-		pClassTypeDesc->mMangledId      = mpSymTable->GetMangledNameForNamedScope(className);
-		pClassTypeDesc->mpOwner         = mpSymTable;
-		pClassTypeDesc->mIsStruct       = isStruct;
-		pClassTypeDesc->mIsTemplate     = isTemplate;
-		pClassTypeDesc->mAccessModifier = accessModifier;
-		pClassTypeDesc->mpParentType    = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
+		pClassTypeDesc->mId                    = className;
+		pClassTypeDesc->mMangledId             = mpSymTable->GetMangledNameForNamedScope(className);
+		pClassTypeDesc->mpOwner                = mpSymTable;
+		pClassTypeDesc->mIsStruct              = isStruct;
+		pClassTypeDesc->mIsTemplate            = isTemplate;
+		pClassTypeDesc->mAccessModifier        = accessModifier;
+		pClassTypeDesc->mpParentType           = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
+		pClassTypeDesc->mIsMarkedWithAttribute = isTagged;
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mType);

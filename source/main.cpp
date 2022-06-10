@@ -73,7 +73,7 @@ int main(int argc, const char** argv)
 		// \note Build symbol tables for each header file
 		for (size_t i = 0; i < filesToProcess.size(); ++i)
 		{
-			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, &cachedData, i, cacheDirectory = options.mCacheDirname, isForceModeEnabled]
+			jobManager.SubmitJob(std::function<void()>([&filesToProcess, &symbolsPerFile, &cachedData, i, &options, cacheDirectory = options.mCacheDirname, isForceModeEnabled]
 			{
 				const std::string& filename = filesToProcess[i];
 				const std::string hash = GetHashFromFilePath(filename);
@@ -100,7 +100,7 @@ int main(int argc, const char** argv)
 					}					
 				}
 
-				symbolsPerFile[i] = std::move(ProcessHeaderFile(filename));
+				symbolsPerFile[i] = std::move(ProcessHeaderFile(options, filename));
 
 				// \note Serialize data
 				{
@@ -123,7 +123,7 @@ int main(int argc, const char** argv)
 	const std::string outputFilename = fs::path(options.mOutputDirname + "/").concat(options.mOutputFilename).string();
 
 	if (!codeGenerator.Init([](const std::string& filename) { return std::make_unique<FileOutputStream>(filename); }, 
-							outputFilename, options.mEmitFlags, options.mTypenamesPatternsToExclude))
+							outputFilename, options.mEmitFlags, options.mTypenamesPatternsToExclude, options.mIsTaggedOnlyModeEnabled))
 	{
 		return -1;
 	}

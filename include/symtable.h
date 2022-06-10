@@ -61,6 +61,8 @@ namespace TDEngine2
 		TType* mpParentType = nullptr;
 
 		E_ACCESS_SPECIFIER_TYPE mAccessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
+
+		bool mIsMarkedWithAttribute = false;
 	};
 
 	

@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include "common.h"
 
 
 namespace TDEngine2
@@ -68,7 +69,7 @@ namespace TDEngine2
 			};
 
 		public:
-			Parser(Lexer& lexer, SymTable& symTable, const TOnErrorCallback& onErrorCallback);
+			Parser(Lexer& lexer, SymTable& symTable, const TIntrospectorOptions& options, const TOnErrorCallback& onErrorCallback);
 			~Parser() = default;
 
 			void Parse();
@@ -86,14 +87,14 @@ namespace TDEngine2
 			bool _parseBlockDeclaration();
 			bool _parseTemplateDeclaration();
 
-			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier);
+			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged = false);
 			bool _parseEnumBody(TEnumType* pEnumType);
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false);
-			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false);
+			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false);
+			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false, bool isTagged = false);
 			bool _parseClassBody(const std::string& className);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
@@ -105,10 +106,12 @@ namespace TDEngine2
 
 			bool _eatUnknownTokens();
 		private:
-			Lexer*           mpLexer;
+			Lexer*               mpLexer;
 
-			SymTable*        mpSymTable;
+			SymTable*            mpSymTable;
 
-			TOnErrorCallback mOnErrorCallback;
+			TOnErrorCallback     mOnErrorCallback;
+
+			TIntrospectorOptions mOptions;
 	};
 }
