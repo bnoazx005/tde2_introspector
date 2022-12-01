@@ -3,7 +3,7 @@
 #include <parser.h>
 #include <symtable.h>
 #include "mockInputStream.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 
 using namespace TDEngine2;

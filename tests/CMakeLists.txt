@@ -80,7 +80,7 @@ if (UNIX)
 endif (UNIX)
 
 add_executable(${TDE2_INTROSPECTOR_TESTS_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2)
+target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2WithMain)
 
 include(CTest)
 include(Catch)

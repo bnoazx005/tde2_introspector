@@ -1,7 +1,7 @@
 #include <symtable.h>
 #include <common.h>
 #include "../deps/archive/archive.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <fstream>
 
 
