@@ -93,7 +93,6 @@ namespace TDEngine2
 */
 
 #include <array>
-#include <string>
 #include <type_traits>
 
 {0}
@@ -162,21 +161,17 @@ template <TypeID id> struct Type { };
 template <typename TEnum>
 struct EnumFieldInfo
 {
-	const TEnum       value;
-	const std::string name;
+	constexpr EnumFieldInfo(TEnum _value, const char* _name): value(_value), name(_name) {}
+
+	TEnum       value;
+	const char* name;
 };
 
 template <typename TEnum>
 struct EnumTrait
 {
-	static const bool         isOpaque = false;
-	static const unsigned int elementsCount = 0;
-
-	static const std::array<EnumFieldInfo<TEnum>, 0>& GetFields() 
-	{ 
-		static std::array<EnumFieldInfo<TEnum>, 0> emptyArray;
-		return emptyArray; 
-	}
+	static constexpr bool     isOpaque = false;
+	static constexpr uint32_t elementsCount = 0;
 };
 
 

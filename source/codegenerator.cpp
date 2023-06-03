@@ -11,39 +11,23 @@ struct EnumTrait<{0}>
 {
 	using UnderlyingType = typename std::underlying_type<{0}>::type;
 
-	static const bool         isOpaque = {1};
-	static const unsigned int elementsCount = {2};
+	static constexpr bool     isOpaque = {1};
+	static constexpr uint32_t elementsCount = {2};
 
-	static const std::array<EnumFieldInfo<{0}>, elementsCount> GetFields() 
-	{ 
-		static const std::array<EnumFieldInfo<{0}>, {2}> fields
-		{
-			{3}
-		};
-
-		return fields;
-	}
-
-	static std::string ToString({0} value)
+	static constexpr std::array<EnumFieldInfo<{0}>, {2}> fields
 	{
-		static auto&& elements = GetFields();
+		{3}
+	};
 
-		for (auto&& currElement : elements)
-		{
-			if (currElement.value == value)
-			{
-				return currElement.name;
-			}
-		}
-
+	static constexpr const char* ToString({0} value)
+	{
+{4}
 		return "";
 	}
 
 	static {0} FromString(const std::string& value)
 	{
-		static auto&& elements = GetFields();
-
-		for (auto&& currElement : elements)
+		for (auto&& currElement : fields)
 		{
 			if (currElement.name == value)
 			{
@@ -51,7 +35,7 @@ struct EnumTrait<{0}>
 			}
 		}
 
-		return (elements.size() > 0) ? elements[0].value : static_cast<{0}>(0);
+		return (fields.size() > 0) ? fields[0].value : static_cast<{0}>(0);
 	}
 };
 )";
@@ -86,6 +70,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 )";
 
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
+
+	const std::string EnumValueToStringConverterPattern = "\t\tif ({0} == value) { return \"{1}\"; }\n";
 
 	const std::string CodeGenerator::mTrueConstant = "true";
 	const std::string CodeGenerator::mFalseConstant = "false";
@@ -181,7 +167,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 		size_t enumeratorsCount = type.mEnumerators.size();
 
-		std::string fieldsStr = "";
+		std::string fieldsStr = Wrench::StringUtils::GetEmptyStr();
+		std::string fieldsToStringStr = Wrench::StringUtils::GetEmptyStr();
 
 		auto&& enumerators = type.mEnumerators;
 
@@ -191,13 +178,16 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 			fieldsStr
 				.append(Wrench::StringUtils::Format(mEnumeratorFieldPattern, fullEnumName, fullEnumName + "::" + currEnumerator, currEnumerator))
-				.append(i + 1 < enumeratorsCount ? "," : "").append("\n\t\t\t");
+				.append(i + 1 < enumeratorsCount ? "," : "").append("\n\t\t");
+
+			fieldsToStringStr
+				.append(Wrench::StringUtils::Format(EnumValueToStringConverterPattern, fullEnumName + "::" + currEnumerator, currEnumerator));
 		}
 
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
-															  enumeratorsCount, fieldsStr));
+															  enumeratorsCount, fieldsStr, fieldsToStringStr));
 	}
 
 	void CodeGenerator::VisitNamespaceType(const TNamespaceType& type)
