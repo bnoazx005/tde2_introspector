@@ -184,10 +184,17 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 				.append(Wrench::StringUtils::Format(EnumValueToStringConverterPattern, fullEnumName + "::" + currEnumerator, currEnumerator));
 		}
 
+		std::string sectionIdentifier = type.mSectionId.empty() ? "ALL" : type.mSectionId; /// \todo replace DEFAULT with configurable constant
+		std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
+
+		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format("\n#ifdef META_EXPORT_{0}_SECTION\n", sectionIdentifier));
+
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
 															  enumeratorsCount, fieldsStr, fieldsToStringStr));
+
+		mpHeaderOutputStream->WriteString("\n#endif\n");
 	}
 
 	void CodeGenerator::VisitNamespaceType(const TNamespaceType& type)

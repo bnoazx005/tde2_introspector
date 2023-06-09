@@ -83,6 +83,8 @@ namespace TDEngine2
 		bool enumerationTagFound = false; /// ENUM_META 
 		bool classTagFound = false;		  /// or CLASS_META was found
 
+		std::string currSectionIdentifier = Wrench::StringUtils::GetEmptyStr();
+
 		while ((pCurrToken = &mpLexer->GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
 		{
 			switch (pCurrToken->mType)
@@ -109,7 +111,7 @@ namespace TDEngine2
 						return false;
 					}
 
-					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound);
+					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound, currSectionIdentifier);
 					enumerationTagFound = false; // reset the flag
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
@@ -131,6 +133,29 @@ namespace TDEngine2
 					}
 
 					mpLexer->GetNextToken();
+
+					if (E_TOKEN_TYPE::TT_SECTION == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
+					{
+						mpLexer->GetNextToken();
+
+						// eat =
+						if (!_expect(E_TOKEN_TYPE::TT_ASSIGN_OP, mpLexer->GetCurrToken()))
+						{
+							return false;
+						}
+
+						mpLexer->GetNextToken();
+
+						// eat identifier
+						if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+						{
+							return false;
+						}
+
+						currSectionIdentifier = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+
+						mpLexer->GetNextToken();
+					}
 
 					if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
 					{
@@ -303,7 +328,7 @@ namespace TDEngine2
 		return _parseDeclarationSequence(true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
 	}
 
-	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged)
+	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const std::string& sectionId)
 	{
 		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mType)
 		{
@@ -364,6 +389,7 @@ namespace TDEngine2
 			pEnumTypeDesc->mpParentType = mpSymTable->GetCurrScopeType();
 			pEnumTypeDesc->mAccessModifier = accessModifier;
 			pEnumTypeDesc->mIsMarkedWithAttribute = isTagged;
+			pEnumTypeDesc->mSectionId = sectionId;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{

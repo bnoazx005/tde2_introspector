@@ -87,7 +87,7 @@ namespace TDEngine2
 			bool _parseBlockDeclaration();
 			bool _parseTemplateDeclaration();
 
-			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged = false);
+			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged = false, const std::string& sectionId = "");
 			bool _parseEnumBody(TEnumType* pEnumType);
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 

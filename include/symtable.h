@@ -56,6 +56,24 @@ namespace TDEngine2
 		std::string mId;
 		std::string mMangledId; // \note contains full path to type Namespace..ClassName@Type
 
+		/*!
+			\brief The identifier works as module's name to group metadata into parts and export declarations partially
+
+			E.g. ENUM_META() enum E_TEST1 {}; emits in metadata.h
+
+			///... EnumTrait<E_TEST1> ....
+
+
+			When ENUM_META(SECTION=common) generates
+
+			#ifdef META_EXPORT_COMMON_SECTION
+
+			///... EnumTrait<E_TEST1> ....
+
+			#endif
+		*/
+		std::string mSectionId; 
+
 		SymTable* mpOwner = nullptr;
 
 		TType* mpParentType = nullptr;
