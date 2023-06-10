@@ -5,7 +5,7 @@
 
 namespace TDEngine2
 {
-	const std::string CodeGenerator::mEnumTraitTemplateSpecializationHeaderPattern = R"(
+	static const std::string mEnumTraitTemplateSpecializationHeaderPattern = R"(
 template <>
 struct EnumTrait<{0}>
 {
@@ -38,7 +38,12 @@ struct EnumTrait<{0}>
 		return (fields.size() > 0) ? fields[0].value : static_cast<{0}>(0);
 	}
 };
+
+#ifdef META_IMPLEMENTATION
+constexpr std::array<EnumFieldInfo<{0}>, {2}> EnumTrait<{0}>::fields;
+#endif
 )";
+
 
 	const std::string CodeGenerator::mClassTraitTemplateSpecializationHeaderPattern = R"(
 template <>

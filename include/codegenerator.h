@@ -98,7 +98,6 @@ namespace TDEngine2
 
 			std::string                    mOutputFilenamesName;
 
-			static const std::string       mEnumTraitTemplateSpecializationHeaderPattern;
 			static const std::string       mEnumeratorFieldPattern;
 
 			static const std::string       mClassTraitTemplateSpecializationHeaderPattern;
