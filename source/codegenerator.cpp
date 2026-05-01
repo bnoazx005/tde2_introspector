@@ -1,5 +1,6 @@
 #include "../include/codegenerator.h"
 #include "../include/common.h"
+#include "../deps/Wrench/source/stringUtils.hpp"
 #include <set>
 
 
@@ -168,7 +169,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			return;
 		}
 
-		std::string fullEnumName = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
+		std::string fullEnumName = "::" + Wrench::StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		size_t enumeratorsCount = type.mEnumerators.size();
 
@@ -217,7 +218,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			return;
 		}
 
-		std::string fullClassIdentifier = "::" + StringUtils::ReplaceAll(type.mMangledId, "@", "::");
+		std::string fullClassIdentifier = "::" + Wrench::StringUtils::ReplaceAll(type.mMangledId, "@", "::");
 
 		auto&& parentClasses = _getParentClasses(type);
 

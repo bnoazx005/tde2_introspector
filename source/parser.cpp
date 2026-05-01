@@ -5,6 +5,8 @@
 #include "../include/common.h"
 #define STR_UTILS_IMPLEMENTATION
 #include "../deps/Wrench/source/stringUtils.hpp"
+#define DEFER_IMPLEMENTATION
+#include "../deps/Wrench/source/deferOperation.hpp"
 #include <cassert>
 
 
@@ -508,7 +510,7 @@ namespace TDEngine2
 			}
 		}
 
-		DEFER([this]
+		defer([this]
 		{
 			_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken());
 			mpSymTable->ExitScope();
@@ -551,7 +553,7 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		}
 
-		DEFER([pClassScopeEntity, &pClassTypeDesc] 
+		defer([pClassScopeEntity, &pClassTypeDesc] 
 		{
 			pClassScopeEntity->mpType = std::move(pClassTypeDesc);
 		});
@@ -810,7 +812,7 @@ namespace TDEngine2
 
 		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType) // a simple identifier
 		{
-			DEFER([this] { mpLexer->GetNextToken(); });
+			defer([this] { mpLexer->GetNextToken(); });
 
 			return dynamic_cast<const TIdentifierToken&>(currToken).mId;
 		}

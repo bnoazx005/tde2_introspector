@@ -8,6 +8,7 @@
 #include "../include/jobmanager.h"
 #include "../deps/archive/archive.h"
 #include "../deps/Wrench/source/stringUtils.hpp"
+#include "../deps/Wrench/source/deferOperation.hpp"
 
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -29,7 +30,7 @@ int main(int argc, const char** argv)
 		std::cout.setstate(std::ios_base::failbit); // \note disable standard console output here and restore at the end of execution
 	}
 
-	DEFER([]
+	defer([]
 	{
 		std::cout.clear();
 	});

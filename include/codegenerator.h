@@ -65,7 +65,7 @@ namespace TDEngine2
 						continue;
 					}
 
-					std::string path = Wrench::StringUtils::Format("#include \"{0}\"\n", StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
+					std::string path = Wrench::StringUtils::Format("#include \"{0}\"\n", Wrench::StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
 					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
 					{
