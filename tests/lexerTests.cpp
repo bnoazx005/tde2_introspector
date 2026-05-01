@@ -17,7 +17,22 @@ TEST_CASE("Lexer tests")
 				// lines here
 				"namespace   {       }     ",
 				"::",
-				"enum class;"
+				"enum class;",
+				"char",
+				"char16_t",
+				"char32_t",
+				"wchar_t",
+				"bool",
+				"short",
+				"int",
+				"long",
+				"signed",
+				"unsigned",
+				"float",
+				"double",
+				"void",
+				"auto",
+				"decltype",
 			} } };
 
 		Lexer lexer(*stream);
@@ -36,6 +51,21 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_ENUM,
 			E_TOKEN_TYPE::TT_CLASS,
 			E_TOKEN_TYPE::TT_SEMICOLON,
+			E_TOKEN_TYPE::TT_CHAR,
+			E_TOKEN_TYPE::TT_CHAR16_T,
+			E_TOKEN_TYPE::TT_CHAR32_T,
+			E_TOKEN_TYPE::TT_WCHAR_T,
+			E_TOKEN_TYPE::TT_BOOL,
+			E_TOKEN_TYPE::TT_SHORT,
+			E_TOKEN_TYPE::TT_INT,
+			E_TOKEN_TYPE::TT_LONG,
+			E_TOKEN_TYPE::TT_SIGNED,
+			E_TOKEN_TYPE::TT_UNSIGNED,
+			E_TOKEN_TYPE::TT_FLOAT,
+			E_TOKEN_TYPE::TT_DOUBLE,
+			E_TOKEN_TYPE::TT_VOID,
+			E_TOKEN_TYPE::TT_AUTO,
+			E_TOKEN_TYPE::TT_DECLTYPE,
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
