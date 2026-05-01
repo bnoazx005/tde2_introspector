@@ -456,16 +456,16 @@ namespace TDEngine2
 		return mSourceFilename;
 	}
 
-	TType* SymTable::GetCurrScopeType() const
+	TType::Ptr SymTable::GetCurrScopeType() const
 	{
-		return mpCurrScope->mpType.get();
+		return mpCurrScope->mpType;
 	}
 
-	TType* SymTable::GetParentScopeType() const
+	TType::Ptr SymTable::GetParentScopeType() const
 	{
 		auto pParentScope = mpCurrScope->mpParentScope;
 
-		return pParentScope ? pParentScope->mpType.get() : nullptr;
+		return pParentScope ? pParentScope->mpType : nullptr;
 	}
 
 	void SymTable::_reset()
@@ -605,7 +605,7 @@ namespace TDEngine2
 			return;
 		}
 
-		if (auto pParentType = dynamic_cast<TClassType*>(type.mpParentType))
+		if (auto pParentType = std::dynamic_pointer_cast<TClassType>(type.mpParentType.lock()))
 		{
 			if (pParentType->mIsTemplate)
 			{
@@ -647,10 +647,17 @@ namespace TDEngine2
 		if ((!type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::CLASSES) != E_EMIT_FLAGS::CLASSES)) || 
 			(type.mIsStruct && ((mEmitFlags & E_EMIT_FLAGS::STRUCTS) != E_EMIT_FLAGS::STRUCTS)) ||
 			(E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mAccessModifier) ||									/// skip either protected type
-			(type.mpParentType && E_ACCESS_SPECIFIER_TYPE::PUBLIC != type.mpParentType->mAccessModifier) || /// or a type that is part of another hidden type
 			type.mIsTemplate)
 		{
 			return;
+		}
+
+		if (TType::Ptr typePtr = type.mpParentType.lock()) /// or a type that is part of another hidden type
+		{
+			if (E_ACCESS_SPECIFIER_TYPE::PUBLIC != typePtr->mAccessModifier)
+			{
+				return;
+			}
 		}
 
 		auto iter = mTypesHashTable.find(type.mMangledId);

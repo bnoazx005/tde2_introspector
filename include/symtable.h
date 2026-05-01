@@ -40,6 +40,8 @@ namespace TDEngine2
 		};
 
 		using UniquePtr = std::unique_ptr<TType>;
+		using Ptr       = std::shared_ptr<TType>;
+		using WeakPtr   = std::weak_ptr<TType>;
 
 		virtual ~TType() = default;
 
@@ -76,7 +78,7 @@ namespace TDEngine2
 
 		SymTable* mpOwner = nullptr;
 
-		TType* mpParentType = nullptr;
+		WeakPtr mpParentType{};
 
 		E_ACCESS_SPECIFIER_TYPE mAccessModifier = E_ACCESS_SPECIFIER_TYPE::PUBLIC;
 
@@ -141,6 +143,7 @@ namespace TDEngine2
 		bool mIsTemplate = false;
 
 		std::vector<TBaseClassInfo> mBaseClasses;
+		std::vector<Ptr>            mMembersInfo;
 	};
 
 
@@ -151,7 +154,7 @@ namespace TDEngine2
 	{
 		std::string              mName;
 
-		TType::UniquePtr         mpType = nullptr;
+		TType::Ptr               mpType = nullptr;
 
 		static const TSymbolDesc mInvalid;
 	};
@@ -170,17 +173,17 @@ namespace TDEngine2
 				bool Save(FileWriterArchive& archive);
 				bool Load(FileReaderArchive& archive, SymTable* symTable);
 
-				TScopeEntity* mpParentScope;
+				TScopeEntity*                        mpParentScope = nullptr;
 
-				std::vector<Ptr> mpNestedScopes;
+				std::vector<Ptr>                     mpNestedScopes{};
 
-				std::unordered_map<std::string, Ptr> mpNamedScopes;
+				std::unordered_map<std::string, Ptr> mpNamedScopes{};
 
-				std::vector<TSymbolDesc> mVariables;
+				std::vector<TSymbolDesc>             mVariables{};
 
-				int32_t mIndex = -1; // -1 for all named scopes
+				int32_t                              mIndex = -1; // -1 for all named scopes
 
-				std::unique_ptr<TType> mpType; // for anonymous scopes it's nullptr
+				TType::Ptr                           mpType = nullptr; // for anonymous scopes it's nullptr
 			};
 		public:
 			SymTable();
@@ -208,8 +211,8 @@ namespace TDEngine2
 
 			const std::string& GetSourceFilename() const;
 
-			TType* GetCurrScopeType() const;
-			TType* GetParentScopeType() const;
+			TType::Ptr GetCurrScopeType() const;
+			TType::Ptr GetParentScopeType() const;
 		private:
 			void _reset();
 

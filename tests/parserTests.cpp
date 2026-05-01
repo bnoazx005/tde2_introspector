@@ -355,4 +355,29 @@ TEST_CASE("Parser tests")
 		auto pType = dynamic_cast<TClassType*>(pNestedEnumScope->mpType.get());
 		REQUIRE((pType && pType->mIsTemplate));
 	}
+
+	SECTION("TestParse_PassSimpleStructWithFields_CorrectlyParsesThem")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"struct Position {",
+				"    float x, y, z;",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		REQUIRE(symTable.EnterScope("Position"));
+		{
+			TType::Ptr pType = symTable.GetCurrScopeType();
+			REQUIRE(pType);
+		}
+		symTable.ExitScope();
+	}
 }
