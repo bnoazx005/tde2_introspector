@@ -108,12 +108,12 @@ namespace TDEngine2
 
 	const TToken& Lexer::GetCurrToken()
 	{
-		if (mTokensQueue.empty())
+		if (mTokensQueue.empty() && !mpLastScannedToken)
 		{
 			return GetNextToken();
 		}
 
-		return *mTokensQueue.front();
+		return *mpLastScannedToken;
 	}
 
 
@@ -129,14 +129,8 @@ namespace TDEngine2
 		return _scanToken(); // \note Scan next token right after END_IGNORE_META_SECTION keyword
 	}
 
-
-	const TToken& Lexer::GetNextToken()
+	std::unique_ptr<TToken> Lexer::_getNextTokenImpl()
 	{
-		if (!mTokensQueue.empty())
-		{
-			mTokensQueue.erase(mTokensQueue.cbegin());
-		}
-
 		auto pToken = _scanToken();
 
 		/*
@@ -155,14 +149,42 @@ namespace TDEngine2
 			pToken = std::move(_skipIgnoredTokensSection());
 		}
 
-		mTokensQueue.emplace_back(std::move(pToken));
+		return std::move(pToken);
+	}
 
-		return *mTokensQueue.front();
+	const TToken& Lexer::GetNextToken()
+	{
+		if (!mTokensQueue.empty())
+		{
+			mpLastScannedToken = std::move(mTokensQueue.front());
+			mTokensQueue.erase(mTokensQueue.cbegin());
+
+			return *mpLastScannedToken;
+		}
+
+		mpLastScannedToken = _getNextTokenImpl();
+		return *mpLastScannedToken;
 	}
 
 	const TToken& Lexer::PeekToken(uint32_t offset)
 	{
-		return *mTokensQueue.front();
+		if (!offset)
+		{
+			mTokensQueue.emplace_back(std::move(_getNextTokenImpl()));
+			return *mTokensQueue.front();
+		}
+
+		if (size_t pos = static_cast<size_t>(offset); pos < mTokensQueue.size())
+		{
+			return *mTokensQueue[pos];
+		}
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(offset + 1 - mTokensQueue.size()); ++i)
+		{
+			mTokensQueue.emplace_back(std::move(_getNextTokenImpl()));
+		}
+
+		return *mTokensQueue.back();
 	}
 
 	std::unique_ptr<TToken> Lexer::_scanToken()

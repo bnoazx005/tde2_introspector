@@ -119,6 +119,8 @@ namespace TDEngine2
 
 	struct TClassType : TType
 	{
+		using Ptr = std::shared_ptr<TClassType>;
+
 		struct TBaseClassInfo
 		{
 			std::string mFullName; /// Includes full path with namespaces 
@@ -143,7 +145,7 @@ namespace TDEngine2
 		bool mIsTemplate = false;
 
 		std::vector<TBaseClassInfo> mBaseClasses;
-		std::vector<Ptr>            mMembersInfo;
+		std::vector<std::string>    mFields;
 	};
 
 

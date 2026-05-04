@@ -398,4 +398,73 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER);
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
 	}
+
+	SECTION("TestPeekToken_InvokePeekForEachToken_EachInvokationReturnsCorrectTokenButDoesntChangePointer")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"=,;:{}"
+			} } };
+
+		Lexer lexer(*stream);
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_ASSIGN_OP,
+			E_TOKEN_TYPE::TT_COMMA,
+			E_TOKEN_TYPE::TT_SEMICOLON,
+			E_TOKEN_TYPE::TT_COLON,
+			E_TOKEN_TYPE::TT_OPEN_BRACE,
+			E_TOKEN_TYPE::TT_CLOSE_BRACE,
+		};
+
+		for (size_t i = 0; i < expectedTokens.size(); ++i)
+		{
+			REQUIRE(lexer.PeekToken(static_cast<uint32_t>(i)).mType == expectedTokens[i]);
+		}
+	}
+
+	SECTION("TestPeekToken_MixPeekAndGetNextTokenCalls_PeekCallFillsBufferGetNextTokenExtractTokenFromThere")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"=,;"
+			} } };
+
+		Lexer lexer(*stream);
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_ASSIGN_OP,
+			E_TOKEN_TYPE::TT_COMMA,
+			E_TOKEN_TYPE::TT_SEMICOLON,
+		};
+
+		for (size_t i = 0; i < expectedTokens.size(); ++i)
+		{
+			REQUIRE(lexer.PeekToken(1).mType == expectedTokens[i]);
+			REQUIRE(lexer.GetNextToken().mType == expectedTokens[i]);
+		}
+	}
+
+	SECTION("TestGetCurrToken_InvokePeekTokenBeforeGetCurrToken_GetCurrTokenShouldReturnSameResultNoMatterOfPeekTokenCalls")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"=,"
+			} } };
+
+		Lexer lexer(*stream);
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_ASSIGN_OP,
+			E_TOKEN_TYPE::TT_COMMA,
+		};
+
+		REQUIRE(lexer.GetCurrToken().mType == expectedTokens[0]);
+		REQUIRE(lexer.PeekToken().mType == expectedTokens[1]);
+		REQUIRE(lexer.GetCurrToken().mType == expectedTokens[0]);
+		REQUIRE(lexer.GetNextToken().mType == expectedTokens[1]);
+	}
 }

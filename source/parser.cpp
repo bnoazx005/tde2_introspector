@@ -720,6 +720,8 @@ namespace TDEngine2
 				continue;
 			}
 
+			_parseClassMemberDeclaration(className, accessModifier);
+
 			pCurrToken = &mpLexer->GetNextToken();
 		}
 
@@ -766,6 +768,43 @@ namespace TDEngine2
 	{
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
+		// \todo For now we just skip type specifier and parse only member's identifiers
+		while (true)
+		{
+			const TToken& nextToken = mpLexer->PeekToken();
+
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER && (nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON))
+			{
+				break;
+			}
+
+			mpLexer->GetNextToken();
+		}
+
+		std::shared_ptr<TClassType> pClassTypeDesc = std::dynamic_pointer_cast<TClassType>(mpSymTable->GetCurrScopeType());
+		assert(pClassTypeDesc);
+
+		while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON)
+		{
+			if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			pClassTypeDesc->mFields.push_back(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId);
+
+			const TToken& delimiterToken = mpLexer->GetNextToken();
+
+			if (delimiterToken.mType == E_TOKEN_TYPE::TT_COMMA)
+			{
+				mpLexer->GetNextToken(); // eat , token
+			}
+		}
+
+		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
 
 		return true;
 	}

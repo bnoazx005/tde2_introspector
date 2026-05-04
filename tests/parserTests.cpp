@@ -25,7 +25,7 @@ TEST_CASE("Parser tests")
 		SymTable symTable;
 
 		Parser(lexer, symTable, mockOptions, [](auto&&)
-		{
+		{ 
 			REQUIRE(false);
 		}).Parse();
 	}
@@ -363,6 +363,9 @@ TEST_CASE("Parser tests")
 				"struct Position {",
 				"    float x, y, z;",
 				"};"
+				"struct Identifier {",
+				"    std::string         mValue;",
+				"};"
 			} } };
 
 		Lexer lexer(*stream);
@@ -375,8 +378,25 @@ TEST_CASE("Parser tests")
 
 		REQUIRE(symTable.EnterScope("Position"));
 		{
-			TType::Ptr pType = symTable.GetCurrScopeType();
+			TClassType::Ptr pType = std::dynamic_pointer_cast<TClassType>(symTable.GetCurrScopeType());
 			REQUIRE(pType);
+
+			REQUIRE(pType->mFields.size() == 3);
+
+			REQUIRE(pType->mFields[0] == "x");
+			REQUIRE(pType->mFields[1] == "y");
+			REQUIRE(pType->mFields[2] == "z");
+		}
+		symTable.ExitScope();
+
+		REQUIRE(symTable.EnterScope("Identifier"));
+		{
+			TClassType::Ptr pType = std::dynamic_pointer_cast<TClassType>(symTable.GetCurrScopeType());
+			REQUIRE(pType);
+
+			REQUIRE(pType->mFields.size() == 1);
+
+			REQUIRE(pType->mFields[0] == "mValue");
 		}
 		symTable.ExitScope();
 	}

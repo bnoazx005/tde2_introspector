@@ -58,9 +58,9 @@ namespace TDEngine2
 		private:
 			Lexer() = default;
 
-			std::unique_ptr<TToken> _scanToken(); 
-			
+			std::unique_ptr<TToken> _scanToken();			
 			std::unique_ptr<TToken> _skipIgnoredTokensSection();
+			std::unique_ptr<TToken> _getNextTokenImpl();
 
 			char _getCurrChar() const;
 			char _getNextChar();
@@ -82,6 +82,7 @@ namespace TDEngine2
 			std::string                          mCurrProcessedText;
 
 			std::vector<std::unique_ptr<TToken>> mTokensQueue;
+			std::unique_ptr<TToken>              mpLastScannedToken = nullptr;
 
 			uint32_t                             mCurrLineIndex = 1;
 			uint32_t                             mCurrHorPosIndex = 0;
