@@ -58,6 +58,11 @@ struct ClassTrait<{0}>
 
 	static const std::array<TypeID, {3}> interfaces;
 	static const std::array<TypeID, {4}> parentClasses;
+
+	static constexpr auto fields = std::make_tuple
+	(
+		{7}
+	);
 };
 
 #if defined(META_IMPLEMENTATION)
@@ -76,6 +81,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 )";
 
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
+	const std::string CodeGenerator::mClassTypeFieldPattern = "ClassFieldInfo<{0}, decltype({0}::{1})> { \"{1}\", &{0}::{1} }";
 
 	const std::string EnumValueToStringConverterPattern = "\t\tif ({0} == value) { return \"{1}\"; }\n";
 
@@ -222,6 +228,18 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 		auto&& parentClasses = _getParentClasses(type);
 
+		std::string fieldsStr = Wrench::StringUtils::GetEmptyStr();
+
+		const size_t fieldsCount = type.mFields.size();
+
+		for (size_t i = 0; i < fieldsCount; ++i)
+		{
+			fieldsStr
+				.append(Wrench::StringUtils::Format(mClassTypeFieldPattern, fullClassIdentifier, type.mFields[i]))
+				.append(i + 1 < fieldsCount ? "," : Wrench::StringUtils::GetEmptyStr()).append("\n\t\t");
+		}
+
+
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern,
 															  fullClassIdentifier,
 															  mFalseConstant,
@@ -229,7 +247,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 															  0, 
 															  parentClasses.size(), 
 															  "{}",
-															  _vectorToString(parentClasses)));
+															  _vectorToString(parentClasses),
+			                                                fieldsStr));
 	}
 
 	void CodeGenerator::_writeHeaderPrelude(const std::string& inclusionsPart)

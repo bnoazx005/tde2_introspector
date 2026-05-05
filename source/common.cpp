@@ -560,6 +560,14 @@ struct EnumTrait
 };
 
 
+template <typename TClass, typename TFieldType>
+struct ClassFieldInfo
+{
+	const char*          name;
+	TFieldType TClass::* pFieldPtr;
+};
+
+
 template <typename TClass>
 struct ClassTrait
 {
@@ -569,6 +577,20 @@ struct ClassTrait
 	static const bool isInterface;
 	static const bool isAbstract;
 };
+
+
+template <typename TClass, typename TFunctor>
+void VisitClassFields(TClass& obj, TFunctor&& func)
+{
+	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr)), ...); }, ClassTrait<TClass>::fields);
+}
+
+
+template <typename TClass, typename TFunctor>
+void VisitClassFields(const TClass& obj, TFunctor&& func)
+{
+	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr)), ...); }, ClassTrait<TClass>::fields);
+}
 
 
 struct EnumInfo
