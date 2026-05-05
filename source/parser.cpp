@@ -773,7 +773,7 @@ namespace TDEngine2
 		{
 			const TToken& nextToken = mpLexer->PeekToken();
 
-			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER && (nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON))
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER && (nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON || nextToken.mType == E_TOKEN_TYPE::TT_ASSIGN_OP))
 			{
 				break;
 			}
@@ -795,9 +795,19 @@ namespace TDEngine2
 
 			const TToken& delimiterToken = mpLexer->GetNextToken();
 
-			if (delimiterToken.mType == E_TOKEN_TYPE::TT_COMMA)
+			switch (delimiterToken.mType)
 			{
-				mpLexer->GetNextToken(); // eat , token
+				case E_TOKEN_TYPE::TT_COMMA:
+					mpLexer->GetNextToken(); // eat , token
+					break;
+
+				case E_TOKEN_TYPE::TT_ASSIGN_OP:
+					while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+					{
+						mpLexer->GetNextToken();
+					}
+
+					break;
 			}
 		}
 

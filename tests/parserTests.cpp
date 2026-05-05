@@ -400,4 +400,33 @@ TEST_CASE("Parser tests")
 		}
 		symTable.ExitScope();
 	}
+
+	SECTION("TestParse_PassStructThatContainsFieldWithInitializer_TheyShouldCorrectlyParsed")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"struct Tag {",
+				"    const char* mValue =\"empty\"; ",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		REQUIRE(symTable.EnterScope("Tag"));
+		{
+			TClassType::Ptr pType = std::dynamic_pointer_cast<TClassType>(symTable.GetCurrScopeType());
+			REQUIRE(pType);
+
+			REQUIRE(pType->mFields.size() == 1);
+
+			REQUIRE(pType->mFields[0] == "mValue");
+		}
+		symTable.ExitScope();
+	}
 }
