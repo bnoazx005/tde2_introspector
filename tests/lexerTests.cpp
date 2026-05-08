@@ -10,6 +10,17 @@ using namespace TDEngine2;
 
 TEST_CASE("Lexer tests")
 {
+	SECTION("TestTTokenConstructor_CreateDefaultConstructedObject_ObjectHasInvalidFlag")
+	{
+		REQUIRE(!TToken().mIsValid);
+	}
+
+	SECTION("TestTTokenConstructor_CreateObjectWithMainConstructor_ObjectHasValidValues")
+	{
+		TToken token{ E_TOKEN_TYPE::TT_CHAR, "char" };
+		REQUIRE((token.mIsValid && token.mType == E_TOKEN_TYPE::TT_CHAR));
+	}
+
 	SECTION("TestGetNextToken_PassKeywords_ReturnsSequenceOfTokens")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream { 

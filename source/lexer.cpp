@@ -108,30 +108,30 @@ namespace TDEngine2
 
 	const TToken& Lexer::GetCurrToken()
 	{
-		if (mTokensQueue.empty() && !mpLastScannedToken)
+		if (mTokensQueue.empty() && !mLastScannedToken.mIsValid)
 		{
 			return GetNextToken();
 		}
 
-		return *mpLastScannedToken;
+		return mLastScannedToken;
 	}
 
 
-	std::unique_ptr<TToken> Lexer::_skipIgnoredTokensSection()
+	TToken Lexer::_skipIgnoredTokensSection()
 	{
-		std::unique_ptr<TToken> pCurrToken = _scanToken();
+		TToken currToken = _scanToken();
 
-		while (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType && E_TOKEN_TYPE::TT_END_IGNORE_SECTION != pCurrToken->mType)
+		while (E_TOKEN_TYPE::TT_EOF != currToken.mType && E_TOKEN_TYPE::TT_END_IGNORE_SECTION != currToken.mType)
 		{
-			pCurrToken = _scanToken();
+			currToken = _scanToken();
 		}
 
 		return _scanToken(); // \note Scan next token right after END_IGNORE_META_SECTION keyword
 	}
 
-	std::unique_ptr<TToken> Lexer::_getNextTokenImpl()
+	TToken Lexer::_getNextTokenImpl()
 	{
-		auto pToken = _scanToken();
+		auto currToken = _scanToken();
 
 		/*
 			There is a special construct that allows to skip range of tokens between
@@ -144,26 +144,26 @@ namespace TDEngine2
 			That's pretty handy when some preprocessor magic's got into business and we can't
 			parse this without actual preprocessing (by default we assume that a code should be parseable without that stage)
 		*/
-		if (E_TOKEN_TYPE::TT_BEGIN_IGNORE_SECTION == pToken->mType)
+		if (E_TOKEN_TYPE::TT_BEGIN_IGNORE_SECTION == currToken.mType)
 		{
-			pToken = std::move(_skipIgnoredTokensSection());
+			currToken = std::move(_skipIgnoredTokensSection());
 		}
 
-		return std::move(pToken);
+		return currToken;
 	}
 
 	const TToken& Lexer::GetNextToken()
 	{
 		if (!mTokensQueue.empty())
 		{
-			mpLastScannedToken = std::move(mTokensQueue.front());
+			mLastScannedToken = mTokensQueue.front();
 			mTokensQueue.erase(mTokensQueue.cbegin());
 
-			return *mpLastScannedToken;
+			return mLastScannedToken;
 		}
 
-		mpLastScannedToken = _getNextTokenImpl();
-		return *mpLastScannedToken;
+		mLastScannedToken = _getNextTokenImpl();
+		return mLastScannedToken;
 	}
 
 	const TToken& Lexer::PeekToken(uint32_t offset)
@@ -171,12 +171,12 @@ namespace TDEngine2
 		if (!offset)
 		{
 			mTokensQueue.emplace_back(std::move(_getNextTokenImpl()));
-			return *mTokensQueue.front();
+			return mTokensQueue.front();
 		}
 
 		if (size_t pos = static_cast<size_t>(offset); pos < mTokensQueue.size())
 		{
-			return *mTokensQueue[pos];
+			return mTokensQueue[pos];
 		}
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(offset + 1 - mTokensQueue.size()); ++i)
@@ -184,14 +184,14 @@ namespace TDEngine2
 			mTokensQueue.emplace_back(std::move(_getNextTokenImpl()));
 		}
 
-		return *mTokensQueue.back();
+		return mTokensQueue.back();
 	}
 
-	std::unique_ptr<TToken> Lexer::_scanToken()
+	TToken Lexer::_scanToken()
 	{
 		char ch = ' ';
 
-		std::unique_ptr<TToken> pRecognizedToken = nullptr;
+		TToken recognizedToken{};
 
 		while ((ch = _getNextChar()) != EOF)
 		{
@@ -207,17 +207,17 @@ namespace TDEngine2
 				continue;
 			}
 
-			if ((pRecognizedToken = std::move(_parseNumbers())))
+			if (auto numberToken = _parseNumbers())
 			{
-				return std::move(pRecognizedToken);
+				return *numberToken;
 			}
 
-			if ((pRecognizedToken = std::move(_parseReservedKeywordsAndIdentifiers())))
+			if (auto keywordToken = _parseReservedKeywordsAndIdentifiers())
 			{
-				return std::move(pRecognizedToken);
+				return *keywordToken;
 			}
 
-			return std::make_unique<TToken>(E_TOKEN_TYPE::TT_UNKNOWN, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
+			return TToken(E_TOKEN_TYPE::TT_UNKNOWN, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
 		}
 
 		/*while (!eof)
@@ -228,7 +228,7 @@ namespace TDEngine2
 			read identifiers and keywords
 		}*/
 
-		return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF);
+		return TToken(E_TOKEN_TYPE::TT_EOF);
 	}
 
 	void Lexer::_skipWhitespaces()
@@ -321,12 +321,12 @@ namespace TDEngine2
 		return mCurrProcessedText[offset];
 	}
 
-	std::unique_ptr<TToken> Lexer::_parseNumbers()
+	std::optional<TToken> Lexer::_parseNumbers()
 	{
-		return {};
+		return std::nullopt;
 	}
 
-	std::unique_ptr<TToken> Lexer::_parseReservedKeywordsAndIdentifiers()
+	std::optional<TToken> Lexer::_parseReservedKeywordsAndIdentifiers()
 	{
 		char ch = _getCurrChar();
 
@@ -344,10 +344,10 @@ namespace TDEngine2
 			auto&& iter = mReservedTokens.find(possibleIdentifier);
 			if (iter != mReservedTokens.cend())
 			{
-				return std::unique_ptr<TToken>(new TToken{ iter->second, { mCurrHorPosIndex, mCurrLineIndex } });
+				return TToken{ iter->second, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
 			}
 			
-			return std::unique_ptr<TToken>(new TIdentifierToken{ possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } });
+			return TToken{ E_TOKEN_TYPE::TT_IDENTIFIER, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
 		}
 
 		// \note try to detect symbol
@@ -356,13 +356,13 @@ namespace TDEngine2
 		{
 			if (_getCurrChar() == EOF)
 			{
-				return std::make_unique<TToken>(E_TOKEN_TYPE::TT_EOF, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
+				return TToken{ E_TOKEN_TYPE::TT_EOF, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex)};
 			}
 
-			return nullptr;
+			return std::nullopt;
 		}
 
-		return std::make_unique<TToken>(iter->second, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
+		return TToken{ iter->second, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
 	}
 
 	bool Lexer::_skipComments()

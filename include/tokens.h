@@ -70,28 +70,13 @@ namespace TDEngine2
 	{
 		using TCursorPos = std::tuple<uint32_t, uint32_t>;
 
-		virtual ~TToken() = default;
-
-		TToken(E_TOKEN_TYPE type, const TCursorPos& pos = { 0, 0 });
+		TToken() = default;
+		TToken(E_TOKEN_TYPE type, const std::string& value = "", const TCursorPos & pos = {0, 0});
 
 		E_TOKEN_TYPE mType = E_TOKEN_TYPE::TT_EOF;
-
 		TCursorPos   mPos = { 0, 0 };
-	};
-
-	
-	struct TIdentifierToken : TToken
-	{
-		explicit TIdentifierToken(const std::string& id, const TCursorPos& pos);
-
-		std::string mId;
-	};
-
-	struct TNumberToken : TToken
-	{
-		explicit TNumberToken(const std::string& value, const TCursorPos& pos);
-
-		std::string mValue;
+		std::string  mValue = "";
+		bool         mIsValid = false;
 	};
 
 

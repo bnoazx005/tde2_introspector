@@ -3,18 +3,8 @@
 
 namespace TDEngine2
 {
-	TToken::TToken(E_TOKEN_TYPE type, const TCursorPos& pos):
-		mType(type), mPos(pos)
-	{
-	}
-
-	TIdentifierToken::TIdentifierToken(const std::string& id, const TCursorPos& pos):
-		TToken(E_TOKEN_TYPE::TT_IDENTIFIER, pos), mId(id)
-	{
-	}
-
-	TNumberToken::TNumberToken(const std::string& value, const TCursorPos& pos):
-		TToken(E_TOKEN_TYPE::TT_NUMBER, pos), mValue(value)
+	TToken::TToken(E_TOKEN_TYPE type, const std::string& value, const TCursorPos& pos):
+		mType(type), mPos(pos), mValue(value), mIsValid(true)
 	{
 	}
 

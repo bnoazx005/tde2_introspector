@@ -154,7 +154,7 @@ namespace TDEngine2
 							return false;
 						}
 
-						currSectionIdentifier = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+						currSectionIdentifier = mpLexer->GetCurrToken().mValue;
 
 						mpLexer->GetNextToken();
 					}
@@ -222,7 +222,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		std::string namespaceId = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+		std::string namespaceId = mpLexer->GetCurrToken().mValue;
 		if (!mpSymTable->CreateScope(namespaceId))
 		{
 			assert(false);
@@ -353,7 +353,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		std::string enumName = dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId;
+		std::string enumName = mpLexer->GetCurrToken().mValue;
 
 		bool result = mpSymTable->CreateScope(enumName);
 		assert(result);
@@ -441,7 +441,7 @@ namespace TDEngine2
 
 		if (pEnumType)
 		{
-			pEnumType->mEnumerators.emplace_back(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId);
+			pEnumType->mEnumerators.emplace_back(mpLexer->GetCurrToken().mValue);
 		}
 
 		mpLexer->GetNextToken();
@@ -773,7 +773,8 @@ namespace TDEngine2
 		{
 			const TToken& nextToken = mpLexer->PeekToken();
 
-			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER && (nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON || nextToken.mType == E_TOKEN_TYPE::TT_ASSIGN_OP))
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER &&
+				(nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON || nextToken.mType == E_TOKEN_TYPE::TT_ASSIGN_OP || nextToken.mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES))
 			{
 				break;
 			}
@@ -791,7 +792,7 @@ namespace TDEngine2
 				return false;
 			}
 
-			pClassTypeDesc->mFields.push_back(dynamic_cast<const TIdentifierToken&>(mpLexer->GetCurrToken()).mId);
+			pClassTypeDesc->mFields.push_back(mpLexer->GetCurrToken().mValue);
 
 			const TToken& delimiterToken = mpLexer->GetNextToken();
 
@@ -863,7 +864,7 @@ namespace TDEngine2
 		{
 			defer([this] { mpLexer->GetNextToken(); });
 
-			return dynamic_cast<const TIdentifierToken&>(currToken).mId;
+			return currToken.mValue;
 		}
 		
 		return Wrench::StringUtils::GetEmptyStr();
@@ -876,9 +877,7 @@ namespace TDEngine2
 		// could be simple identifier or simple template one
 		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType)
 		{
-			const TIdentifierToken& idToken = dynamic_cast<const TIdentifierToken&>(currToken);
-
-			std::string templateIdentifier = idToken.mId;
+			std::string templateIdentifier = currToken.mValue;
 
 			if (E_TOKEN_TYPE::TT_LESS == mpLexer->PeekToken().mType) // a template identifier
 			{

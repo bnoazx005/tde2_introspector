@@ -5,6 +5,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 #include "tokens.h"
 #include "common.h"
 
@@ -58,9 +59,9 @@ namespace TDEngine2
 		private:
 			Lexer() = default;
 
-			std::unique_ptr<TToken> _scanToken();			
-			std::unique_ptr<TToken> _skipIgnoredTokensSection();
-			std::unique_ptr<TToken> _getNextTokenImpl();
+			TToken _scanToken();			
+			TToken _skipIgnoredTokensSection();
+			TToken _getNextTokenImpl();
 
 			char _getCurrChar() const;
 			char _getNextChar();
@@ -68,8 +69,8 @@ namespace TDEngine2
 
 			void _skipWhitespaces();
 
-			std::unique_ptr<TToken> _parseNumbers();
-			std::unique_ptr<TToken> _parseReservedKeywordsAndIdentifiers();
+			std::optional<TToken> _parseNumbers();
+			std::optional<TToken> _parseReservedKeywordsAndIdentifiers();
 
 			bool _skipComments();
 			bool _skipMacroDefinitions();
@@ -77,16 +78,16 @@ namespace TDEngine2
 			void _skipSingleLineComment();
 			void _skipMultiLineComment();
 		private:
-			IInputStream*                        mpStream;
+			IInputStream*             mpStream;
 
-			std::string                          mCurrProcessedText;
+			std::string               mCurrProcessedText;
 
-			std::vector<std::unique_ptr<TToken>> mTokensQueue;
-			std::unique_ptr<TToken>              mpLastScannedToken = nullptr;
+			std::vector<TToken>       mTokensQueue;
+			TToken                    mLastScannedToken{};
 
-			uint32_t                             mCurrLineIndex = 1;
-			uint32_t                             mCurrHorPosIndex = 0;
+			uint32_t                  mCurrLineIndex = 1;
+			uint32_t                  mCurrHorPosIndex = 0;
 
-			static const TKeywordsMap            mReservedTokens;
+			static const TKeywordsMap mReservedTokens;
 	};
 }
