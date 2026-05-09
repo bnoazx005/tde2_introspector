@@ -179,7 +179,9 @@ namespace TDEngine2
 			return mTokensQueue[pos];
 		}
 
-		for (uint32_t i = 0; i < static_cast<uint32_t>(offset + 1 - mTokensQueue.size()); ++i)
+		const size_t count = static_cast<size_t>(offset - mTokensQueue.size());
+
+		for (size_t i = 0; i < count; ++i)
 		{
 			mTokensQueue.emplace_back(std::move(_getNextTokenImpl()));
 		}

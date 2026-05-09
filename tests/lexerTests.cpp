@@ -429,7 +429,9 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_CLOSE_BRACE,
 		};
 
-		for (size_t i = 0; i < expectedTokens.size(); ++i)
+		REQUIRE(lexer.GetCurrToken().mType == expectedTokens[0]);
+
+		for (size_t i = 1; i < expectedTokens.size(); ++i)
 		{
 			REQUIRE(lexer.PeekToken(static_cast<uint32_t>(i)).mType == expectedTokens[i]);
 		}
@@ -451,7 +453,9 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_SEMICOLON,
 		};
 
-		for (size_t i = 0; i < expectedTokens.size(); ++i)
+		REQUIRE(lexer.GetCurrToken().mType == expectedTokens[0]);
+
+		for (size_t i = 1; i < expectedTokens.size(); ++i)
 		{
 			REQUIRE(lexer.PeekToken(1).mType == expectedTokens[i]);
 			REQUIRE(lexer.GetNextToken().mType == expectedTokens[i]);
