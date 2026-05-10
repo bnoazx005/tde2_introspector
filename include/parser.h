@@ -95,16 +95,16 @@ namespace TDEngine2
 
 			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false);
 			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false, bool isTagged = false);
-			bool _parseClassBody(const std::string& className);
+			bool _parseClassBody(const std::string& className, bool isTagged = false);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 
 			std::string _parseClassIdentifier();
 			std::string _parseSimpleTemplateIdentifier();
 
-			bool _parseCompoundStatement();
+			bool _consumeBalancedTokens();
 
-			bool _eatUnknownTokens();
+			bool _parseCompoundStatement();
 		private:
 			Lexer*               mpLexer;
 

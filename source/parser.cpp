@@ -8,6 +8,8 @@
 #define DEFER_IMPLEMENTATION
 #include "../deps/Wrench/source/deferOperation.hpp"
 #include <cassert>
+#include <unordered_set>
+#include <stack>
 
 
 namespace TDEngine2
@@ -519,7 +521,7 @@ namespace TDEngine2
 		});
 
 		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged) ||
-			!_parseClassBody(className))
+			!_parseClassBody(className, isTagged))
 		{
 			return false;
 		}
@@ -631,7 +633,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassBody(const std::string& className)
+	bool Parser::_parseClassBody(const std::string& className, bool isTagged)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -652,6 +654,18 @@ namespace TDEngine2
 			if (pClassTypeDesc)
 			{
 				pClassTypeDesc->mIsForwardDeclaration = true;
+			}
+
+			return true;
+		}
+
+		if (!isTagged && mOptions.mIsTaggedOnlyModeEnabled)
+		{
+			_consumeBalancedTokens(); // \note Skip all tokens inside class definition
+
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON)
+			{
+				mpLexer->GetNextToken();
 			}
 
 			return true;
@@ -782,6 +796,32 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		}
 
+		if (mpLexer->PeekToken().mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES) /// \note Skip a method
+		{
+			mpLexer->GetNextToken(); // eat identifier			
+			_consumeBalancedTokens(); // consume arguments part
+
+			// \note Next possible token either ; or { with method's definition (qualifiers like const, override, = 0, etc are not considered yet)
+			while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON)
+			{
+				if (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_BRACE)
+				{
+					mpLexer->GetNextToken();
+					continue;
+				}
+
+				_consumeBalancedTokens();
+				break;
+			}
+
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON)
+			{
+				mpLexer->GetNextToken(); // eat ; token
+			}
+
+			return true;
+		}
+
 		std::shared_ptr<TClassType> pClassTypeDesc = std::dynamic_pointer_cast<TClassType>(mpSymTable->GetCurrScopeType());
 		assert(pClassTypeDesc);
 
@@ -907,14 +947,59 @@ namespace TDEngine2
 		return Wrench::StringUtils::GetEmptyStr();
 	}
 
-	bool Parser::_eatUnknownTokens()
+
+	static const std::unordered_map<E_TOKEN_TYPE, E_TOKEN_TYPE> BALANCED_TOKENS_TABLE
 	{
-		while (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_UNKNOWN)
+		{ E_TOKEN_TYPE::TT_OPEN_BRACE,  E_TOKEN_TYPE::TT_CLOSE_BRACE },
+		{ E_TOKEN_TYPE::TT_OPEN_PARENTHES, E_TOKEN_TYPE::TT_CLOSE_PARENTHES },
+		{ E_TOKEN_TYPE::TT_LESS, E_TOKEN_TYPE::TT_GREAT },
+	};
+
+	static const std::unordered_set<E_TOKEN_TYPE> END_BALANCED_TOKENS_TABLE
+	{
+		E_TOKEN_TYPE::TT_CLOSE_BRACE, E_TOKEN_TYPE::TT_CLOSE_PARENTHES, E_TOKEN_TYPE::TT_GREAT
+	};
+
+
+	bool Parser::_consumeBalancedTokens()
+	{
+		TToken currToken = mpLexer->GetCurrToken();
+
+		if (BALANCED_TOKENS_TABLE.find(currToken.mType) == BALANCED_TOKENS_TABLE.cend()) // nothing to skip here
 		{
-			mpLexer->GetNextToken();
+			return true;
 		}
 
-		return mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF;
+		std::stack<TToken> matchedTokens { { BALANCED_TOKENS_TABLE.at(currToken.mType) }};
+
+		while (!matchedTokens.empty())
+		{
+			currToken = mpLexer->GetNextToken();
+
+			if (END_BALANCED_TOKENS_TABLE.find(currToken.mType) == END_BALANCED_TOKENS_TABLE.cend())
+			{
+				continue;
+			}
+
+			const TToken& expectedEndToken = matchedTokens.top();
+			matchedTokens.pop();
+
+			if (!_expect(expectedEndToken.mType, currToken))
+			{
+				return false;
+			}
+
+			if (BALANCED_TOKENS_TABLE.find(currToken.mType) == BALANCED_TOKENS_TABLE.cend())
+			{
+				continue;
+			}
+
+			matchedTokens.push(BALANCED_TOKENS_TABLE.at(currToken.mType));
+		}
+
+		mpLexer->GetNextToken();
+
+		return true;
 	}
 
 	bool Parser::_expect(E_TOKEN_TYPE expectedType, const TToken& token)
