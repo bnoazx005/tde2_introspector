@@ -91,6 +91,7 @@ namespace TDEngine2
 			bool _parseEnumBody(TEnumType* pEnumType);
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
+			bool _parseTypeSpecifier(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
 			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false);

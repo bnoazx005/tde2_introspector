@@ -43,6 +43,7 @@ namespace TDEngine2
 		TT_VOID,
 		TT_AUTO,
 		TT_DECLTYPE,
+		TT_TYPEDEF,
 
 		// symbols
 		TT_COLON,

@@ -117,17 +117,37 @@ namespace TDEngine2
 
 					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound, currSectionIdentifier);
 					enumerationTagFound = false; // reset the flag
+					
+					if (!isInvokedFromTemplateDecl)
+					{
+						if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+						{
+							return false;
+						}
+
+						mpLexer->GetNextToken();
+					}
+
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
 					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound);
 					classTagFound = false; // reset the flag
+
+					if (!isInvokedFromTemplateDecl)
+					{
+						if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+						{
+							return false;
+						}
+
+						mpLexer->GetNextToken();
+					}
+
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
 					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
 					break;
-				case E_TOKEN_TYPE::TT_CLOSE_BRACE: // there are some tokens that we can skip in this method
-					return true;
 				case E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE:
 					mpLexer->GetNextToken();
 
@@ -189,6 +209,25 @@ namespace TDEngine2
 					mpLexer->GetNextToken();
 
 					classTagFound = true;
+
+					break;
+				case E_TOKEN_TYPE::TT_TYPEDEF:
+					mpLexer->GetNextToken(); // consume typedef keyword
+
+					_parseTypeSpecifier();
+
+					// skip all declarators
+					while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON)
+					{
+						mpLexer->GetNextToken();
+					}
+
+					if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+					{
+						return false;
+					}
+
+					mpLexer->GetNextToken();
 
 					break;
 				default:
@@ -412,14 +451,7 @@ namespace TDEngine2
 			pEnumScopeEntity->mpType = std::move(pEnumTypeDesc);
 		}
 
-		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
-		{
-			return false;
-		}
-
 		mpSymTable->ExitScope();
-
-		mpLexer->GetNextToken();
 
 		return true;
 	}
@@ -473,6 +505,37 @@ namespace TDEngine2
 		return true;
 	}
 
+	bool Parser::_parseTypeSpecifier(bool isInvokedFromTemplateDecl, E_DECL_TYPE allowedDeclTypes)
+	{
+		bool result = true;
+
+		switch (mpLexer->GetCurrToken().mType)
+		{
+			case E_TOKEN_TYPE::TT_TEMPLATE:
+				if ((E_DECL_TYPE::TEMPLATE & allowedDeclTypes) != E_DECL_TYPE::TEMPLATE)
+				{
+					return false;
+				}
+
+				result = _parseTemplateDeclaration();
+				break;
+			case E_TOKEN_TYPE::TT_ENUM:
+				if ((E_DECL_TYPE::ENUM_TYPE & allowedDeclTypes) != E_DECL_TYPE::ENUM_TYPE)
+				{
+					return false;
+				}
+
+				result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, false, Wrench::StringUtils::GetEmptyStr());
+				break;
+			case E_TOKEN_TYPE::TT_CLASS:
+			case E_TOKEN_TYPE::TT_STRUCT:
+				result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, false);
+				break;
+		}
+
+		return result;
+	}
+
 	std::unique_ptr<TType> Parser::_parseTypeSpecifiers()
 	{
 		// \todo replace it
@@ -514,10 +577,7 @@ namespace TDEngine2
 
 		defer([this]
 		{
-			_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken());
 			mpSymTable->ExitScope();
-
-			mpLexer->GetNextToken();
 		});
 
 		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged) ||
@@ -716,25 +776,27 @@ namespace TDEngine2
 				continue;
 			}
 
-			if (E_TOKEN_TYPE::TT_ENUM == pCurrToken->mType)
+			switch (pCurrToken->mType)
 			{
-				_parseEnumDeclaration(accessModifier);
-				continue;
+				case E_TOKEN_TYPE::TT_ENUM:
+					_parseEnumDeclaration(accessModifier);
+					break;
+				case E_TOKEN_TYPE::TT_TEMPLATE:
+					_parseTemplateDeclaration();
+					break;
+				case E_TOKEN_TYPE::TT_STRUCT:
+				case E_TOKEN_TYPE::TT_CLASS:
+					_parseClassDeclaration(accessModifier, false);
+					break;
+				default:
+					_parseClassMemberDeclaration(className, accessModifier);
+					break;
 			}
 
-			if (E_TOKEN_TYPE::TT_TEMPLATE == pCurrToken->mType)
+			if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
 			{
-				_parseTemplateDeclaration();
-				continue;
+				return false;
 			}
-
-			if (E_TOKEN_TYPE::TT_STRUCT == pCurrToken->mType || E_TOKEN_TYPE::TT_CLASS == pCurrToken->mType)
-			{
-				_parseClassDeclaration(accessModifier, false);
-				continue;
-			}
-
-			_parseClassMemberDeclaration(className, accessModifier);
 
 			pCurrToken = &mpLexer->GetNextToken();
 		}
@@ -785,6 +847,11 @@ namespace TDEngine2
 		// \todo For now we just skip type specifier and parse only member's identifiers
 		while (true)
 		{
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF)
+			{
+				break;
+			}
+
 			const TToken& nextToken = mpLexer->PeekToken();
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER &&
@@ -812,11 +879,6 @@ namespace TDEngine2
 
 				_consumeBalancedTokens();
 				break;
-			}
-
-			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON)
-			{
-				mpLexer->GetNextToken(); // eat ; token
 			}
 
 			return true;
@@ -850,11 +912,6 @@ namespace TDEngine2
 
 					break;
 			}
-		}
-
-		if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
-		{
-			return false;
 		}
 
 		return true;

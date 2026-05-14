@@ -44,6 +44,7 @@ TEST_CASE("Lexer tests")
 				"void",
 				"auto",
 				"decltype",
+				"typedef"
 			} } };
 
 		Lexer lexer(*stream);
@@ -77,6 +78,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_VOID,
 			E_TOKEN_TYPE::TT_AUTO,
 			E_TOKEN_TYPE::TT_DECLTYPE,
+			E_TOKEN_TYPE::TT_TYPEDEF,
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)

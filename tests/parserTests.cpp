@@ -429,4 +429,41 @@ TEST_CASE("Parser tests")
 		}
 		symTable.ExitScope();
 	}
+
+	SECTION("TestParse_PassEnumerationAndStructureWrappedUpInNamespace_NamespaceShouldBeCorrectlyProcessed")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"namespace Test {",
+				"    typedef struct Type1 { ",
+				"		int value = 42;",
+				"    } Type1, *TType1Ptr; ",
+				"    ENUM_META(SECTION = animation)",
+				" ",
+				"	 enum class E_ANIMATION_WRAP_MODE_TYPE : U8 { "
+				"       PLAY_ONCE, ",
+				"       LOOP, ",
+					"};",
+				"};"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		REQUIRE(symTable.EnterScope("Test"));
+		{
+			REQUIRE(symTable.EnterScope("E_ANIMATION_WRAP_MODE_TYPE"));
+			
+			TEnumType::Ptr pType = std::dynamic_pointer_cast<TEnumType>(symTable.GetCurrScopeType());
+			REQUIRE(pType);
+
+			symTable.ExitScope();
+		}
+		symTable.ExitScope();
+	}
 }
