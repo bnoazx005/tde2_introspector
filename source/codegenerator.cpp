@@ -22,11 +22,18 @@ struct EnumTrait<{0}>
 
 	static constexpr const char* ToString({0} value)
 	{
-{4}
+		for (auto&& currElement : fields)
+		{
+			if (currElement.value == value)
+			{
+				return currElement.name;
+			}
+		}
+
 		return "";
 	}
 
-	static {0} FromString(const std::string& value)
+	static {0} FromString(std::string_view value)
 	{
 		for (auto&& currElement : fields)
 		{
@@ -180,7 +187,6 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		size_t enumeratorsCount = type.mEnumerators.size();
 
 		std::string fieldsStr = Wrench::StringUtils::GetEmptyStr();
-		std::string fieldsToStringStr = Wrench::StringUtils::GetEmptyStr();
 
 		auto&& enumerators = type.mEnumerators;
 
@@ -191,9 +197,6 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 			fieldsStr
 				.append(Wrench::StringUtils::Format(mEnumeratorFieldPattern, fullEnumName, fullEnumName + "::" + currEnumerator, currEnumerator))
 				.append(i + 1 < enumeratorsCount ? "," : "").append("\n\t\t");
-
-			fieldsToStringStr
-				.append(Wrench::StringUtils::Format(EnumValueToStringConverterPattern, fullEnumName + "::" + currEnumerator, currEnumerator));
 		}
 
 		std::string sectionIdentifier = type.mSectionId.empty() ? "ALL" : type.mSectionId; /// \todo replace DEFAULT with configurable constant
@@ -204,7 +207,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mEnumTraitTemplateSpecializationHeaderPattern,
 															  fullEnumName,
 															  (type.mIsStronglyTyped ? mTrueConstant : mFalseConstant),
-															  enumeratorsCount, fieldsStr, fieldsToStringStr));
+															  enumeratorsCount, fieldsStr));
 
 		mpHeaderOutputStream->WriteString("\n#endif\n");
 	}

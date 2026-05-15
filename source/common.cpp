@@ -479,6 +479,7 @@ namespace TDEngine2
 
 #include <array>
 #include <type_traits>
+#include <string_view>
 
 {0}
 
