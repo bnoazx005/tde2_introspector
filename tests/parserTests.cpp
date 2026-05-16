@@ -121,7 +121,6 @@ TEST_CASE("Parser tests")
 
 		TEnumType* pTypeDesc = dynamic_cast<TEnumType*>(pTestEnumScope->mpType.get());
 		REQUIRE((pTypeDesc && pTypeDesc->mIsMarkedWithAttribute));
-
 	}
 
 	SECTION("TestParse_PassEnumDefinition_ProcessWithoutErrors")
@@ -465,5 +464,34 @@ TEST_CASE("Parser tests")
 			symTable.ExitScope();
 		}
 		symTable.ExitScope();
+	}
+
+	SECTION("TestParse_PassTaggedStructDeclaration_ProcessWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"CLASS_META() struct TestType;",
+				"CLASS_META(SECTION=test_section) struct TestTypeWithSection;",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		auto pTestStructScope = symTable.LookUpNamedScope("TestType");
+		REQUIRE(pTestStructScope);
+
+		TClassType::Ptr pTypeDesc = std::dynamic_pointer_cast<TClassType>(pTestStructScope->mpType);
+		REQUIRE((pTypeDesc && pTypeDesc->mIsMarkedWithAttribute));
+
+		auto pTestStructWithSectionScope = symTable.LookUpNamedScope("TestTypeWithSection");
+		REQUIRE(pTestStructWithSectionScope);
+
+		TClassType::Ptr pTypeWithSectionDesc = std::dynamic_pointer_cast<TClassType>(pTestStructWithSectionScope->mpType);
+		REQUIRE((pTypeWithSectionDesc && pTypeWithSectionDesc->mIsMarkedWithAttribute && pTypeWithSectionDesc->mSectionId == "test_section"));
 	}
 }

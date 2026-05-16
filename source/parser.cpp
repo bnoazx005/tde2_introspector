@@ -78,7 +78,7 @@ namespace TDEngine2
 	}
 
 
-	bool Parser::_parseDeclarationSequence(bool isInvokedFromTemplateDecl, E_DECL_TYPE allowedDeclTypes)
+	bool Parser::_parseDeclarationSequence(bool exitOnCloseBrace, bool isInvokedFromTemplateDecl, E_DECL_TYPE allowedDeclTypes)
 	{
 		const TToken* pCurrToken = nullptr;
 
@@ -131,7 +131,7 @@ namespace TDEngine2
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
-					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound);
+					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, currSectionIdentifier);
 					classTagFound = false; // reset the flag
 
 					if (!isInvokedFromTemplateDecl)
@@ -148,65 +148,26 @@ namespace TDEngine2
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
 					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
 					break;
+				case E_TOKEN_TYPE::TT_CLOSE_BRACE:
+					if (exitOnCloseBrace)
+					{
+						return true;
+					}
+					break;
 				case E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE:
-					mpLexer->GetNextToken();
-
-					if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+					if (!_parseMetaTagSection(currSectionIdentifier))
 					{
 						return false;
 					}
-
-					mpLexer->GetNextToken();
-
-					if (E_TOKEN_TYPE::TT_SECTION == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
-					{
-						mpLexer->GetNextToken();
-
-						// eat =
-						if (!_expect(E_TOKEN_TYPE::TT_ASSIGN_OP, mpLexer->GetCurrToken()))
-						{
-							return false;
-						}
-
-						mpLexer->GetNextToken();
-
-						// eat identifier
-						if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
-						{
-							return false;
-						}
-
-						currSectionIdentifier = mpLexer->GetCurrToken().mValue;
-
-						mpLexer->GetNextToken();
-					}
-
-					if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
-					{
-						return false;
-					}
-
-					mpLexer->GetNextToken();
 
 					enumerationTagFound = true;
 
 					break;
 				case E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE:
-					mpLexer->GetNextToken();
-
-					if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+					if (!_parseMetaTagSection(currSectionIdentifier))
 					{
 						return false;
 					}
-
-					mpLexer->GetNextToken();
-
-					if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
-					{
-						return false;
-					}
-
-					mpLexer->GetNextToken();
 
 					classTagFound = true;
 
@@ -290,7 +251,7 @@ namespace TDEngine2
 		mpLexer->GetNextToken();
 
 		// \note parse the body of the namespace
-		if (!_parseDeclarationSequence())
+		if (!_parseDeclarationSequence(true, false, E_DECL_TYPE::ALL))
 		{
 			return false;
 		}
@@ -317,7 +278,7 @@ namespace TDEngine2
 		auto&& currToken = mpLexer->GetNextToken(); // eat {
 
 		// \note parse the body of the namespace
-		if (!_parseDeclarationSequence())
+		if (!_parseDeclarationSequence(true, false, E_DECL_TYPE::ALL))
 		{
 			return false;
 		}
@@ -368,7 +329,7 @@ namespace TDEngine2
 			return false;
 		}
 
-		return _parseDeclarationSequence(true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
+		return _parseDeclarationSequence(false, true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
 	}
 
 	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const std::string& sectionId)
@@ -547,7 +508,7 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged)
+	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged, const std::string& sectionId)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
 
@@ -580,7 +541,7 @@ namespace TDEngine2
 			mpSymTable->ExitScope();
 		});
 
-		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged) ||
+		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged, sectionId) ||
 			!_parseClassBody(className, isTagged))
 		{
 			return false;
@@ -589,7 +550,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate, bool isTagged)
+	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate, bool isTagged, const std::string& sectionId)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -607,6 +568,7 @@ namespace TDEngine2
 		pClassTypeDesc->mAccessModifier        = accessModifier;
 		pClassTypeDesc->mpParentType           = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
 		pClassTypeDesc->mIsMarkedWithAttribute = isTagged;
+		pClassTypeDesc->mSectionId             = sectionId;
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mType);
@@ -942,6 +904,50 @@ namespace TDEngine2
 		}
 
 		mpLexer->GetNextToken(); // eat } token
+
+		return true;
+	}
+
+	bool Parser::_parseMetaTagSection(std::string& sectionId)
+	{
+		mpLexer->GetNextToken();
+
+		if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		if (E_TOKEN_TYPE::TT_SECTION == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
+		{
+			mpLexer->GetNextToken();
+
+			// eat =
+			if (!_expect(E_TOKEN_TYPE::TT_ASSIGN_OP, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			mpLexer->GetNextToken();
+
+			// eat identifier
+			if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			sectionId = mpLexer->GetCurrToken().mValue;
+
+			mpLexer->GetNextToken();
+		}
+
+		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
 
 		return true;
 	}

@@ -78,7 +78,7 @@ namespace TDEngine2
 
 			bool _expect(E_TOKEN_TYPE expectedType, const TToken& token);
 
-			bool _parseDeclarationSequence(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
+			bool _parseDeclarationSequence(bool exitOnCloseBrace = false, bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 
 			bool _parseNamespaceDefinition();
 			bool _parseNamedNamespaceDefinition();
@@ -94,8 +94,8 @@ namespace TDEngine2
 			bool _parseTypeSpecifier(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false);
-			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false, bool isTagged = false);
+			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false, const std::string & sectionId = "");
+			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false, bool isTagged = false, const std::string& sectionId = "");
 			bool _parseClassBody(const std::string& className, bool isTagged = false);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
@@ -106,6 +106,8 @@ namespace TDEngine2
 			bool _consumeBalancedTokens();
 
 			bool _parseCompoundStatement();
+
+			bool _parseMetaTagSection(std::string& sectionId);
 		private:
 			Lexer*               mpLexer;
 
