@@ -435,10 +435,11 @@ TEST_CASE("Parser tests")
 			{
 				"namespace Test {",
 				"    typedef struct Type1 { ",
+				"		SOME_MACRO(Foo)",
 				"		int value = 42;",
 				"    } Type1, *TType1Ptr; ",
-				"    ENUM_META(SECTION = animation)",
 				" ",
+				"    ENUM_META(SECTION = animation)",
 				"	 enum class E_ANIMATION_WRAP_MODE_TYPE : U8 { "
 				"       PLAY_ONCE, ",
 				"       LOOP, ",

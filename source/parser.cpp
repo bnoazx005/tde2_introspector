@@ -153,6 +153,7 @@ namespace TDEngine2
 					{
 						return true;
 					}
+
 					break;
 				case E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE:
 					if (!_parseMetaTagSection(currSectionIdentifier))
@@ -1039,25 +1040,22 @@ namespace TDEngine2
 		{
 			currToken = mpLexer->GetNextToken();
 
-			if (END_BALANCED_TOKENS_TABLE.find(currToken.mType) == END_BALANCED_TOKENS_TABLE.cend())
+			if (BALANCED_TOKENS_TABLE.find(currToken.mType) != BALANCED_TOKENS_TABLE.cend())
 			{
+				matchedTokens.push(BALANCED_TOKENS_TABLE.at(currToken.mType));
 				continue;
 			}
 
-			const TToken& expectedEndToken = matchedTokens.top();
-			matchedTokens.pop();
-
-			if (!_expect(expectedEndToken.mType, currToken))
+			if (END_BALANCED_TOKENS_TABLE.find(currToken.mType) != END_BALANCED_TOKENS_TABLE.cend())
 			{
-				return false;
-			}
+				if (matchedTokens.empty() || !_expect(matchedTokens.top().mType, currToken))
+				{
+					return false;
+				}
 
-			if (BALANCED_TOKENS_TABLE.find(currToken.mType) == BALANCED_TOKENS_TABLE.cend())
-			{
+				matchedTokens.pop();
 				continue;
 			}
-
-			matchedTokens.push(BALANCED_TOKENS_TABLE.at(currToken.mType));
 		}
 
 		mpLexer->GetNextToken();
