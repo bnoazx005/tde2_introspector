@@ -97,11 +97,11 @@ TEST_CASE("Lexer tests")
 		}
 	}
 
-	SECTION("TestGetNextToken_PassOperators_ReturnsSequenceOfTokens")
+	SECTION("TestGetNextToken_PassMultiCharacterOperators_ReturnsSequenceOfTokens")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
 			{
-				"=,;:{}"
+				"--->++<<>>"
 			} } };
 
 		Lexer lexer(*stream);
@@ -112,12 +112,11 @@ TEST_CASE("Lexer tests")
 
 		std::vector<E_TOKEN_TYPE> expectedTokens
 		{
-			E_TOKEN_TYPE::TT_ASSIGN_OP,
-			E_TOKEN_TYPE::TT_COMMA,
-			E_TOKEN_TYPE::TT_SEMICOLON,
-			E_TOKEN_TYPE::TT_COLON,
-			E_TOKEN_TYPE::TT_OPEN_BRACE,
-			E_TOKEN_TYPE::TT_CLOSE_BRACE,
+			E_TOKEN_TYPE::TT_DECREMENT,
+			E_TOKEN_TYPE::TT_ARROW,
+			E_TOKEN_TYPE::TT_INCREMENT,
+			E_TOKEN_TYPE::TT_LEFT_SHIFT,
+			E_TOKEN_TYPE::TT_RIGHT_SHIFT,
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
@@ -487,5 +486,76 @@ TEST_CASE("Lexer tests")
 		REQUIRE(lexer.PeekToken().mType == expectedTokens[1]);
 		REQUIRE(lexer.GetCurrToken().mType == expectedTokens[0]);
 		REQUIRE(lexer.GetNextToken().mType == expectedTokens[1]);
+	}
+
+	SECTION("TestGetNextToken_Pass<>CharactersInTemplateMode_ReturnsSingleCharacterTokensForTemplateMode")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"<<>>"
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_LEFT_SHIFT,
+			E_TOKEN_TYPE::TT_GREAT,
+			E_TOKEN_TYPE::TT_GREAT,
+		};
+
+		lexer.SetTemplateArgsParsingMode(true);
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+
+		lexer.SetTemplateArgsParsingMode(false);
+	}
+
+	SECTION("TestGetNextToken_Pass<>CharactersInDefaultMode_ReturnsShiftOperatorTokens")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"<<>>"
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_LEFT_SHIFT,
+			E_TOKEN_TYPE::TT_RIGHT_SHIFT,
+		};
+
+		lexer.SetTemplateArgsParsingMode(false);
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+
+		lexer.SetTemplateArgsParsingMode(false);
 	}
 }

@@ -57,6 +57,13 @@ namespace TDEngine2
 		TT_LESS,
 		TT_GREAT,
 
+		// operators
+		TT_ARROW,
+		TT_INCREMENT,
+		TT_DECREMENT,
+		TT_LEFT_SHIFT,
+		TT_RIGHT_SHIFT,
+
 		// attributes
 		TT_ENUM_META_ATTRIBUTE,
 		TT_CLASS_META_ATTRIBUTE,

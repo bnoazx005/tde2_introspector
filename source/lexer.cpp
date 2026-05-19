@@ -101,6 +101,11 @@ namespace TDEngine2
 		{ ",", E_TOKEN_TYPE::TT_COMMA },
 		{ "<", E_TOKEN_TYPE::TT_LESS },
 		{ ">", E_TOKEN_TYPE::TT_GREAT },
+		{ "->", E_TOKEN_TYPE::TT_ARROW },
+		{ "++", E_TOKEN_TYPE::TT_INCREMENT },
+		{ "--", E_TOKEN_TYPE::TT_DECREMENT },
+		{ "<<", E_TOKEN_TYPE::TT_LEFT_SHIFT },
+		{ ">>", E_TOKEN_TYPE::TT_RIGHT_SHIFT },
 	};
 
 	Lexer::Lexer(IInputStream& streamSource):
@@ -191,6 +196,11 @@ namespace TDEngine2
 		return mTokensQueue.back();
 	}
 
+	void Lexer::SetTemplateArgsParsingMode(bool state)
+	{
+		mIsTemplateArgsParsingModeEnabled = state;
+	}
+
 	TToken Lexer::_scanToken()
 	{
 		char ch = ' ';
@@ -210,6 +220,8 @@ namespace TDEngine2
 			{
 				continue;
 			}
+
+			ch = _getCurrChar();
 
 			if (auto numberToken = _parseNumbers())
 			{
@@ -322,6 +334,11 @@ namespace TDEngine2
 			mCurrProcessedText.append(mpStream->ReadLine());
 		}
 
+		if (mCurrProcessedText.empty())
+		{
+			return EOF;
+		}
+
 		return mCurrProcessedText[offset];
 	}
 
@@ -354,6 +371,23 @@ namespace TDEngine2
 			return TToken{ E_TOKEN_TYPE::TT_IDENTIFIER, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
 		}
 
+		// \note Try to recognize double character token first
+		if (_peekNextChar(1) != EOF)
+		{
+			possibleIdentifier.push_back(_peekNextChar(1));
+			auto&& iter = mReservedTokens.find(possibleIdentifier);
+			if (iter != mReservedTokens.cend())
+			{
+				if (iter->second != E_TOKEN_TYPE::TT_RIGHT_SHIFT || !mIsTemplateArgsParsingModeEnabled)
+				{
+					_getNextChar(); // eat previously peeked symbol
+					return TToken{ iter->second, iter->first, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
+				}
+			}
+
+			possibleIdentifier.pop_back();
+		}
+
 		// \note try to detect symbol
 		auto&& iter = mReservedTokens.find(possibleIdentifier);
 		if (iter == mReservedTokens.cend())
@@ -366,7 +400,7 @@ namespace TDEngine2
 			return std::nullopt;
 		}
 
-		return TToken{ iter->second, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
+		return TToken{ iter->second, iter->first, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
 	}
 
 	bool Lexer::_skipComments()

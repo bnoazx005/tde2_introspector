@@ -56,6 +56,9 @@ namespace TDEngine2
 			const TToken& GetCurrToken();
 			const TToken& GetNextToken();
 			const TToken& PeekToken(uint32_t offset = 1);
+
+			void SetTemplateArgsParsingMode(bool state);
+
 		private:
 			Lexer() = default;
 
@@ -89,5 +92,7 @@ namespace TDEngine2
 			uint32_t                  mCurrHorPosIndex = 0;
 
 			static const TKeywordsMap mReservedTokens;
+
+			bool                      mIsTemplateArgsParsingModeEnabled = false;
 	};
 }
