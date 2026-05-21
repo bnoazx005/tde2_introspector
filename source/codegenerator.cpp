@@ -242,6 +242,10 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 				.append(i + 1 < fieldsCount ? "," : Wrench::StringUtils::GetEmptyStr()).append("\n\t\t");
 		}
 
+		std::string sectionIdentifier = type.mSectionId.empty() ? "ALL" : type.mSectionId; /// \todo replace DEFAULT with configurable constant
+		std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
+
+		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format("\n#ifdef META_EXPORT_{0}_SECTION\n", sectionIdentifier));
 
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format(mClassTraitTemplateSpecializationHeaderPattern,
 															  fullClassIdentifier,
@@ -252,6 +256,8 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 															  "{}",
 															  _vectorToString(parentClasses),
 			                                                fieldsStr));
+
+		mpHeaderOutputStream->WriteString("\n#endif\n");
 	}
 
 	void CodeGenerator::_writeHeaderPrelude(const std::string& inclusionsPart)

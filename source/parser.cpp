@@ -4,9 +4,11 @@
 #include "../include/symtable.h"
 #include "../include/common.h"
 #define STR_UTILS_IMPLEMENTATION
-#include "../deps/Wrench/source/stringUtils.hpp"
+#include "stringUtils.hpp"
 #define DEFER_IMPLEMENTATION
-#include "../deps/Wrench/source/deferOperation.hpp"
+#include "deferOperation.hpp"
+#define RESULT_IMPLEMENTATION
+#include "result.hpp"
 #include <cassert>
 #include <unordered_set>
 #include <stack>
@@ -131,11 +133,22 @@ namespace TDEngine2
 					break;
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
-					result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, currSectionIdentifier);
+				case E_TOKEN_TYPE::TT_UNION:
+				{
+					auto&& classParsingResult = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, currSectionIdentifier);
 					classTagFound = false; // reset the flag
 
 					if (!isInvokedFromTemplateDecl)
 					{
+						// \note For now just consume all tokens until ; reached in case of forward declarations
+						if (classParsingResult.IsOk() && std::dynamic_pointer_cast<TClassType>(classParsingResult.Get())->mIsForwardDeclaration)
+						{
+							while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+							{
+								mpLexer->GetNextToken();
+							}
+						}
+
 						if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
 						{
 							return false;
@@ -143,10 +156,10 @@ namespace TDEngine2
 
 						mpLexer->GetNextToken();
 					}
-
+				}
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
-					result = _parseCompoundStatement(); // \fixme temprorary solution to skip any { .. } compound block in listings
+					result = _consumeBalancedTokens(); // \fixme temprorary solution to skip any { .. } compound block in listings
 					break;
 				case E_TOKEN_TYPE::TT_CLOSE_BRACE:
 					if (exitOnCloseBrace)
@@ -301,36 +314,60 @@ namespace TDEngine2
 
 	bool Parser::_parseTemplateDeclaration()
 	{
-		auto checkAndEat = [this](E_TOKEN_TYPE type)
-		{
-			if (!_expect(type, mpLexer->GetCurrToken()))
-			{
-				return false;
-			}
-
-			mpLexer->GetNextToken();
-			return true;
-		};
-
-		if (!checkAndEat(E_TOKEN_TYPE::TT_TEMPLATE) ||
-			!checkAndEat(E_TOKEN_TYPE::TT_LESS))
+		if (!_expect(E_TOKEN_TYPE::TT_TEMPLATE, mpLexer->GetCurrToken()))
 		{
 			return false;
 		}
 
-		const TToken* pCurrToken = nullptr;
+		mpLexer->GetNextToken();
 
-		while ((E_TOKEN_TYPE::TT_GREAT != (pCurrToken = &mpLexer->GetCurrToken())->mType) && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType))
-		{
-			mpLexer->GetNextToken();
-		}
+		mpLexer->SetTemplateArgsParsingMode(true);
 
-		if (!checkAndEat(E_TOKEN_TYPE::TT_GREAT))
+		if (!_consumeBalancedTokens())
 		{
 			return false;
 		}
 
-		return _parseDeclarationSequence(false, true, E_DECL_TYPE::TEMPLATE | E_DECL_TYPE::TYPE);
+		mpLexer->SetTemplateArgsParsingMode(false);
+
+		// parse declaration
+		switch (mpLexer->GetCurrToken().mType)
+		{
+			case E_TOKEN_TYPE::TT_CLASS:
+			case E_TOKEN_TYPE::TT_STRUCT:
+			case E_TOKEN_TYPE::TT_UNION:
+				return _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, true);
+
+			case E_TOKEN_TYPE::TT_USING: // \note For now just skip aliases
+				while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+				{
+					mpLexer->GetNextToken();
+				}
+
+				mpLexer->GetNextToken();
+
+				break;
+
+			default: // possibly it's a function declaration
+				
+				// skip everything until parameters
+				while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_OPEN_PARENTHES && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+				{
+					mpLexer->GetNextToken();
+				}
+
+				_consumeBalancedTokens(); // consume arguments in (...)
+
+				if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON) // function forward declaration
+				{
+					mpLexer->GetNextToken();
+					return true;
+				}
+
+				_consumeBalancedTokens(); // consume definition
+
+				break;
+		}
 	}
 
 	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const std::string& sectionId)
@@ -491,7 +528,8 @@ namespace TDEngine2
 				break;
 			case E_TOKEN_TYPE::TT_CLASS:
 			case E_TOKEN_TYPE::TT_STRUCT:
-				result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, false);
+			case E_TOKEN_TYPE::TT_UNION:
+				result = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, false).IsOk();
 				break;
 		}
 
@@ -509,23 +547,24 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	bool Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged, const std::string& sectionId)
+	Parser::TTypeResult Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged, const std::string& sectionId)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
+		const bool isUnion = !isStruct && (E_TOKEN_TYPE::TT_UNION == mpLexer->GetCurrToken().mType);
 
-		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mType && !isStruct)
+		if (E_TOKEN_TYPE::TT_CLASS != mpLexer->GetCurrToken().mType && !isStruct && !isUnion)
 		{
-			return false;
+			return Wrench::TErrValue<bool>(false);
 		}
 
 		mpLexer->GetNextToken();
 
 		std::string className = _parseClassIdentifier();
-
+		
 		if (className.empty())
 		{
 			mOnErrorCallback({});
-			return false;
+			return Wrench::TErrValue<bool>(false);
 		}
 
 		if (!mpSymTable->CreateScope(className))
@@ -542,16 +581,16 @@ namespace TDEngine2
 			mpSymTable->ExitScope();
 		});
 
-		if (!_parseClassHeader(className, accessModifier, isStruct, isTemplateDeclaration, isTagged, sectionId) ||
+		if (!_parseClassHeader(className, accessModifier, isStruct, isUnion, isTemplateDeclaration, isTagged, sectionId) ||
 			!_parseClassBody(className, isTagged))
 		{
-			return false;
+			return Wrench::TErrValue<bool>(false);
 		}
 
-		return true;
+		return Wrench::TOkValue(mpSymTable->GetCurrScopeType());
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isTemplate, bool isTagged, const std::string& sectionId)
+	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isUnion, bool isTemplate, bool isTagged, const std::string& sectionId)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -565,6 +604,7 @@ namespace TDEngine2
 		pClassTypeDesc->mMangledId             = mpSymTable->GetMangledNameForNamedScope(className);
 		pClassTypeDesc->mpOwner                = mpSymTable;
 		pClassTypeDesc->mIsStruct              = isStruct;
+		pClassTypeDesc->mIsUnion               = isUnion;
 		pClassTypeDesc->mIsTemplate            = isTemplate;
 		pClassTypeDesc->mAccessModifier        = accessModifier;
 		pClassTypeDesc->mpParentType           = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
@@ -749,6 +789,7 @@ namespace TDEngine2
 					break;
 				case E_TOKEN_TYPE::TT_STRUCT:
 				case E_TOKEN_TYPE::TT_CLASS:
+				case E_TOKEN_TYPE::TT_UNION:
 					_parseClassDeclaration(accessModifier, false);
 					break;
 				default:
@@ -880,35 +921,6 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseCompoundStatement()
-	{
-		if (!_expect(E_TOKEN_TYPE::TT_OPEN_BRACE, mpLexer->GetCurrToken().mType))
-		{
-			return false;
-		}
-
-		mpLexer->GetNextToken();
-
-		const TToken* pCurrToken = nullptr;
-
-		while (E_TOKEN_TYPE::TT_CLOSE_BRACE != (pCurrToken = &mpLexer->GetCurrToken())->mType && (E_TOKEN_TYPE::TT_EOF != pCurrToken->mType))
-		{
-			if (E_TOKEN_TYPE::TT_OPEN_BRACE == mpLexer->GetCurrToken().mType)
-			{
-				if (!_parseCompoundStatement())
-				{
-					return false;
-				}
-			}
-
-			mpLexer->GetNextToken();
-		}
-
-		mpLexer->GetNextToken(); // eat } token
-
-		return true;
-	}
-
 	bool Parser::_parseMetaTagSection(std::string& sectionId)
 	{
 		mpLexer->GetNextToken();
@@ -955,21 +967,52 @@ namespace TDEngine2
 
 	std::string Parser::_parseClassIdentifier()
 	{
-		auto&& id = _parseSimpleTemplateIdentifier();
+		TToken firstToken = mpLexer->GetCurrToken();
 
-		if (!id.empty())
+		if (E_TOKEN_TYPE::TT_IDENTIFIER == firstToken.mType || (E_TOKEN_TYPE::TT_COLON == firstToken.mType && E_TOKEN_TYPE::TT_COLON == mpLexer->PeekToken().mType)) // :: or identifier comes first
 		{
-			return id;
+			std::stringstream compoundIdentifier{};
+			compoundIdentifier << (E_TOKEN_TYPE::TT_IDENTIFIER == firstToken.mType ? firstToken.mValue : "::");
+
+			mpLexer->GetNextToken();
+
+			if (E_TOKEN_TYPE::TT_IDENTIFIER != firstToken.mType)
+			{
+				mpLexer->GetNextToken(); // consume :: part
+			}
+
+			static const std::unordered_set<E_TOKEN_TYPE> ALLOWED_TOKEN_TYPES{ E_TOKEN_TYPE::TT_IDENTIFIER, E_TOKEN_TYPE::TT_LESS, E_TOKEN_TYPE::TT_GREAT };
+
+			int templateArgsDepth = 0;
+
+			while (ALLOWED_TOKEN_TYPES.find(mpLexer->GetCurrToken().mType) != ALLOWED_TOKEN_TYPES.cend() || (E_TOKEN_TYPE::TT_COLON == mpLexer->GetCurrToken().mType && E_TOKEN_TYPE::TT_COLON == mpLexer->PeekToken().mType)
+				|| templateArgsDepth > 0)
+			{
+				compoundIdentifier << mpLexer->GetCurrToken().mValue;
+
+				if (E_TOKEN_TYPE::TT_LESS == mpLexer->GetCurrToken().mType)
+				{
+					mpLexer->SetTemplateArgsParsingMode(true);
+					++templateArgsDepth;
+				}
+
+				if (E_TOKEN_TYPE::TT_GREAT == mpLexer->GetCurrToken().mType)
+				{
+					--templateArgsDepth;
+				}
+
+				if (E_TOKEN_TYPE::TT_COLON == mpLexer->GetCurrToken().mType && E_TOKEN_TYPE::TT_COLON == mpLexer->PeekToken().mType)
+				{
+					compoundIdentifier << mpLexer->GetNextToken().mValue; // consume :: part
+				}
+
+				mpLexer->GetNextToken();
+			}
+
+			return compoundIdentifier.str();
 		}
 
-		const TToken& currToken = mpLexer->GetCurrToken();
-
-		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType) // a simple identifier
-		{
-			defer([this] { mpLexer->GetNextToken(); });
-
-			return currToken.mValue;
-		}
+		defer([this] { mpLexer->SetTemplateArgsParsingMode(false); });
 		
 		return Wrench::StringUtils::GetEmptyStr();
 	}
@@ -1029,6 +1072,8 @@ namespace TDEngine2
 	{
 		TToken currToken = mpLexer->GetCurrToken();
 
+		const E_TOKEN_TYPE balancedTokenToCheck = currToken.mType;
+
 		if (BALANCED_TOKENS_TABLE.find(currToken.mType) == BALANCED_TOKENS_TABLE.cend()) // nothing to skip here
 		{
 			return true;
@@ -1039,6 +1084,11 @@ namespace TDEngine2
 		while (!matchedTokens.empty())
 		{
 			currToken = mpLexer->GetNextToken();
+
+			if (currToken.mType != balancedTokenToCheck && currToken.mType != BALANCED_TOKENS_TABLE.at(balancedTokenToCheck))
+			{
+				continue;
+			}
 
 			if (BALANCED_TOKENS_TABLE.find(currToken.mType) != BALANCED_TOKENS_TABLE.cend())
 			{

@@ -73,6 +73,8 @@ endif (UNIX)
 add_executable(${TDE2_INTROSPECTOR_TESTS_NAME} ${SOURCES} ${HEADERS})
 target_link_libraries(${TDE2_INTROSPECTOR_TESTS_NAME} Catch2::Catch2WithMain)
 
+target_include_directories(${TDE2_INTROSPECTOR_TESTS_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../deps/Wrench/source/")
+
 include(CTest)
 include(Catch)
 

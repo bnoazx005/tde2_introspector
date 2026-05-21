@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include "common.h"
+#include "result.hpp"
 
 
 namespace TDEngine2
@@ -68,6 +69,8 @@ namespace TDEngine2
 				ALL = ENUM_TYPE | TYPE | NAMESPACE | TEMPLATE
 			};
 
+			typedef Wrench::Result<std::shared_ptr<struct TType>, bool> TTypeResult;
+
 		public:
 			Parser(Lexer& lexer, SymTable& symTable, const TIntrospectorOptions& options, const TOnErrorCallback& onErrorCallback);
 			~Parser() = default;
@@ -94,8 +97,8 @@ namespace TDEngine2
 			bool _parseTypeSpecifier(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			bool _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false, const std::string & sectionId = "");
-			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isTemplate = false, bool isTagged = false, const std::string& sectionId = "");
+			TTypeResult _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false, const std::string & sectionId = "");
+			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isUnion = false, bool isTemplate = false, bool isTagged = false, const std::string& sectionId = "");
 			bool _parseClassBody(const std::string& className, bool isTagged = false);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
@@ -104,8 +107,6 @@ namespace TDEngine2
 			std::string _parseSimpleTemplateIdentifier();
 
 			bool _consumeBalancedTokens();
-
-			bool _parseCompoundStatement();
 
 			bool _parseMetaTagSection(std::string& sectionId);
 		private:

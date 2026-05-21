@@ -141,6 +141,7 @@ namespace TDEngine2
 
 		bool mIsFinal = false;
 		bool mIsStruct = false;
+		bool mIsUnion = false;
 		bool mIsForwardDeclaration = false;
 		bool mIsTemplate = false;
 

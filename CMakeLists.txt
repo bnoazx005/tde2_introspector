@@ -20,7 +20,6 @@ set(HEADERS
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/argparse/argparse.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/archive/archive.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/deps/PicoSHA2/picosha2.h"
-	"${CMAKE_CURRENT_SOURCE_DIR}/deps/Wrench/source/stringUtils.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/lexer.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/parser.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/tokens.h"
@@ -73,8 +72,9 @@ if (UNIX)
     endif()
 endif (UNIX)
 
-
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ${HEADERS})
+
+target_include_directories(${EXECUTABLE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/deps/Wrench/source/")
 
 if (UNIX)
 	target_link_libraries(${EXECUTABLE_NAME} pthread stdc++fs)

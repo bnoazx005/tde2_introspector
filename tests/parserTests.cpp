@@ -495,4 +495,62 @@ TEST_CASE("Parser tests")
 		TClassType::Ptr pTypeWithSectionDesc = std::dynamic_pointer_cast<TClassType>(pTestStructWithSectionScope->mpType);
 		REQUIRE((pTypeWithSectionDesc && pTypeWithSectionDesc->mIsMarkedWithAttribute && pTypeWithSectionDesc->mSectionId == "test_section"));
 	}
+
+	SECTION("TestParse_DeclareTwoClassesOneInNamespaceAnotherDerivesIt_AllIdentifiersShouldBeProcessedWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"namespace { class A {}; }",
+				"class B : public ::A {};",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		auto pClassAScope = symTable.LookUpNamedScope("A");
+		REQUIRE(pClassAScope);
+
+		auto pClassBScope = symTable.LookUpNamedScope("B");
+		REQUIRE(pClassBScope);
+
+		TClassType::Ptr pTypeADesc = std::dynamic_pointer_cast<TClassType>(pClassAScope->mpType);
+		REQUIRE(pTypeADesc);
+
+		TClassType::Ptr pTypeBDesc = std::dynamic_pointer_cast<TClassType>(pClassBScope->mpType);
+		REQUIRE((pTypeBDesc && pTypeBDesc->mBaseClasses.size() == 1 && pTypeBDesc->mBaseClasses.front().mFullName == "::A"));
+	}
+
+	SECTION("TestParse_DeclareTwoClassesOneTemplateWithNestedTypeInNamespaceAnotherDerivesIt_AllIdentifiersShouldBeProcessedWithoutErrors")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"namespace { template <typename T> struct A { struct C {}; }; }",
+				"struct B : public A<B>::C {};",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		auto pClassAScope = symTable.LookUpNamedScope("A");
+		REQUIRE(pClassAScope);
+
+		auto pClassBScope = symTable.LookUpNamedScope("B");
+		REQUIRE(pClassBScope);
+
+		TClassType::Ptr pTypeADesc = std::dynamic_pointer_cast<TClassType>(pClassAScope->mpType);
+		REQUIRE(pTypeADesc);
+
+		TClassType::Ptr pTypeBDesc = std::dynamic_pointer_cast<TClassType>(pClassBScope->mpType);
+		REQUIRE((pTypeBDesc && pTypeBDesc->mBaseClasses.size() == 1 && pTypeBDesc->mBaseClasses.front().mFullName == "A<B>::C"));
+	}
 }
