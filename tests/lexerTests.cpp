@@ -47,6 +47,7 @@ TEST_CASE("Lexer tests")
 				"typedef",
 				"SECTION",
 				"section",
+				"union",
 			} } };
 
 		Lexer lexer(*stream);
@@ -83,6 +84,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_TYPEDEF,
 			E_TOKEN_TYPE::TT_SECTION,
 			E_TOKEN_TYPE::TT_SECTION,
+			E_TOKEN_TYPE::TT_UNION,
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)

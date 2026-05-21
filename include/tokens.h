@@ -18,6 +18,7 @@ namespace TDEngine2
 		TT_ENUM,
 		TT_CLASS,
 		TT_STRUCT,
+		TT_UNION,
 		TT_PUBLIC,
 		TT_PRIVATE,
 		TT_PROTECTED,
@@ -44,6 +45,7 @@ namespace TDEngine2
 		TT_AUTO,
 		TT_DECLTYPE,
 		TT_TYPEDEF,
+		TT_USING,
 
 		// symbols
 		TT_COLON,
