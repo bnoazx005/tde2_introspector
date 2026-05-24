@@ -58,6 +58,7 @@ namespace TDEngine2
 			const TToken& PeekToken(uint32_t offset = 1);
 
 			void SetTemplateArgsParsingMode(bool state);
+			void SetMetaTagParsingMode(bool state);
 
 		private:
 			Lexer() = default;
@@ -94,5 +95,6 @@ namespace TDEngine2
 			static const TKeywordsMap mReservedTokens;
 
 			bool                      mIsTemplateArgsParsingModeEnabled = false;
+			bool                      mIsMetaTagParsingModeEnabled = false;
 	};
 }

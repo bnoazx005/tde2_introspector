@@ -923,6 +923,9 @@ namespace TDEngine2
 
 	bool Parser::_parseMetaTagSection(std::string& sectionId)
 	{
+		mpLexer->SetMetaTagParsingMode(true);
+		defer([this] { mpLexer->SetMetaTagParsingMode(false); });
+
 		mpLexer->GetNextToken();
 
 		if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
@@ -932,7 +935,7 @@ namespace TDEngine2
 
 		mpLexer->GetNextToken();
 
-		if (E_TOKEN_TYPE::TT_SECTION == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
+		if (E_TOKEN_TYPE::TT_SECTION_TAG_KEY == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
 		{
 			mpLexer->GetNextToken();
 

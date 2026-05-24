@@ -71,11 +71,18 @@ namespace TDEngine2
 		{ "template", E_TOKEN_TYPE::TT_TEMPLATE },
 		{ "ENUM_META", E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE },
 		{ "CLASS_META", E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE },
+		{ "FIELD_META", E_TOKEN_TYPE::TT_FIELD_META_ATTRIBUTE },
 		{ "INTERFACE_META", E_TOKEN_TYPE::TT_INTERFACE_META_ATTRIBUTE },
 		{ "BEGIN_IGNORE_META_SECTION", E_TOKEN_TYPE::TT_BEGIN_IGNORE_SECTION },
 		{ "END_IGNORE_META_SECTION", E_TOKEN_TYPE::TT_END_IGNORE_SECTION },
-		{ "SECTION", E_TOKEN_TYPE::TT_SECTION },
-		{ "section", E_TOKEN_TYPE::TT_SECTION },
+		{ "SECTION", E_TOKEN_TYPE::TT_SECTION_TAG_KEY },
+		{ "section", E_TOKEN_TYPE::TT_SECTION_TAG_KEY },
+		{ "NAME", E_TOKEN_TYPE::TT_NAME_TAG_KEY },
+		{ "name", E_TOKEN_TYPE::TT_NAME_TAG_KEY },
+		{ "FLAGS", E_TOKEN_TYPE::TT_FLAGS_TAG_KEY },
+		{ "flags", E_TOKEN_TYPE::TT_FLAGS_TAG_KEY },
+		{ "SERIALIZE_ALL_FIELDS", E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG },
+		{ "SERIALIZE_MARKED_ONLY_FIELDS", E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG },
 		{ "char", E_TOKEN_TYPE::TT_CHAR },
 		{ "char16_t", E_TOKEN_TYPE::TT_CHAR16_T },
 		{ "char32_t", E_TOKEN_TYPE::TT_CHAR32_T },
@@ -201,6 +208,11 @@ namespace TDEngine2
 	void Lexer::SetTemplateArgsParsingMode(bool state)
 	{
 		mIsTemplateArgsParsingModeEnabled = state;
+	}
+
+	void Lexer::SetMetaTagParsingMode(bool state)
+	{
+		mIsMetaTagParsingModeEnabled = state;
 	}
 
 	TToken Lexer::_scanToken()
@@ -365,6 +377,17 @@ namespace TDEngine2
 			}
 
 			auto&& iter = mReservedTokens.find(possibleIdentifier);
+
+			if (!mIsMetaTagParsingModeEnabled && 
+				   (iter->second == E_TOKEN_TYPE::TT_SECTION_TAG_KEY || 
+					iter->second == E_TOKEN_TYPE::TT_NAME_TAG_KEY || 
+					iter->second == E_TOKEN_TYPE::TT_FLAGS_TAG_KEY ||
+					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG || 
+					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG))
+			{
+				return TToken{ E_TOKEN_TYPE::TT_IDENTIFIER, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
+			}
+
 			if (iter != mReservedTokens.cend())
 			{
 				return TToken{ iter->second, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };

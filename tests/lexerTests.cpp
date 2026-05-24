@@ -45,8 +45,6 @@ TEST_CASE("Lexer tests")
 				"auto",
 				"decltype",
 				"typedef",
-				"SECTION",
-				"section",
 				"union",
 			} } };
 
@@ -82,8 +80,6 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_AUTO,
 			E_TOKEN_TYPE::TT_DECLTYPE,
 			E_TOKEN_TYPE::TT_TYPEDEF,
-			E_TOKEN_TYPE::TT_SECTION,
-			E_TOKEN_TYPE::TT_SECTION,
 			E_TOKEN_TYPE::TT_UNION,
 		};
 
@@ -559,5 +555,81 @@ TEST_CASE("Lexer tests")
 		}
 
 		lexer.SetTemplateArgsParsingMode(false);
+	}
+
+	SECTION("TestGetNextToken_PassKeywordsThatAllowedOnlyInTagParsingMode_ReturnsThemAsIdentifierTokens")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"SECTION",
+				"section",
+				"name",
+				"NAME",
+				"flags",
+				"FLAGS",
+				"SERIALIZE_ALL_FIELDS",
+				"SERIALIZE_MARKED_ONLY_FIELDS",
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		lexer.SetMetaTagParsingMode(false);
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			REQUIRE(pCurrToken->mType == E_TOKEN_TYPE::TT_IDENTIFIER);
+		}
+
+		lexer.SetMetaTagParsingMode(false);
+	}
+
+	SECTION("TestGetNextToken_PassKeywordsThatAllowedOnlyInTagParsingMode_ReturnsCorrectTokensWhenModeIsOn")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"SECTION",
+				"section",
+				"name",
+				"NAME",
+				"flags",
+				"FLAGS",
+				"SERIALIZE_ALL_FIELDS",
+				"SERIALIZE_MARKED_ONLY_FIELDS",
+			} } };
+
+		Lexer lexer(*stream);
+
+		const TToken* pCurrToken = nullptr;
+
+		uint32_t currExpectedTokenIndex = 0;
+
+		std::vector<E_TOKEN_TYPE> expectedTokens
+		{
+			E_TOKEN_TYPE::TT_SECTION_TAG_KEY,
+			E_TOKEN_TYPE::TT_SECTION_TAG_KEY,
+			E_TOKEN_TYPE::TT_NAME_TAG_KEY,
+			E_TOKEN_TYPE::TT_NAME_TAG_KEY,
+			E_TOKEN_TYPE::TT_FLAGS_TAG_KEY,
+			E_TOKEN_TYPE::TT_FLAGS_TAG_KEY,
+			E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG,
+			E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG,
+		};
+
+		lexer.SetMetaTagParsingMode(true);
+
+		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)
+		{
+			if (currExpectedTokenIndex >= expectedTokens.size())
+			{
+				REQUIRE(false);
+				break;
+			}
+
+			REQUIRE(pCurrToken->mType == expectedTokens[currExpectedTokenIndex++]);
+		}
+
+		lexer.SetMetaTagParsingMode(false);
 	}
 }
