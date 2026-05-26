@@ -539,6 +539,9 @@ enum class TypeID : uint32_t
 template <TypeID id> struct Type { };
 
 
+template <typename TType> struct HasMetaData : std::false_type { };
+
+
 /*
 	\brief The section is auto generated code that contains all needed types, functcions and other
 	infrastructure to provide correct work of meta-data
@@ -566,6 +569,7 @@ struct ClassFieldInfo
 {
 	const char*          name;
 	TFieldType TClass::* pFieldPtr;
+    bool                 mIsSerializable;
 };
 
 

@@ -99,7 +99,7 @@ TEST_CASE("Lexer tests")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
 			{
-				"--->++<<>>"
+				"--->++<<>>|"
 			} } };
 
 		Lexer lexer(*stream);
@@ -115,6 +115,7 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_INCREMENT,
 			E_TOKEN_TYPE::TT_LEFT_SHIFT,
 			E_TOKEN_TYPE::TT_RIGHT_SHIFT,
+			E_TOKEN_TYPE::TT_PIPE
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)

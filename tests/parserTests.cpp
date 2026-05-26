@@ -382,9 +382,9 @@ TEST_CASE("Parser tests")
 
 			REQUIRE(pType->mFields.size() == 3);
 
-			REQUIRE(pType->mFields[0] == "x");
-			REQUIRE(pType->mFields[1] == "y");
-			REQUIRE(pType->mFields[2] == "z");
+			REQUIRE(pType->mFields[0].mOriginalName == "x");
+			REQUIRE(pType->mFields[1].mOriginalName == "y");
+			REQUIRE(pType->mFields[2].mOriginalName == "z");
 		}
 		symTable.ExitScope();
 
@@ -395,7 +395,7 @@ TEST_CASE("Parser tests")
 
 			REQUIRE(pType->mFields.size() == 1);
 
-			REQUIRE(pType->mFields[0] == "mValue");
+			REQUIRE(pType->mFields[0].mOriginalName == "mValue");
 		}
 		symTable.ExitScope();
 	}
@@ -424,7 +424,7 @@ TEST_CASE("Parser tests")
 
 			REQUIRE(pType->mFields.size() == 1);
 
-			REQUIRE(pType->mFields[0] == "mValue");
+			REQUIRE(pType->mFields[0].mOriginalName == "mValue");
 		}
 		symTable.ExitScope();
 	}
@@ -493,7 +493,7 @@ TEST_CASE("Parser tests")
 		REQUIRE(pTestStructWithSectionScope);
 
 		TClassType::Ptr pTypeWithSectionDesc = std::dynamic_pointer_cast<TClassType>(pTestStructWithSectionScope->mpType);
-		REQUIRE((pTypeWithSectionDesc && pTypeWithSectionDesc->mIsMarkedWithAttribute && pTypeWithSectionDesc->mSectionId == "test_section"));
+		REQUIRE((pTypeWithSectionDesc && pTypeWithSectionDesc->mIsMarkedWithAttribute && pTypeWithSectionDesc->mAttributes.mSectionId == "test_section"));
 	}
 
 	SECTION("TestParse_DeclareTwoClassesOneInNamespaceAnotherDerivesIt_AllIdentifiersShouldBeProcessedWithoutErrors")
@@ -552,5 +552,30 @@ TEST_CASE("Parser tests")
 
 		TClassType::Ptr pTypeBDesc = std::dynamic_pointer_cast<TClassType>(pClassBScope->mpType);
 		REQUIRE((pTypeBDesc && pTypeBDesc->mBaseClasses.size() == 1 && pTypeBDesc->mBaseClasses.front().mFullName == "A<B>::C"));
+	}
+
+	SECTION("TestParse_ProdiveTypeTagWithFlagsParam_TypeShouldContainAllProvidedAttributes")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"CLASS_META(flags = SERIALIZE_ALL_FIELDS|SERIALIZE_MARKED_ONLY_FIELDS, section = TestSection) struct Test; ",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+
+		auto pTestClassScope = symTable.LookUpNamedScope("Test");
+		REQUIRE(pTestClassScope);
+
+		TClassType::Ptr pTestTypeDesc = std::dynamic_pointer_cast<TClassType>(pTestClassScope->mpType);
+		REQUIRE((pTestTypeDesc && pTestTypeDesc->mAttributes.mSectionId == "TestSection"));
+
+		E_SERIALIZATION_ATTRIBUTES_FLAGS flags = pTestTypeDesc->mAttributes.mFlags;
+		REQUIRE((flags == static_cast<E_SERIALIZATION_ATTRIBUTES_FLAGS>(static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_ALL) | static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_MARKED_ONLY))));
 	}
 }

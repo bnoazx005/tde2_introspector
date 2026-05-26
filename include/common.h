@@ -178,4 +178,51 @@ namespace TDEngine2
 
 	std::string GetHashFromInputFiles(const std::vector<std::string>& inputFiles);
 	std::string GetHashFromFilePath(const std::string& value);
+
+
+	enum class E_SERIALIZATION_ATTRIBUTES_FLAGS : uint8_t
+	{
+		NONE,
+		SERIALIZE_ALL,
+		SERIALIZE_MARKED_ONLY
+	};
+
+
+	template <typename Enum>
+	Enum operator| (Enum left, Enum right)
+	{
+		using baseType = typename std::underlying_type<Enum>::type;
+		return static_cast<Enum>(static_cast<baseType>(left) | static_cast<baseType>(right));
+	}
+
+
+	template <typename Enum>
+	Enum operator& (Enum left, Enum right)
+	{
+		using baseType = typename std::underlying_type<Enum>::type;
+		return static_cast<Enum>(static_cast<baseType>(left) & static_cast<baseType>(right));
+	}
+
+
+	template <typename Enum>
+	bool HasEnumFlag(Enum value, Enum flag)
+	{
+		using baseType = typename std::underlying_type<Enum>::type;
+		return (value & flag) == flag;
+	}
+
+
+	struct TTypeMetaTagParams
+	{
+		std::string                      mSectionId = "";
+		E_SERIALIZATION_ATTRIBUTES_FLAGS mFlags = E_SERIALIZATION_ATTRIBUTES_FLAGS::NONE;
+	};
+
+
+	struct TFieldMetaTagParams
+	{
+		std::string mName = "";
+		std::string mOriginalName = "";
+		bool        mIsSerializable = false;
+	};
 }

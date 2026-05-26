@@ -55,6 +55,7 @@ namespace TDEngine2
 		TT_COMMA,
 		TT_LESS,
 		TT_GREAT,
+		TT_PIPE,
 
 		// operators
 		TT_ARROW,

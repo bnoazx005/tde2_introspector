@@ -74,7 +74,7 @@ namespace TDEngine2
 
 			#endif
 		*/
-		std::string mSectionId; 
+		TTypeMetaTagParams mAttributes{};
 
 		SymTable* mpOwner = nullptr;
 
@@ -145,8 +145,8 @@ namespace TDEngine2
 		bool mIsForwardDeclaration = false;
 		bool mIsTemplate = false;
 
-		std::vector<TBaseClassInfo> mBaseClasses;
-		std::vector<std::string>    mFields;
+		std::vector<TBaseClassInfo>      mBaseClasses{};
+		std::vector<TFieldMetaTagParams> mFields{};
 	};
 
 

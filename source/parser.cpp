@@ -89,7 +89,7 @@ namespace TDEngine2
 		bool enumerationTagFound = false; /// ENUM_META 
 		bool classTagFound = false;		  /// or CLASS_META was found
 
-		std::string currSectionIdentifier = Wrench::StringUtils::GetEmptyStr();
+		TTypeMetaTagParams typeTagAttributes{};
 
 		while ((pCurrToken = &mpLexer->GetCurrToken())->mType != E_TOKEN_TYPE::TT_EOF)
 		{
@@ -117,7 +117,7 @@ namespace TDEngine2
 						return false;
 					}
 
-					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound, currSectionIdentifier);
+					result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, enumerationTagFound, typeTagAttributes);
 					enumerationTagFound = false; // reset the flag
 					
 					if (!isInvokedFromTemplateDecl)
@@ -135,7 +135,7 @@ namespace TDEngine2
 				case E_TOKEN_TYPE::TT_STRUCT:
 				case E_TOKEN_TYPE::TT_UNION:
 				{
-					auto&& classParsingResult = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, currSectionIdentifier);
+					auto&& classParsingResult = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, typeTagAttributes);
 					classTagFound = false; // reset the flag
 
 					if (!isInvokedFromTemplateDecl)
@@ -169,7 +169,7 @@ namespace TDEngine2
 
 					break;
 				case E_TOKEN_TYPE::TT_ENUM_META_ATTRIBUTE:
-					if (!_parseMetaTagSection(currSectionIdentifier))
+					if (!_parseMetaTag(typeTagAttributes))
 					{
 						return false;
 					}
@@ -178,7 +178,7 @@ namespace TDEngine2
 
 					break;
 				case E_TOKEN_TYPE::TT_CLASS_META_ATTRIBUTE:
-					if (!_parseMetaTagSection(currSectionIdentifier))
+					if (!_parseMetaTag(typeTagAttributes))
 					{
 						return false;
 					}
@@ -370,7 +370,7 @@ namespace TDEngine2
 		}
 	}
 
-	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const std::string& sectionId)
+	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const TTypeMetaTagParams& attributes)
 	{
 		if (E_TOKEN_TYPE::TT_ENUM != mpLexer->GetCurrToken().mType)
 		{
@@ -431,7 +431,7 @@ namespace TDEngine2
 			pEnumTypeDesc->mpParentType = mpSymTable->GetCurrScopeType();
 			pEnumTypeDesc->mAccessModifier = accessModifier;
 			pEnumTypeDesc->mIsMarkedWithAttribute = isTagged;
-			pEnumTypeDesc->mSectionId = sectionId;
+			pEnumTypeDesc->mAttributes = attributes;
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
 			{
@@ -524,7 +524,7 @@ namespace TDEngine2
 					return false;
 				}
 
-				result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, false, Wrench::StringUtils::GetEmptyStr());
+				result = _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, false, {});
 				break;
 			case E_TOKEN_TYPE::TT_CLASS:
 			case E_TOKEN_TYPE::TT_STRUCT:
@@ -547,7 +547,7 @@ namespace TDEngine2
 		return nullptr;
 	}
 
-	Parser::TTypeResult Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged, const std::string& sectionId)
+	Parser::TTypeResult Parser::_parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration, bool isTagged, const TTypeMetaTagParams& attributes)
 	{
 		const bool isStruct = (E_TOKEN_TYPE::TT_STRUCT == mpLexer->GetCurrToken().mType);
 		const bool isUnion = !isStruct && (E_TOKEN_TYPE::TT_UNION == mpLexer->GetCurrToken().mType);
@@ -581,7 +581,7 @@ namespace TDEngine2
 			mpSymTable->ExitScope();
 		});
 
-		if (!_parseClassHeader(className, accessModifier, isStruct, isUnion, isTemplateDeclaration, isTagged, sectionId) ||
+		if (!_parseClassHeader(className, accessModifier, isStruct, isUnion, isTemplateDeclaration, isTagged, attributes) ||
 			!_parseClassBody(className, isTagged))
 		{
 			return Wrench::TErrValue<bool>(false);
@@ -590,7 +590,7 @@ namespace TDEngine2
 		return Wrench::TOkValue(mpSymTable->GetCurrScopeType());
 	}
 
-	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isUnion, bool isTemplate, bool isTagged, const std::string& sectionId)
+	bool Parser::_parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct, bool isUnion, bool isTemplate, bool isTagged, const TTypeMetaTagParams& attributes)
 	{
 		auto pClassScopeEntity = mpSymTable->LookUpNamedScope(className);
 		if (!pClassScopeEntity)
@@ -609,7 +609,7 @@ namespace TDEngine2
 		pClassTypeDesc->mAccessModifier        = accessModifier;
 		pClassTypeDesc->mpParentType           = mpSymTable->GetParentScopeType(); /// \note Take parent's type because we've already create a new scope for this class
 		pClassTypeDesc->mIsMarkedWithAttribute = isTagged;
-		pClassTypeDesc->mSectionId             = sectionId;
+		pClassTypeDesc->mAttributes            = attributes;
 
 		// \note 'final' specifier parsing
 		pClassTypeDesc->mIsFinal = (E_TOKEN_TYPE::TT_FINAL == mpLexer->GetCurrToken().mType);
@@ -848,12 +848,22 @@ namespace TDEngine2
 	{
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
+		TFieldMetaTagParams currFieldInfo{};
+
 		// \todo For now we just skip type specifier and parse only member's identifiers
 		while (true)
 		{
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_EOF)
 			{
 				break;
+			}
+
+			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_FIELD_META_ATTRIBUTE)
+			{
+				if (!_parseFieldMetaTag(currFieldInfo))
+				{
+					return false;
+				}
 			}
 
 			const TToken& nextToken = mpLexer->PeekToken();
@@ -898,7 +908,13 @@ namespace TDEngine2
 				return false;
 			}
 
-			pClassTypeDesc->mFields.push_back(mpLexer->GetCurrToken().mValue);
+			currFieldInfo.mIsSerializable = 
+				HasEnumFlag(pClassTypeDesc->mAttributes.mFlags, E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_ALL) || 
+				(HasEnumFlag(pClassTypeDesc->mAttributes.mFlags, E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_MARKED_ONLY) && !currFieldInfo.mName.empty());
+
+			currFieldInfo.mOriginalName = mpLexer->GetCurrToken().mValue;
+
+			pClassTypeDesc->mFields.push_back(currFieldInfo);
 
 			const TToken& delimiterToken = mpLexer->GetNextToken();
 
@@ -921,7 +937,7 @@ namespace TDEngine2
 		return true;
 	}
 
-	bool Parser::_parseMetaTagSection(std::string& sectionId)
+	bool Parser::_parseMetaTag(TTypeMetaTagParams& attributes)
 	{
 		mpLexer->SetMetaTagParsingMode(true);
 		defer([this] { mpLexer->SetMetaTagParsingMode(false); });
@@ -933,8 +949,26 @@ namespace TDEngine2
 			return false;
 		}
 
+		do
+		{
+			mpLexer->GetNextToken();
+
+			_parseMetaTagParam(attributes);
+		} 
+		while (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_COMMA);
+
+		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
 		mpLexer->GetNextToken();
 
+		return true;
+	}
+
+	bool Parser::_parseMetaTagParam(TTypeMetaTagParams& attributes)
+	{
 		if (E_TOKEN_TYPE::TT_SECTION_TAG_KEY == mpLexer->GetCurrToken().mType) /// \note Try to read SECTION=id construction
 		{
 			mpLexer->GetNextToken();
@@ -953,10 +987,91 @@ namespace TDEngine2
 				return false;
 			}
 
-			sectionId = mpLexer->GetCurrToken().mValue;
+			attributes.mSectionId = mpLexer->GetCurrToken().mValue;
 
 			mpLexer->GetNextToken();
 		}
+
+		if (E_TOKEN_TYPE::TT_FLAGS_TAG_KEY == mpLexer->GetCurrToken().mType) /// \note Try to read FLAGS=flag|...|flag construction
+		{
+			mpLexer->GetNextToken();
+
+			// eat =
+			if (!_expect(E_TOKEN_TYPE::TT_ASSIGN_OP, mpLexer->GetCurrToken()))
+			{
+				return false;
+			}
+
+			E_SERIALIZATION_ATTRIBUTES_FLAGS& flags = attributes.mFlags;
+			flags = E_SERIALIZATION_ATTRIBUTES_FLAGS::NONE;
+
+			do
+			{
+				mpLexer->GetNextToken();
+
+				switch (mpLexer->GetCurrToken().mType)
+				{
+					case E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG:
+						flags = static_cast<E_SERIALIZATION_ATTRIBUTES_FLAGS>(static_cast<uint8_t>(flags) | static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_ALL));
+						break;
+					case E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG:
+						flags = static_cast<E_SERIALIZATION_ATTRIBUTES_FLAGS>(static_cast<uint8_t>(flags) | static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_MARKED_ONLY));
+						break;
+					default:
+						return false;
+				}
+
+				mpLexer->GetNextToken();
+
+			} while (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_PIPE);
+		}
+
+		if (attributes.mFlags == E_SERIALIZATION_ATTRIBUTES_FLAGS::NONE) // \note By default all fields are serializable if another condition is not set
+		{
+			attributes.mFlags = attributes.mFlags | E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_ALL;
+		}
+
+		return true;
+	}
+
+	bool Parser::_parseFieldMetaTag(TFieldMetaTagParams& fieldAttributes)
+	{
+		mpLexer->SetMetaTagParsingMode(true);
+		defer([this] { mpLexer->SetMetaTagParsingMode(false); });
+
+		mpLexer->GetNextToken();
+
+		if (!_expect(E_TOKEN_TYPE::TT_OPEN_PARENTHES, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		// name
+		if (!_expect(E_TOKEN_TYPE::TT_NAME_TAG_KEY, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		// eat =
+		if (!_expect(E_TOKEN_TYPE::TT_ASSIGN_OP, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		mpLexer->GetNextToken();
+
+		if (!_expect(E_TOKEN_TYPE::TT_IDENTIFIER, mpLexer->GetCurrToken()))
+		{
+			return false;
+		}
+
+		fieldAttributes.mName = mpLexer->GetCurrToken().mValue;
+
+		mpLexer->GetNextToken();
 
 		if (!_expect(E_TOKEN_TYPE::TT_CLOSE_PARENTHES, mpLexer->GetCurrToken()))
 		{
@@ -1017,43 +1132,6 @@ namespace TDEngine2
 
 		defer([this] { mpLexer->SetTemplateArgsParsingMode(false); });
 		
-		return Wrench::StringUtils::GetEmptyStr();
-	}
-
-	std::string Parser::_parseSimpleTemplateIdentifier()
-	{
-		const TToken& currToken = mpLexer->GetCurrToken();
-
-		// could be simple identifier or simple template one
-		if (E_TOKEN_TYPE::TT_IDENTIFIER == currToken.mType)
-		{
-			std::string templateIdentifier = currToken.mValue;
-
-			if (E_TOKEN_TYPE::TT_LESS == mpLexer->PeekToken().mType) // a template identifier
-			{
-				mpLexer->GetNextToken(); // eat <
-
-				templateIdentifier.push_back('<');
-
-				// \note \todo Parse template's arguments list
-				while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_GREAT)
-				{
-					mpLexer->GetNextToken();
-				}
-
-				if (!_expect(E_TOKEN_TYPE::TT_GREAT, mpLexer->GetCurrToken().mType))
-				{
-					return Wrench::StringUtils::GetEmptyStr();
-				}
-
-				templateIdentifier.push_back('>');
-
-				return templateIdentifier;
-			}
-
-			return Wrench::StringUtils::GetEmptyStr();
-		}
-
 		return Wrench::StringUtils::GetEmptyStr();
 	}
 

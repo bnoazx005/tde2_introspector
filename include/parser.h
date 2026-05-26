@@ -90,25 +90,27 @@ namespace TDEngine2
 			bool _parseBlockDeclaration();
 			bool _parseTemplateDeclaration();
 
-			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged = false, const std::string& sectionId = "");
+			bool _parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged = false, const TTypeMetaTagParams& attributes = {});
 			bool _parseEnumBody(TEnumType* pEnumType);
 			bool _parseEnumeratorDefinition(TEnumType* pEnumType);
 
 			bool _parseTypeSpecifier(bool isInvokedFromTemplateDecl = false, E_DECL_TYPE allowedDeclTypes = E_DECL_TYPE::ALL);
 			std::unique_ptr<TType> _parseTypeSpecifiers();
 
-			TTypeResult _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false, const std::string & sectionId = "");
-			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isUnion = false, bool isTemplate = false, bool isTagged = false, const std::string& sectionId = "");
+			TTypeResult _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTemplateDeclaration = false, bool isTagged = false, const TTypeMetaTagParams& attributes = {});
+			bool _parseClassHeader(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool isStruct = false, bool isUnion = false, bool isTemplate = false, bool isTagged = false, const TTypeMetaTagParams& attributes = {});
 			bool _parseClassBody(const std::string& className, bool isTagged = false);
 			bool _parseClassMemberSpecification(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 			bool _parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier);
 
 			std::string _parseClassIdentifier();
-			std::string _parseSimpleTemplateIdentifier();
 
 			bool _consumeBalancedTokens();
 
-			bool _parseMetaTagSection(std::string& sectionId);
+			bool _parseMetaTag(TTypeMetaTagParams& attributes);
+			bool _parseMetaTagParam(TTypeMetaTagParams& attributes);
+
+			bool _parseFieldMetaTag(TFieldMetaTagParams& fieldAttributes);
 		private:
 			Lexer*               mpLexer;
 

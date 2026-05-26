@@ -47,6 +47,10 @@ struct EnumTrait<{0}>
 	}
 };
 
+
+template <> struct HasMetaData<{0}> : std::true_type { };
+
+
 #ifdef META_IMPLEMENTATION
 constexpr std::array<EnumFieldInfo<{0}>, {2}> EnumTrait<{0}>::fields;
 #endif
@@ -72,6 +76,10 @@ struct ClassTrait<{0}>
 	);
 };
 
+
+template <> struct HasMetaData<{0}> : std::true_type { };
+
+
 #if defined(META_IMPLEMENTATION)
 
 const std::string ClassTrait<{0}>::name = "{0}";
@@ -88,7 +96,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 )";
 
 	const std::string CodeGenerator::mEnumeratorFieldPattern = "EnumFieldInfo<{0}> { {1}, \"{2}\" }";
-	const std::string CodeGenerator::mClassTypeFieldPattern = "ClassFieldInfo<{0}, decltype({0}::{1})> { \"{1}\", &{0}::{1} }";
+	const std::string CodeGenerator::mClassTypeFieldPattern = "ClassFieldInfo<{0}, decltype({0}::{1}), bool> { \"{1}\", &{0}::{2}, {3} }";
 
 	const std::string EnumValueToStringConverterPattern = "\t\tif ({0} == value) { return \"{1}\"; }\n";
 
@@ -199,7 +207,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 				.append(i + 1 < enumeratorsCount ? "," : "").append("\n\t\t");
 		}
 
-		std::string sectionIdentifier = type.mSectionId.empty() ? "ALL" : type.mSectionId; /// \todo replace DEFAULT with configurable constant
+		std::string sectionIdentifier = type.mAttributes.mSectionId.empty() ? "ALL" : type.mAttributes.mSectionId; /// \todo replace DEFAULT with configurable constant
 		std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
 
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format("\n#ifdef META_EXPORT_{0}_SECTION\n", sectionIdentifier));
@@ -237,12 +245,14 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 
 		for (size_t i = 0; i < fieldsCount; ++i)
 		{
+			const std::string& identifier = type.mFields[i].mName.empty() ? type.mFields[i].mOriginalName : type.mFields[i].mName;
+
 			fieldsStr
-				.append(Wrench::StringUtils::Format(mClassTypeFieldPattern, fullClassIdentifier, type.mFields[i]))
+				.append(Wrench::StringUtils::Format(mClassTypeFieldPattern, fullClassIdentifier, identifier, type.mFields[i].mOriginalName, type.mFields[i].mIsSerializable ? "true" : "false"))
 				.append(i + 1 < fieldsCount ? "," : Wrench::StringUtils::GetEmptyStr()).append("\n\t\t");
 		}
 
-		std::string sectionIdentifier = type.mSectionId.empty() ? "ALL" : type.mSectionId; /// \todo replace DEFAULT with configurable constant
+		std::string sectionIdentifier = type.mAttributes.mSectionId.empty() ? "ALL" : type.mAttributes.mSectionId; /// \todo replace DEFAULT with configurable constant
 		std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
 
 		mpHeaderOutputStream->WriteString(Wrench::StringUtils::Format("\n#ifdef META_EXPORT_{0}_SECTION\n", sectionIdentifier));

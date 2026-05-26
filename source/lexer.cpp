@@ -110,6 +110,7 @@ namespace TDEngine2
 		{ ",", E_TOKEN_TYPE::TT_COMMA },
 		{ "<", E_TOKEN_TYPE::TT_LESS },
 		{ ">", E_TOKEN_TYPE::TT_GREAT },
+		{ "|", E_TOKEN_TYPE::TT_PIPE },
 		{ "->", E_TOKEN_TYPE::TT_ARROW },
 		{ "++", E_TOKEN_TYPE::TT_INCREMENT },
 		{ "--", E_TOKEN_TYPE::TT_DECREMENT },
@@ -377,19 +378,18 @@ namespace TDEngine2
 			}
 
 			auto&& iter = mReservedTokens.find(possibleIdentifier);
-
-			if (!mIsMetaTagParsingModeEnabled && 
-				   (iter->second == E_TOKEN_TYPE::TT_SECTION_TAG_KEY || 
-					iter->second == E_TOKEN_TYPE::TT_NAME_TAG_KEY || 
-					iter->second == E_TOKEN_TYPE::TT_FLAGS_TAG_KEY ||
-					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG || 
-					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG))
-			{
-				return TToken{ E_TOKEN_TYPE::TT_IDENTIFIER, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
-			}
-
 			if (iter != mReservedTokens.cend())
 			{
+				if (!mIsMetaTagParsingModeEnabled &&
+					(iter->second == E_TOKEN_TYPE::TT_SECTION_TAG_KEY ||
+					iter->second == E_TOKEN_TYPE::TT_NAME_TAG_KEY ||
+					iter->second == E_TOKEN_TYPE::TT_FLAGS_TAG_KEY ||
+					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_ALL_FIELDS_FLAG ||
+					iter->second == E_TOKEN_TYPE::TT_SERIALIZE_MARKED_FIELDS_ONLY_FLAG))
+				{
+					return TToken{ E_TOKEN_TYPE::TT_IDENTIFIER, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
+				}
+
 				return TToken{ iter->second, possibleIdentifier, { mCurrHorPosIndex, mCurrLineIndex } };
 			}
 			
