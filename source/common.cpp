@@ -587,14 +587,14 @@ struct ClassTrait
 template <typename TClass, typename TFunctor>
 void VisitClassFields(TClass& obj, TFunctor&& func)
 {
-	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr)), ...); }, ClassTrait<TClass>::fields);
+	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr), field.mIsSerializable), ...); }, ClassTrait<TClass>::fields);
 }
 
 
 template <typename TClass, typename TFunctor>
 void VisitClassFields(const TClass& obj, TFunctor&& func)
 {
-	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr)), ...); }, ClassTrait<TClass>::fields);
+	std::apply([&](auto... field) { (func(field.name, obj.*(field.pFieldPtr), field.mIsSerializable), ...); }, ClassTrait<TClass>::fields);
 }
 
 
