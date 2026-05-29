@@ -598,6 +598,41 @@ void VisitClassFields(const TClass& obj, TFunctor&& func)
 }
 
 
+namespace Impl
+{
+	template <typename TClass, typename TFunctor, size_t... Index>
+	void VisitSerializableClassFieldsImpl(const TClass& obj, TFunctor&& func, std::index_sequence<Index...>)
+	{
+		constexpr auto&& fields = Meta::ClassTrait<TClass>::fields;
+		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
+	}
+
+
+	template <typename TClass, typename TFunctor, size_t... Index>
+	void VisitSerializableClassFieldsImpl(TClass& obj, TFunctor&& func, std::index_sequence<Index...>)
+	{
+		constexpr auto&& fields = Meta::ClassTrait<TClass>::fields;
+		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
+	}
+}
+
+
+template <typename TClass, typename TFunctor>
+void VisitSerializableClassFields(const TClass& obj, TFunctor&& func)
+{
+	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
+	::Meta::Impl::VisitSerializableClassFieldsImpl(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+}
+
+
+template <typename TClass, typename TFunctor>
+void VisitSerializableClassFields(TClass& obj, TFunctor&& func)
+{
+	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
+	::Meta::Impl::VisitSerializableClassFieldsImpl(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+}
+
+
 struct EnumInfo
 {	
 };
