@@ -792,6 +792,17 @@ namespace TDEngine2
 				case E_TOKEN_TYPE::TT_UNION:
 					_parseClassDeclaration(accessModifier, false);
 					break;
+				case E_TOKEN_TYPE::TT_TYPEDEF:
+					mpLexer->GetNextToken(); // consume typedef keyword
+
+					_parseTypeSpecifier();
+
+					// skip all declarators
+					while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON)
+					{
+						mpLexer->GetNextToken();
+					}
+					break;
 				default:
 					_parseClassMemberDeclaration(className, accessModifier);
 					break;
