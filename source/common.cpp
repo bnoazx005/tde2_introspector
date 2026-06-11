@@ -614,6 +614,19 @@ namespace Impl
 		constexpr auto&& fields = Meta::ClassTrait<TClass>::fields;
 		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
 	}
+
+	template <typename TClass>
+	std::vector<std::string> GetPropertiesNamesImpl() 
+	{
+		std::vector<std::string> names;
+		constexpr auto& fields = Meta::ClassTrait<TClass>::fields;
+    
+		std::apply([&names](const auto&... fieldInfos) {
+			(names.emplace_back(fieldInfos.name), ...);
+		}, fields);
+	
+		return names;
+	}
 }
 
 

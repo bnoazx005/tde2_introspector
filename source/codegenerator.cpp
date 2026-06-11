@@ -62,7 +62,7 @@ template <>
 struct ClassTrait<{0}>
 {
 	static const std::string name;
-	static constexpr TypeID  typeID = TYPEID({0});
+	static constexpr TypeID  typeID = TYPEID({8});
 
 	static const bool isInterface = {1};
 	static const bool isAbstract = {2};
@@ -88,7 +88,7 @@ const std::array<TypeID, {3}> ClassTrait<{0}>::interfaces {5};
 
 const std::array<TypeID, {4}> ClassTrait<{0}>::parentClasses {6};
 
-template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
+template<> struct Type<TYPEID({8})> { using Value = {0}; }; /// {0}
 
 #endif
 
@@ -265,7 +265,7 @@ template<> struct Type<TYPEID({0})> { using Value = {0}; }; /// {0}
 															  parentClasses.size(), 
 															  "{}",
 															  _vectorToString(parentClasses),
-			                                                fieldsStr));
+			                                                fieldsStr, type.mId));
 
 		mpHeaderOutputStream->WriteString("\n#endif\n");
 	}
