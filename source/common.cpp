@@ -1,3 +1,12 @@
+#ifdef _DEBUG
+	#ifdef _WIN32
+		#include <windows.h>
+	#else
+		#include <unistd.h>
+	#endif
+#include <chrono>
+#endif
+
 #include "../include/common.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
@@ -41,6 +50,9 @@ namespace TDEngine2
 		int suppressLogOutput = 0;
 		int forceMode = 0;
 		int emitFlags = 0;
+#ifdef _DEBUG
+		int debuggerMode = 0;
+#endif
 
 		const char* pOutputDirectory = nullptr;
 		const char* pOutputFilename = nullptr;
@@ -60,6 +72,9 @@ namespace TDEngine2
 			OPT_BOOLEAN('t', "tagged-only", &taggedOnly, "The flag enables a mode when only tagged with corresponding attributes types will be passed into output file"),
 			OPT_BOOLEAN('q', "quiet", &suppressLogOutput, "Enables suppresion of program's output"),
 			OPT_BOOLEAN('F', "force", &forceMode, "Enables force mode for the utility, all cached data will be ignored"),
+#ifdef _DEBUG
+			OPT_BOOLEAN(0, "debugger", &debuggerMode, "Enables mode when the utility waits until debugger connected"),
+#endif
 			OPT_GROUP("Code generation options"),
 			OPT_BIT(0, "emit-enums", &emitFlags, "Enables code generation for enumerations", NULL, static_cast<int>(E_EMIT_FLAGS::ENUMS), OPT_NONEG),
 			OPT_BIT(0, "emit-classes", &emitFlags, "Enables code generation for classes", NULL, static_cast<int>(E_EMIT_FLAGS::CLASSES), OPT_NONEG),
@@ -82,10 +97,13 @@ namespace TDEngine2
 
 		TIntrospectorOptions utilityOptions;
 
-		utilityOptions.mIsValid = true;
-		utilityOptions.mIsTaggedOnlyModeEnabled = static_cast<bool>(taggedOnly);
-		utilityOptions.mIsLogOutputEnabled = !static_cast<bool>(suppressLogOutput);
-		utilityOptions.mIsForceModeEnabled = static_cast<bool>(forceMode);
+		utilityOptions.mIsValid                   = true;
+		utilityOptions.mIsTaggedOnlyModeEnabled   = static_cast<bool>(taggedOnly);
+		utilityOptions.mIsLogOutputEnabled        = !static_cast<bool>(suppressLogOutput);
+		utilityOptions.mIsForceModeEnabled        = static_cast<bool>(forceMode);
+#ifdef _DEBUG
+		utilityOptions.mIsWaitDebuggerModeEnabled = static_cast<bool>(debuggerMode);
+#endif
 
 		// \note parse input files before any option, because argparse library will remove all argv's values after it processes that
 		if (argc >= 1)
@@ -719,4 +737,21 @@ struct TypeInfo
 };
 
 	)";
+
+
+#ifdef _DEBUG
+
+void WaitForDebugger()
+{
+#ifdef _WIN32
+	while (!IsDebuggerPresent())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+#else
+	// TODO: implement for UNIX/etc
+#endif
+}
+
+#endif
 }

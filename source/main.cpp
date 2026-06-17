@@ -25,6 +25,13 @@ int main(int argc, const char** argv)
 		return -1;
 	}
 
+#ifdef _DEBUG
+	if (options.mIsWaitDebuggerModeEnabled)
+	{
+		WaitForDebugger();
+	}
+#endif
+
 	if (!options.mIsLogOutputEnabled)
 	{
 		std::cout.setstate(std::ios_base::failbit); // \note disable standard console output here and restore at the end of execution

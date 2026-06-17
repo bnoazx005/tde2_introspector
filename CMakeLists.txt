@@ -50,6 +50,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC) 	#cl.exe compiler's options
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 	add_definitions(-D_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING)
+	add_definitions(-DNOMINMAX)
 
 	#Debug compiler's options
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /W3 /GS /Zc:inline /Od /ZI  /Zc:wchar_t")

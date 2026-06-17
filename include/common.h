@@ -54,6 +54,10 @@ namespace TDEngine2
 		bool                      mIsLogOutputEnabled = true;
 		bool                      mIsForceModeEnabled = false;
 
+#ifdef _DEBUG
+		bool                      mIsWaitDebuggerModeEnabled = false;
+#endif
+
 		std::vector<std::string>  mInputSources { "." };
 		std::vector<std::string>  mPathsToExclude;
 		std::vector<std::regex>   mTypenamesPatternsToExclude;
@@ -225,4 +229,9 @@ namespace TDEngine2
 		std::string mOriginalName = "";
 		bool        mIsSerializable = false;
 	};
+
+
+#ifdef _DEBUG
+	void WaitForDebugger();
+#endif
 }
