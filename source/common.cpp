@@ -95,7 +95,7 @@ namespace TDEngine2
 
 			for (int i = 0; i < argc; ++i)
 			{
-				sources.push_back(argparse.out[i]);
+				sources.emplace_back(argparse.out[i]);
 			}
 		}
 
@@ -146,7 +146,32 @@ namespace TDEngine2
 			}
 		}
 
-		return std::move(utilityOptions);
+		return utilityOptions;
+	}
+
+
+	static bool HasValidExtension(const std::string& ext)
+	{
+		static const std::array<std::string, 2> extensions{ ".h", ".hpp" };
+		return (ext == extensions[0]) || (ext == extensions[1]);
+	};
+
+
+	static bool HasGlobPattern(const std::string& path)
+	{
+		return path.find("*") != std::string::npos || path.find("?") != std::string::npos;
+	}
+
+
+	static std::regex GetRegexFromGlobStr(const std::string path)
+	{
+		const std::string pattern =
+			Wrench::StringUtils::ReplaceAll(
+			Wrench::StringUtils::ReplaceAll(
+				Wrench::StringUtils::ReplaceAll(
+					Wrench::StringUtils::ReplaceAll(path, ".", "\\."), "?", "."), "*", ".*"), "\\", "\\\\");
+
+		return std::regex(pattern);
 	}
 
 
@@ -157,19 +182,44 @@ namespace TDEngine2
 			return {};
 		}
 
-		static const std::array<std::string, 2> extensions { ".h", ".hpp" };
-
-		auto&& hasValidExtension = [=](const std::string& ext)
-		{
-			return (ext == extensions[0]) || (ext == extensions[1]);
-		};
-		
 		std::unordered_set<std::string> processedPaths; // contains absolute paths that already have been processed 
 
 		std::vector<std::string> headersPaths;
+		std::vector<std::string> paths;
 
-		for (auto&& currSource : directories)
+		std::copy(directories.begin(), directories.end(), std::back_inserter(paths));
+
+		while (!paths.empty())
 		{
+			std::string currSource = paths.back();
+			paths.pop_back();
+
+			// path contains glob pattern with * or ? we should collect all directories that corresponds to that pattern
+			if (HasGlobPattern(currSource))
+			{
+				std::regex currRegex = GetRegexFromGlobStr(currSource);
+				const std::string mostCommonPath = currSource.substr(0, currSource.find_first_of("*?"));
+
+				if (!fs::is_directory(mostCommonPath)) // skip this path it's a strange one
+				{
+					continue;
+				}
+
+				for (auto&& directory : fs::recursive_directory_iterator{ mostCommonPath })
+				{
+					auto&& path = directory.path();
+					auto&& absPathStr = fs::canonical(path).string();
+
+					if (std::regex_match(absPathStr, currRegex) && (processedPaths.find(absPathStr) == processedPaths.cend()) && HasValidExtension(path.extension().string()))
+					{
+						headersPaths.emplace_back(path.string());
+						processedPaths.emplace(absPathStr);
+					}
+				}
+
+				continue;
+			}
+
 			// files
 			if (!fs::is_directory(currSource))
 			{
@@ -177,7 +227,7 @@ namespace TDEngine2
 
 				auto&& absPathStr = fs::canonical(currSource).string();
 
-				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && hasValidExtension(path.extension().string()))
+				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && HasValidExtension(path.extension().string()))
 				{
 					headersPaths.emplace_back(currSource);
 					processedPaths.emplace(absPathStr);
@@ -193,7 +243,7 @@ namespace TDEngine2
 
 				auto&& absPathStr = fs::canonical(path).string();
 
-				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && hasValidExtension(path.extension().string()))
+				if ((processedPaths.find(absPathStr) == processedPaths.cend()) && HasValidExtension(path.extension().string()))
 				{
 					headersPaths.emplace_back(path.string());
 					processedPaths.emplace(absPathStr);
