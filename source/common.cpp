@@ -187,7 +187,8 @@ namespace TDEngine2
 			Wrench::StringUtils::ReplaceAll(
 			Wrench::StringUtils::ReplaceAll(
 				Wrench::StringUtils::ReplaceAll(
-					Wrench::StringUtils::ReplaceAll(path, ".", "\\."), "?", "."), "*", ".*"), "\\", "\\\\");
+					Wrench::StringUtils::ReplaceAll(
+						Wrench::StringUtils::ReplaceAll(path, "..", "*"), ".", "*"), "?", "."), "*", ".*"), "\\", "\\\\");
 
 		return std::regex(pattern);
 	}
