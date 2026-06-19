@@ -54,9 +54,9 @@ namespace TDEngine2
 			template <typename T>
 			std::string WriteInclusions(const MetaExtractor<T>& metaExtractor)
 			{
-				std::string result;
-
 				auto&& entities = metaExtractor.GetTypesInfo();
+
+				std::unordered_map<std::string, std::vector<std::string>> inclusionsPerSection{};
 
 				for (auto currMetaEntity : entities)
 				{
@@ -65,16 +65,33 @@ namespace TDEngine2
 						continue;
 					}
 
-					std::string path = Wrench::StringUtils::Format("#include \"{0}\"\n", Wrench::StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
+					std::string path = Wrench::StringUtils::Format("\t#include \"{0}\"\n", Wrench::StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
 					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
 					{
 						continue;
 					}
 
-					result.append(path);
+					std::string sectionIdentifier = currMetaEntity->mAttributes.mSectionId.empty() ? "ALL" : currMetaEntity->mAttributes.mSectionId; /// \todo replace DEFAULT with configurable constant
+					std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
+
+					inclusionsPerSection[sectionIdentifier].emplace_back(path);
 
 					mIncludedHeaders.emplace(path);
+				}
+
+				std::string result;
+
+				for (auto&& currEntry : inclusionsPerSection)
+				{
+					result.append(Wrench::StringUtils::Format("\n#ifdef META_EXPORT_{0}_SECTION\n", currEntry.first));
+					
+					for (const std::string& currInclusionLine : currEntry.second)
+					{
+						result.append(currInclusionLine);
+					}
+					
+					result.append("#endif\n");
 				}
 
 				return result;
