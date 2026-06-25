@@ -578,4 +578,64 @@ TEST_CASE("Parser tests")
 		E_SERIALIZATION_ATTRIBUTES_FLAGS flags = pTestTypeDesc->mAttributes.mFlags;
 		REQUIRE((flags == static_cast<E_SERIALIZATION_ATTRIBUTES_FLAGS>(static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_ALL) | static_cast<uint8_t>(E_SERIALIZATION_ATTRIBUTES_FLAGS::SERIALIZE_MARKED_ONLY))));
 	}
+
+	SECTION("TestParse_ProvideTemplateStructPartialSpecialization_ParserCorrectlyProcessedIt")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"template <> struct Test<uint32_t>",
+				"{",
+				"	static inline std::vector<uint32_t> Foo()",
+				"	{",
+				"		return {};",
+				"	}",
+				"};",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+	}
+
+	SECTION("TestParse_ProvideStructureWithEmptyDeclarations_ParserCorrectlyProcessedIt")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"struct EmptyStruct",
+				"{",
+				"    ;",
+				"    ;",
+				"    ;",
+				"    ;",
+				"};",
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+	}
+
+	SECTION("TestParse_ScanFunctionDefinitionWithForwardDeclarationInParameters_CorrectlyProcessedBodyIsSkipped")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"bool IsNotNull(class Test* pPtr) { return pPtr != nullptr; }"
+			} } };
+
+		Lexer lexer(*stream);
+		SymTable symTable;
+
+		Parser(lexer, symTable, mockOptions, [](auto&&)
+			{
+				REQUIRE(false);
+			}).Parse();
+	}
 }

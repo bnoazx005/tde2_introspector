@@ -43,6 +43,8 @@ namespace TDEngine2
 		TT_DECLTYPE,
 		TT_TYPEDEF,
 		TT_USING,
+		TT_STATIC,
+		TT_INLINE,
 
 		// symbols
 		TT_COLON,

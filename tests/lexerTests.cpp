@@ -46,6 +46,8 @@ TEST_CASE("Lexer tests")
 				"decltype",
 				"typedef",
 				"union",
+				"static",
+				"inline"
 			} } };
 
 		Lexer lexer(*stream);
@@ -81,6 +83,8 @@ TEST_CASE("Lexer tests")
 			E_TOKEN_TYPE::TT_DECLTYPE,
 			E_TOKEN_TYPE::TT_TYPEDEF,
 			E_TOKEN_TYPE::TT_UNION,
+			E_TOKEN_TYPE::TT_STATIC,
+			E_TOKEN_TYPE::TT_INLINE,
 		};
 
 		while ((pCurrToken = &lexer.GetNextToken())->mType != E_TOKEN_TYPE::TT_EOF)

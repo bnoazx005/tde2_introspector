@@ -205,6 +205,26 @@ namespace TDEngine2
 					mpLexer->GetNextToken();
 
 					break;
+				case E_TOKEN_TYPE::TT_IDENTIFIER:
+					if (mpLexer->PeekToken().mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES) /// \note Skip a function
+					{
+						mpLexer->GetNextToken(); // eat identifier			
+						_consumeBalancedTokens(); // consume arguments part
+
+						if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_OPEN_BRACE)
+						{
+							_consumeBalancedTokens();
+						}
+						else if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_SEMICOLON)
+						{
+							mpLexer->GetNextToken(); // eat ;
+						}
+					}
+					else
+					{
+						mpLexer->GetNextToken();
+					}
+					break;
 				default:
 					mpLexer->GetNextToken(); // just skip unknown tokens
 					break;
@@ -779,6 +799,8 @@ namespace TDEngine2
 				continue;
 			}
 
+			bool isSemicolonCouldBeOmitted = false;
+
 			switch (pCurrToken->mType)
 			{
 				case E_TOKEN_TYPE::TT_ENUM:
@@ -803,9 +825,16 @@ namespace TDEngine2
 						mpLexer->GetNextToken();
 					}
 					break;
-				default:
-					_parseClassMemberDeclaration(className, accessModifier);
+				case E_TOKEN_TYPE::TT_SEMICOLON:
 					break;
+				default:
+					_parseClassMemberDeclaration(className, accessModifier, isSemicolonCouldBeOmitted);
+					break;
+			}
+
+			if (isSemicolonCouldBeOmitted)
+			{
+				continue;
 			}
 
 			if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
@@ -852,10 +881,11 @@ namespace TDEngine2
 			mpLexer->GetNextToken();
 		}
 
-		return _parseClassMemberDeclaration(className, accessModifier) && _parseClassMemberSpecification(className, accessModifier);
+		bool isMethod = false;
+		return _parseClassMemberDeclaration(className, accessModifier, isMethod) && _parseClassMemberSpecification(className, accessModifier);
 	}
 
-	bool Parser::_parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier)
+	bool Parser::_parseClassMemberDeclaration(const std::string& className, E_ACCESS_SPECIFIER_TYPE accessModifier, bool& isMethodBeingParsed)
 	{
 		const TToken* pCurrToken = &mpLexer->GetCurrToken();
 
@@ -890,6 +920,8 @@ namespace TDEngine2
 
 		if (mpLexer->PeekToken().mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES) /// \note Skip a method
 		{
+			isMethodBeingParsed = true;
+
 			mpLexer->GetNextToken(); // eat identifier			
 			_consumeBalancedTokens(); // consume arguments part
 

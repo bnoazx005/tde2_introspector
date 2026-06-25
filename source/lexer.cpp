@@ -100,6 +100,8 @@ namespace TDEngine2
 		{ "decltype", E_TOKEN_TYPE::TT_DECLTYPE },
 		{ "typedef", E_TOKEN_TYPE::TT_TYPEDEF },
 		{ "using", E_TOKEN_TYPE::TT_USING },
+		{ "static", E_TOKEN_TYPE::TT_STATIC },
+		{ "inline", E_TOKEN_TYPE::TT_INLINE },
 		{ "{", E_TOKEN_TYPE::TT_OPEN_BRACE },
 		{ "}", E_TOKEN_TYPE::TT_CLOSE_BRACE },
 		{ "(", E_TOKEN_TYPE::TT_OPEN_PARENTHES },
