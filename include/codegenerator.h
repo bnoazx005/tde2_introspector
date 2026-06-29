@@ -57,6 +57,8 @@ namespace TDEngine2
 				auto&& entities = metaExtractor.GetTypesInfo();
 
 				std::unordered_map<std::string, std::vector<std::string>> inclusionsPerSection{};
+				std::set<std::string> includedHeaders;
+
 
 				for (auto currMetaEntity : entities)
 				{
@@ -67,7 +69,7 @@ namespace TDEngine2
 
 					std::string path = Wrench::StringUtils::Format("\t#include \"{0}\"\n", Wrench::StringUtils::ReplaceAll(currMetaEntity->mpOwner->GetSourceFilename(), "\\", "/"));
 
-					if (mIncludedHeaders.find(path) != mIncludedHeaders.cend())
+					if (includedHeaders.find(path) != includedHeaders.cend())
 					{
 						continue;
 					}
@@ -76,8 +78,8 @@ namespace TDEngine2
 					std::transform(sectionIdentifier.begin(), sectionIdentifier.end(), sectionIdentifier.begin(), ::toupper);	/// \note Convert to upper case
 
 					inclusionsPerSection[sectionIdentifier].emplace_back(path);
-
-					mIncludedHeaders.emplace(path);
+					 
+					includedHeaders.emplace(path);
 				}
 
 				std::string result;
@@ -110,8 +112,6 @@ namespace TDEngine2
 			//std::unique_ptr<IOutputStream> mpSourceOutputStream;
 
 			TOutputStreamFactoryFunctor    mOutputStreamFactoryFunctor;
-
-			std::set<std::string>          mIncludedHeaders; ///< Contains all headers that have been appeared in a generated file
 
 			std::string                    mOutputFilenamesName;
 
