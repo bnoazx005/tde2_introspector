@@ -1,0 +1,74 @@
+name: tde2_introscpector tool
+
+on: 
+  push:
+  pull_request:
+
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }} 
+    strategy:
+      fail-fast: false
+      matrix:
+        config: 
+        - {
+            name: "Windows Latest MSVC",
+            os: windows-latest,
+            artifact: "tde2_introscpector.zip",
+            build_type: "Release",
+            cc: "cl",
+            cxx: "cl",
+            archiver: "7z a",
+            generators: "Visual Studio 18 2026",
+            platform: "Win64",
+          }
+        - {
+            name: "Ubuntu_GCC_9",
+            os: ubuntu-22.04,
+            artifact: "tde2_introscpector.zip",
+            build_type: "Release",
+            cc: "gcc",
+            cxx: "g++",
+            archiver: "7z a",
+            generators: "Unix Makefiles",
+            platform: "Ubuntu",
+          }
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies on windows
+        if: startsWith(matrix.config.os, 'windows')
+        run: |
+          choco install ninja cmake
+          ninja --version
+          cmake --version
+
+      - name: Install dependencies on ubuntu
+        if: startsWith(matrix.config.name, 'Ubuntu')
+        run: |
+          sudo apt-get install -qq cmake gcc g++ libc++-dev
+
+      - name: Pre-Build
+        run: |
+          git submodule update --recursive --init
+
+      - name: Build (Windows)
+        if: startsWith(matrix.config.os, 'windows')
+        run: |
+          mkdir build && cd build
+          cmake -G "${{ matrix.config.generators }}" .. && cmake --build . --config ${{ matrix.config.build_type }}
+
+      - name: Build (Ubuntu)
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: |
+          mkdir build && cd build
+          cmake -G "${{ matrix.config.generators }}" -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} .. && cmake --build .
+
+      - name: Test
+        working-directory: build
+        run: |
+          ctest -C ${{ matrix.config.build_type }} --output-on-failure
