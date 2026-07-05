@@ -250,7 +250,7 @@ namespace TDEngine2
 				return *keywordToken;
 			}
 
-			return TToken(E_TOKEN_TYPE::TT_UNKNOWN, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex));
+			return TToken(E_TOKEN_TYPE::TT_UNKNOWN, "", TCursor{ mCurrHorPosIndex, mCurrLineIndex });
 		}
 
 		/*while (!eof)
@@ -276,8 +276,7 @@ namespace TDEngine2
 			{
 				if (ch == '\n' || ch == '\r')
 				{
-					mCurrHorPosIndex = 0;
-					++mCurrLineIndex;
+					_moveCursorToNextLine();
 				}
 
 				_getNextChar();
@@ -408,7 +407,7 @@ namespace TDEngine2
 				if (iter->second != E_TOKEN_TYPE::TT_RIGHT_SHIFT || !mIsTemplateArgsParsingModeEnabled)
 				{
 					_getNextChar(); // eat previously peeked symbol
-					return TToken{ iter->second, iter->first, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
+					return TToken{ iter->second, iter->first, { mCurrHorPosIndex, mCurrLineIndex } };
 				}
 			}
 
@@ -421,13 +420,13 @@ namespace TDEngine2
 		{
 			if (_getCurrChar() == EOF)
 			{
-				return TToken{ E_TOKEN_TYPE::TT_EOF, "", std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex)};
+				return TToken{ E_TOKEN_TYPE::TT_EOF, "", { mCurrHorPosIndex, mCurrLineIndex } };
 			}
 
 			return std::nullopt;
 		}
 
-		return TToken{ iter->second, iter->first, std::tuple<uint32_t, uint32_t>(mCurrHorPosIndex, mCurrLineIndex) };
+			return TToken{ iter->second, iter->first, { mCurrHorPosIndex, mCurrLineIndex } };
 	}
 
 	bool Lexer::_skipComments()
@@ -441,20 +440,17 @@ namespace TDEngine2
 
 		if (std::isspace(ch))
 		{
-			// increment counter of lines
 			return false;
 		}
 
 		switch (ch)
 		{
 			case '/':
-				_getNextChar(); // take '/'
-				_getNextChar();
+				_getNextChar(); // take '/' another '/' will be consumed during first iteration within _skipSingleLineComment() call
 				_skipSingleLineComment();
 				break;
 			case '*':
-				_getNextChar(); // take '/'
-				_getNextChar();
+				_getNextChar(); // take '/', '*' is consumed within _skipMultiLineComment()
 				_skipMultiLineComment();
 				break;
 			default:
@@ -470,7 +466,7 @@ namespace TDEngine2
 
 		while ((ch = _getNextChar()) != EOF && ch != '\n') {}
 
-		// \todo increment counter of lines
+		_moveCursorToNextLine();
 	}
 
 	void Lexer::_skipMultiLineComment()
@@ -478,13 +474,16 @@ namespace TDEngine2
 		char currCh = ' ';
 		char nextCh = ' ';
 
-		/*uint32_t x = mCurrPos;
-		uint32_t y = mCurrLine;*/
-
 		while (((currCh = _getNextChar()) != EOF && currCh != '*') ||
 			(currCh == '*' && (nextCh = _peekNextChar(1)) != '/'))
 		{
 			_skipComments();
+			
+			// increment counter of lines
+			if (const char ch = _getCurrChar(); ch == '\n' || ch == '\r')
+			{
+				_moveCursorToNextLine();
+			}
 		}
 
 		switch (currCh)
@@ -506,5 +505,11 @@ namespace TDEngine2
 
 				break;
 		}
+	}
+
+	void Lexer::_moveCursorToNextLine()
+	{
+		mCurrHorPosIndex = 0;
+		++mCurrLineIndex;
 	}
 }

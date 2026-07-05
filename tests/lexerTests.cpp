@@ -261,22 +261,39 @@ TEST_CASE("Lexer tests")
 		}
 	}
 
-	SECTION("TestGetNextToken_PassMultilineStream_ReturnsCorrectLineIndexesNumbersInTokens")
+	SECTION("TestGetNextToken_PassMultilineStream_ReturnsCorrectLineIndexesNumbersInTokensCommentsAlsoInfluenceAtCursorPosition")
 	{
 		std::unique_ptr<IInputStream> stream{ new MockInputStream {
 			{
 				"a",
+				"//test",
 				"b",
+				"/*",
+				"",
+				"*/",
 				"c",
 				"d",
 			} } };
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 1));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 2));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 3));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 4));
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 1, 1 });
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 1, 3 }); // because of a single-line comment
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 1, 7 }); // because of a multi-line comment
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 1, 8 });
+		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
+	}
+
+	SECTION("TestGetNextToken_PassSingleLineCommentary_TokenContainsCorrectCursorPosThatIncludesCommentLength")
+	{
+		std::unique_ptr<IInputStream> stream{ new MockInputStream {
+			{
+				"/**/a",
+			} } };
+
+		Lexer lexer(*stream);
+
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 5, 1 });
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
 	}
 
@@ -289,10 +306,10 @@ TEST_CASE("Lexer tests")
 
 		Lexer lexer(*stream);
 
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(1, 1));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(3, 1));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(5, 1));
-		REQUIRE(lexer.GetNextToken().mPos == std::tuple<uint32_t, uint32_t>(7, 1));
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 1, 1 });
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 3, 1 });
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 5, 1 });
+		REQUIRE(lexer.GetNextToken().mPos == TCursor{ 7, 1 });
 		REQUIRE(lexer.GetNextToken().mType == E_TOKEN_TYPE::TT_EOF);
 	}
 

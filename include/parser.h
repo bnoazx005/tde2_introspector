@@ -25,8 +25,6 @@ namespace TDEngine2
 
 	struct TParserError
 	{
-		using TCursorPos = std::tuple<uint32_t, uint32_t>;
-
 		enum class E_PARSER_ERROR_CODE: uint32_t
 		{
 			UNEXPECTED_SYMBOL,
@@ -35,7 +33,7 @@ namespace TDEngine2
 
 		E_PARSER_ERROR_CODE mCode;
 
-		TCursorPos          mPos;
+		TCursor             mCursorPos;
 
 		union
 		{

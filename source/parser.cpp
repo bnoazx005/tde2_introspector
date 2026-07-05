@@ -22,9 +22,9 @@ namespace TDEngine2
 		
 		result
 			.append("(")
-			.append(std::to_string(std::get<1>(mPos)))
+			.append(std::to_string(mCursorPos.mLine))
 			.append(":")
-			.append(std::to_string(std::get<0>(mPos)))
+			.append(std::to_string(mCursorPos.mCol))
 			.append(") ")
 			.append(ParserErrorToString(mCode))
 			.append(". ");
@@ -1247,8 +1247,8 @@ namespace TDEngine2
 		if (mOnErrorCallback)
 		{
 			TParserError error;
-			error.mCode = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
-			error.mPos  = token.mPos;
+			error.mCode                         = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
+			error.mCursorPos                    = token.mPos;
 			error.mData.mUnexpectedTokenErrData = { token.mType, expectedType };
 
 			mOnErrorCallback(error);

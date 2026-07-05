@@ -81,6 +81,8 @@ namespace TDEngine2
 
 			void _skipSingleLineComment();
 			void _skipMultiLineComment();
+
+			void _moveCursorToNextLine();
 		private:
 			IInputStream*             mpStream;
 
@@ -89,8 +91,8 @@ namespace TDEngine2
 			std::vector<TToken>       mTokensQueue;
 			TToken                    mLastScannedToken{};
 
-			uint32_t                  mCurrLineIndex = 1;
-			uint32_t                  mCurrHorPosIndex = 0;
+			size_t                    mCurrLineIndex = 1;
+			size_t                    mCurrHorPosIndex = 0;
 
 			static const TKeywordsMap mReservedTokens;
 

@@ -234,4 +234,14 @@ namespace TDEngine2
 #ifdef _DEBUG
 	void WaitForDebugger();
 #endif
+
+
+	struct TCursor
+	{
+		size_t mCol = 1;
+		size_t mLine = 1;
+	};
+
+
+	inline bool operator== (const TCursor& left, const TCursor& right) { return left.mCol == right.mCol && left.mLine == right.mLine; }
 }

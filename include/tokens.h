@@ -2,7 +2,7 @@
 
 
 #include <cstdint>
-#include <tuple>
+#include "common.h"
 #include <string>
 
 
@@ -86,13 +86,11 @@ namespace TDEngine2
 
 	struct TToken
 	{
-		using TCursorPos = std::tuple<uint32_t, uint32_t>;
-
 		TToken() = default;
-		TToken(E_TOKEN_TYPE type, const std::string& value = "", const TCursorPos & pos = {0, 0});
+		TToken(E_TOKEN_TYPE type, const std::string& value = "", const TCursor& pos = {0, 0});
 
 		E_TOKEN_TYPE mType = E_TOKEN_TYPE::TT_EOF;
-		TCursorPos   mPos = { 0, 0 };
+		TCursor      mPos = { 0, 0 };
 		std::string  mValue = "";
 		bool         mIsValid = false;
 	};
