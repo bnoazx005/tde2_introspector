@@ -6,7 +6,9 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <variant>
 #include "common.h"
+#include "tokens.h"
 #include "result.hpp"
 
 
@@ -15,11 +17,9 @@ namespace TDEngine2
 	class Lexer;
 	class SymTable;
 
-	struct TToken;
 	struct TType;
 	struct TEnumType;
 
-	enum class E_TOKEN_TYPE : uint16_t;
 	enum class E_ACCESS_SPECIFIER_TYPE : uint8_t;
 
 
@@ -31,20 +31,17 @@ namespace TDEngine2
 			UNKNOWN
 		};
 
+		struct TUnexpectedTokenErrorData
+		{
+			TToken mActualToken;
+			TToken mExpectedToken;
+		};
+
 		E_PARSER_ERROR_CODE mCode;
 
 		TCursor             mCursorPos;
 
-		union
-		{
-			struct TUnexpectedTokenErrorData
-			{
-				E_TOKEN_TYPE mActualToken;
-				E_TOKEN_TYPE mExpectedToken;
-			};
-
-			TUnexpectedTokenErrorData mUnexpectedTokenErrData;
-		} mData;
+		std::variant<TUnexpectedTokenErrorData> mData;
 
 		std::string ToString() const;
 	};

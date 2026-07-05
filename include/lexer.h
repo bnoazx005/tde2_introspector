@@ -60,6 +60,8 @@ namespace TDEngine2
 			void SetTemplateArgsParsingMode(bool state);
 			void SetMetaTagParsingMode(bool state);
 
+			static TToken GetReservedToken(E_TOKEN_TYPE& type);
+
 		private:
 			Lexer() = default;
 

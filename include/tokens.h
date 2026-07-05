@@ -94,7 +94,4 @@ namespace TDEngine2
 		std::string  mValue = "";
 		bool         mIsValid = false;
 	};
-
-
-	std::string TokenTypeToString(const E_TOKEN_TYPE& type);
 }

@@ -218,6 +218,27 @@ namespace TDEngine2
 		mIsMetaTagParsingModeEnabled = state;
 	}
 
+
+	TToken Lexer::GetReservedToken(E_TOKEN_TYPE& type)
+	{
+		for (const auto& tokenInfo : mReservedTokens)
+		{
+			if (tokenInfo.second == type)
+			{
+				return TToken { tokenInfo.second, tokenInfo.first };
+			}
+		}
+
+		switch (type)
+		{
+			case E_TOKEN_TYPE::TT_IDENTIFIER:
+				return  TToken{ type, "<identifier>" };
+		}
+
+		return TToken{ E_TOKEN_TYPE::TT_UNKNOWN, "<unknown>" };
+	}
+
+
 	TToken Lexer::_scanToken()
 	{
 		char ch = ' ';
@@ -250,7 +271,7 @@ namespace TDEngine2
 				return *keywordToken;
 			}
 
-			return TToken(E_TOKEN_TYPE::TT_UNKNOWN, "", TCursor{ mCurrHorPosIndex, mCurrLineIndex });
+			return TToken(E_TOKEN_TYPE::TT_UNKNOWN, { ch }, TCursor{ mCurrHorPosIndex, mCurrLineIndex });
 		}
 
 		/*while (!eof)
@@ -426,7 +447,7 @@ namespace TDEngine2
 			return std::nullopt;
 		}
 
-			return TToken{ iter->second, iter->first, { mCurrHorPosIndex, mCurrLineIndex } };
+		return TToken{ iter->second, iter->first, { mCurrHorPosIndex, mCurrLineIndex } };
 	}
 
 	bool Lexer::_skipComments()

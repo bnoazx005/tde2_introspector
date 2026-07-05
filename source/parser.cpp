@@ -33,14 +33,16 @@ namespace TDEngine2
 		{
 			case TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL:
 			{
+				const TUnexpectedTokenErrorData& data = std::get<TUnexpectedTokenErrorData>(mData);
+
 				result
 					.append("Expected \'")
-					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mExpectedToken))
+					.append(data.mExpectedToken.mValue)
 					.append("\', but found \'")
-					.append(TokenTypeToString(mData.mUnexpectedTokenErrData.mActualToken))
+					.append(data.mActualToken.mValue)
 					.append("\'");
 			}
-				break;
+			break;
 		}
 
 		return result;
@@ -134,29 +136,29 @@ namespace TDEngine2
 				case E_TOKEN_TYPE::TT_CLASS:
 				case E_TOKEN_TYPE::TT_STRUCT:
 				case E_TOKEN_TYPE::TT_UNION:
-				{
-					auto&& classParsingResult = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, typeTagAttributes);
-					classTagFound = false; // reset the flag
-
-					if (!isInvokedFromTemplateDecl)
 					{
-						// \note For now just consume all tokens until ; reached in case of forward declarations
-						if (classParsingResult.IsOk() && std::dynamic_pointer_cast<TClassType>(classParsingResult.Get())->mIsForwardDeclaration)
+						auto&& classParsingResult = _parseClassDeclaration(E_ACCESS_SPECIFIER_TYPE::PUBLIC, isInvokedFromTemplateDecl, classTagFound, typeTagAttributes);
+						classTagFound = false; // reset the flag
+
+						if (!isInvokedFromTemplateDecl)
 						{
-							while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+							// \note For now just consume all tokens until ; reached in case of forward declarations
+							if (classParsingResult.IsOk() && std::dynamic_pointer_cast<TClassType>(classParsingResult.Get())->mIsForwardDeclaration)
 							{
-								mpLexer->GetNextToken();
+								while (mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_SEMICOLON && mpLexer->GetCurrToken().mType != E_TOKEN_TYPE::TT_EOF)
+								{
+									mpLexer->GetNextToken();
+								}
 							}
-						}
 
-						if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
-						{
-							return false;
-						}
+							if (!_expect(E_TOKEN_TYPE::TT_SEMICOLON, mpLexer->GetCurrToken()))
+							{
+								return false;
+							}
 
-						mpLexer->GetNextToken();
+							mpLexer->GetNextToken();
+						}
 					}
-				}
 					break;
 				case E_TOKEN_TYPE::TT_OPEN_BRACE:
 					result = _consumeBalancedTokens(); // \fixme temprorary solution to skip any { .. } compound block in listings
@@ -388,6 +390,8 @@ namespace TDEngine2
 
 				break;
 		}
+
+		return true;
 	}
 
 	bool Parser::_parseEnumDeclaration(E_ACCESS_SPECIFIER_TYPE accessModifier, bool isTagged, const TTypeMetaTagParams& attributes)
@@ -910,7 +914,11 @@ namespace TDEngine2
 			const TToken& nextToken = mpLexer->PeekToken();
 
 			if (mpLexer->GetCurrToken().mType == E_TOKEN_TYPE::TT_IDENTIFIER &&
-				(nextToken.mType == E_TOKEN_TYPE::TT_COMMA || nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON || nextToken.mType == E_TOKEN_TYPE::TT_ASSIGN_OP || nextToken.mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES))
+				   (nextToken.mType == E_TOKEN_TYPE::TT_COMMA || 
+					nextToken.mType == E_TOKEN_TYPE::TT_SEMICOLON || 
+					nextToken.mType == E_TOKEN_TYPE::TT_ASSIGN_OP ||
+					nextToken.mType == E_TOKEN_TYPE::TT_OPEN_PARENTHES ||
+					nextToken.mType == E_TOKEN_TYPE::TT_OPEN_BRACE))
 			{
 				break;
 			}
@@ -972,7 +980,11 @@ namespace TDEngine2
 					{
 						mpLexer->GetNextToken();
 					}
+					// \todo Add { processing
+					break;
 
+				case E_TOKEN_TYPE::TT_OPEN_BRACE: // \note uniform initialization found here between { }
+					_consumeBalancedTokens();
 					break;
 			}
 		}
@@ -1247,9 +1259,9 @@ namespace TDEngine2
 		if (mOnErrorCallback)
 		{
 			TParserError error;
-			error.mCode                         = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
-			error.mCursorPos                    = token.mPos;
-			error.mData.mUnexpectedTokenErrData = { token.mType, expectedType };
+			error.mCode      = TParserError::E_PARSER_ERROR_CODE::UNEXPECTED_SYMBOL;
+			error.mCursorPos = token.mPos;
+			error.mData      = TParserError::TUnexpectedTokenErrorData{ token, Lexer::GetReservedToken(expectedType) };
 
 			mOnErrorCallback(error);
 		}
