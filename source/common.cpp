@@ -183,12 +183,21 @@ namespace TDEngine2
 
 	static std::regex GetRegexFromGlobStr(const std::string path)
 	{
-		const std::string pattern =
-			Wrench::StringUtils::ReplaceAll(
-			Wrench::StringUtils::ReplaceAll(
-				Wrench::StringUtils::ReplaceAll(
-					Wrench::StringUtils::ReplaceAll(
-						Wrench::StringUtils::ReplaceAll(path, "..", "*"), ".", "*"), "?", "."), "*", ".*"), "\\", "\\\\");
+		static const std::array<std::tuple<std::string, std::string>, 5> REPLACE_PATTERNS
+		{
+			std::make_tuple("..", "*"),
+			std::make_tuple(".", "*"),
+			std::make_tuple("?", "."),
+			std::make_tuple("*", ".*"),
+			std::make_tuple("\\", "\\\\"),
+		};
+
+		std::string pattern = path;
+
+		for (const auto& [what, replacement] : REPLACE_PATTERNS)
+		{
+			pattern = Wrench::StringUtils::ReplaceAll(pattern, what, replacement);
+		}
 
 		return std::regex(pattern);
 	}
@@ -684,17 +693,28 @@ namespace Impl
 		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
 	}
 
-	template <typename TClass>
-	std::vector<std::string> GetPropertiesNamesImpl() 
-	{
+
+	template <typename TClass, size_t... Index>
+	std::vector<std::string> GetPropertiesNamesImplHelper(std::index_sequence<Index...>) {
 		std::vector<std::string> names;
 		constexpr auto& fields = Meta::ClassTrait<TClass>::fields;
-    
-		std::apply([&names](const auto&... fieldInfos) {
-			(names.emplace_back(fieldInfos.name), ...);
-		}, fields);
-	
+		
+		([&]() 
+		{
+			if constexpr (std::get<Index>(fields).mIsSerializable)
+			{
+				names.emplace_back(std::get<Index>(fields).name);
+			}
+		}(), ...);
+
 		return names;
+	}
+
+
+	template <typename TClass>
+	std::vector<std::string> GetPropertiesNamesImpl() {
+		constexpr size_t SIZE = std::tuple_size_v<decltype(Meta::ClassTrait<TClass>::fields)>;
+		return GetPropertiesNamesImplHelper<TClass>(std::make_index_sequence<SIZE>{});
 	}
 }
 
