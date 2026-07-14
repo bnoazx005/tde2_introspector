@@ -678,19 +678,39 @@ void VisitClassFields(const TClass& obj, TFunctor&& func)
 
 namespace Impl
 {
-	template <typename TClass, typename TFunctor, size_t... Index>
+	struct TValuePolicy
+	{
+		template <typename Functor, typename TClass, typename TMemberPtr>
+		static void Apply(Functor&& func, const char* name, TClass& obj, TMemberPtr pMemberPtr)
+		{
+			func(name, obj.*pMemberPtr);
+		}
+	};
+
+
+	struct TMemberPointerPolicy
+	{
+		template <typename Functor, typename TClass, typename TMemberPtr>
+		static void Apply(Functor&& func, const char* name, TClass& obj, TMemberPtr pMemberPtr)
+		{
+			func(name, pMemberPtr);
+		}
+	};
+
+
+	template <typename TClass, typename TFunctor, typename TPolicy, size_t... Index>
 	void VisitSerializableClassFieldsImpl(const TClass& obj, TFunctor&& func, std::index_sequence<Index...>)
 	{
 		constexpr auto&& fields = Meta::ClassTrait<TClass>::fields;
-		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
+		((std::get<Index>(fields).mIsSerializable ? TPolicy::Apply(func, std::get<Index>(fields).name, obj, std::get<Index>(fields).pFieldPtr) : void()), ...);
 	}
 
 
-	template <typename TClass, typename TFunctor, size_t... Index>
+	template <typename TClass, typename TFunctor, typename TPolicy, size_t... Index>
 	void VisitSerializableClassFieldsImpl(TClass& obj, TFunctor&& func, std::index_sequence<Index...>)
 	{
 		constexpr auto&& fields = Meta::ClassTrait<TClass>::fields;
-		((std::get<Index>(fields).mIsSerializable ? func(std::get<Index>(fields).name, obj.*(std::get<Index>(fields).pFieldPtr)) : void()), ...);
+		((std::get<Index>(fields).mIsSerializable ? TPolicy::Apply(func, std::get<Index>(fields).name, obj, std::get<Index>(fields).pFieldPtr) : void()), ...);
 	}
 
 
@@ -698,7 +718,7 @@ namespace Impl
 	std::vector<std::string> GetPropertiesNamesImplHelper(std::index_sequence<Index...>) {
 		std::vector<std::string> names;
 		constexpr auto& fields = Meta::ClassTrait<TClass>::fields;
-		
+
 		([&]() 
 		{
 			if constexpr (std::get<Index>(fields).mIsSerializable)
@@ -719,19 +739,35 @@ namespace Impl
 }
 
 
-template <typename TClass, typename TFunctor>
+template <typename TClass, typename TFunctor, typename TPolicy = ::Meta::Impl::TValuePolicy>
 void VisitSerializableClassFields(const TClass& obj, TFunctor&& func)
 {
 	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
-	::Meta::Impl::VisitSerializableClassFieldsImpl(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+	::Meta::Impl::VisitSerializableClassFieldsImpl<TClass, TFunctor, TPolicy>(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
 }
 
 
-template <typename TClass, typename TFunctor>
+template <typename TClass, typename TFunctor, typename TPolicy = ::Meta::Impl::TValuePolicy>
 void VisitSerializableClassFields(TClass& obj, TFunctor&& func)
 {
 	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
-	::Meta::Impl::VisitSerializableClassFieldsImpl(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+	::Meta::Impl::VisitSerializableClassFieldsImpl<TClass, TFunctor, TPolicy>(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+}
+
+
+template <typename TClass, typename TFunctor, typename TPolicy>
+void VisitSerializableClassFields(const TClass& obj, TFunctor&& func, TPolicy)
+{
+	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
+	::Meta::Impl::VisitSerializableClassFieldsImpl<TClass, TFunctor, TPolicy>(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
+}
+
+
+template <typename TClass, typename TFunctor, typename TPolicy>
+void VisitSerializableClassFields(TClass& obj, TFunctor&& func, TPolicy)
+{
+	constexpr size_t SIZE = std::tuple_size_v<decltype(::Meta::ClassTrait<TClass>::fields)>;
+	::Meta::Impl::VisitSerializableClassFieldsImpl<TClass, TFunctor, TPolicy>(obj, std::forward<TFunctor>(func), std::make_index_sequence<SIZE>());
 }
 
 
